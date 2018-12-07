@@ -1,5 +1,4 @@
 var request=require("request");
-var cheerio=require("cheerio");
 
 exports.getYoutubeVideo=function(data,callback){
   var url="https://www.googleapis.com/youtube/v3/search?part=snippet&q="+data.channel+"&type=channel&key="+process.env.youtubeKey

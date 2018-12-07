@@ -1,186 +1,137 @@
-var Discord=require("discord.js");
-var ytdl=require('ytdl-core');
-var reddit=require("./secrets");
+var discord=require("discord.js");
+var Cleverbot=require("cleverbot-api");
+var fs=require("fs");
+var secrets=require("./secrets");
+var embed=require("./embed");
+var utils=require("./utils");
 var reddit=require("./reddit");
 var crypto=require("./crypto");
 var youtube=require("./youtube");
-var client=new Discord.Client();
-var first=true;
-var request=require("request");
 
-const CleverbotAPI = require('cleverbot-api');
-const cleverbot = new CleverbotAPI(process.env.cleverBotKey);
+var meta={};
 
-client.on('ready', () => {
-  client.user.setActivity('with your mind');
-  console.log(`Logged in as ${client.user.tag}!`);
+var client=new discord.Client();
+var cleverbot=new Cleverbot(process.env.cleverBotKey);
+
+client.on("ready",()=>{
+  fs.readFile("meta.json","utf8",function(err,data){
+    if(err) throw err;
+    meta=JSON.parse(data);
+    console.log("Logged in as "+client.user.tag+"!");
+    client.user.setActivity(meta.order,{type:"PLAYING"});
+  });
 });
-var dispatcher=null;
-client.on('message', msg => {
-  if (msg.content.includes('rodrigo') || msg.content.includes('Rodrigo')) {
-    if(msg.content.includes('voice youtube')){
-      var youtubeLink=msg.content.split('youtube ')[1];
-      if(msg.member.voiceChannel){
-        msg.member.voiceChannel.join().then(connection=>{
-          const stream=ytdl(youtubeLink,{filter:'audioonly'});
-          const streamOptions={seek:0,volume:0.5};
-          dispatcher=connection.playStream(stream,streamOptions);
 
-          dispatcher.on('end', () => {
-            msg.member.voiceChannel.leave();
-          });
-        }).catch(console.log);
-      }else{
-        msg.reply('Vai para um canal de voz primeiro sua xixada!');
-      }
-    }else if(msg.content.includes('voice pause')){
-      dispatcher.pause();
-    }else if(msg.content.includes('voice resume')){
-      dispatcher.resume();
-    }else if(msg.content.includes('voice end')){
-      dispatcher.end();
-    }else if(msg.content.includes('o que gostas de fazer') || msg.content.includes('carne')){
-      msg.channel.send({
-        file: "./assets/img/cuttingmeat.jpg"
-      });
-    }else if(msg.content.includes("procura")){
-      var topic=msg.content.split('procura ')[1];
-      var res=[];
-      var url="https://www.googleapis.com/customsearch/v1?q="+topic+"&cx=007153606045358422053:uw-koc4dhb8&key="+process.env.youtubeKey;
-
-      request(url,function(error,response,html){
-        if(error) console.log(error);
-        var json=JSON.parse(html);
-        for(var i=0;i<3;i++){
-          res.push({
-            topic:topic,
-            title:json.items[i].title,
-            link:json.items[i].link,
-            description:json.items[i].snippet,
+client.on("message",msg=>{
+  if(msg.content.toLowerCase().includes("rodrigo")){
+    var checkForInsideJokes=utils.checkForInsideJokes(msg,meta);
+    if(checkForInsideJokes.isInsideJoke){
+      msg.channel.send(checkForInsideJokes.msg);
+    }else{
+      utils.checkForMemes(msg,function(checkForMemes){
+        if(checkForMemes.isMeme){
+          msg.channel.send(checkForMemes.msg);
+        }else{
+          reddit.checkForReddit(msg,function(checkForReddit){
+            if(checkForReddit.isReddit){
+              if(checkForReddit.error) msg.channel.send(checkForReddit.error);
+              else embed.createRedditEmbed(msg,checkForReddit.msg);
+            }else{
+              checkForKeyWords(msg,meta);
+            }
           });
         }
-        createSearchEmbed(msg,res);
       });
-    }else if(msg.content.includes("probabilidade")){
-      var num=Math.floor(Math.random()*100);
-      msg.channel.send("Cerca de "+num+"%");
-    }else if(msg.content.includes("clever")){
-      cleverbot.getReply({
-          input: msg.content
-      }, (error, response) => {
-          if(error) throw error;
-          //console.log(response.input);
-          msg.channel.send(response.output);
-      });
-    }else if(msg.content.includes("?")){
-      var num=Math.floor(Math.random()>=0.5);
-      if(num){
-        msg.channel.send("Sim");
-      }else{
-        msg.channel.send("Não");
-      }
-    }else if(msg.content.includes('piada')){
-      reddit.getAccessToken({subreddit:"jokes"},function(res){
-        createEmbed(msg,res);
-      });
-    }else if(msg.content.includes("crypto")){
-      var coin=msg.content.split('crypto ')[1];
-      crypto.getPrice({coin:coin},function(res){
-        if(res==""){
-          msg.channel.send("Essa moeda deve estar no xixo porque não a encontro");
-        }else{
-          createCryptoEmbed(msg,res);
-        }
-      });
-    }else if(msg.content.includes('reddit')){
-      var sub=msg.content.split('reddit ')[1];
-      reddit.getAccessToken({subreddit:sub},function(res){
-        if(res==""){
-          msg.channel.send("Esse subreddit deve estar no xixo porque não o encontro");
-        }else{
-          createEmbed(msg,res);
-        }
-      });
-    }else if(msg.content.includes('gif')){
-      reddit.getAccessToken({subreddit:"gif"},function(res){
-        createEmbed(msg,res);
-      });
-    }else if(msg.content.includes('video')){
-      reddit.getAccessToken({subreddit:"videos"},function(res){
-        createEmbed(msg,res);
-      });
-    }else if(msg.content.includes('meme')){
-      reddit.getAccessToken({subreddit:"2meirl4meirl+boottoobig+dankmemes+greentext+insanepeoplefacebook+oldpeoplefacebook+memes+meme+imgoingtohellforthis+prequelmemes"},function(res){
-        createEmbed(msg,res);
-      });
-    }else if(msg.content.includes("porn") || msg.content.includes("porno")){
-      reddit.getAccessToken({subreddit:"pornvids"},function(res){
-        createEmbed(msg,res);
-      });
-    }else if(msg.content.includes('youtube')){
-      var channel=msg.content.split('youtube ')[1];
-      youtube.getYoutubeVideo({channel:channel},function(res){
-        if(res==""){
-          msg.channel.send("Esse canal deve estar no xixo porque não o encontro");
-        }else{
-          msg.channel.send(res);
-        }
-      });
-    }else if(msg.content.includes('twitch')){
-      var channel=msg.content.split('twitch ')[1];
-      msg.channel.send("https://www.twitch.tv/"+channel);
-    }else if(msg.content.includes(":rodrigo:")){
-      msg.channel.send("Que carinha laroca!");
     }
+
+    fs.writeFile("meta.json",JSON.stringify(meta),function(err){
+      if(err) console.log(err);
+    });
   }
 });
 
 client.login(process.env.discordKey);
 
-var createEmbed=function(msg,res){
-  var embed=new Discord.RichEmbed();
-  if(res[0].contentVideo!=""){
-    msg.channel.send(res[0].contentVideo);
-  }else{
-    embed.setTitle(res[0].title);
-    embed.setURL(res[0].url);
-    embed.setColor(0x00AE86);
-    if(res[0].content!=""){
-      embed.setThumbnail(res[0].image);
-      embed.addField("Content",res[0].content);
-    }else if(res[0].contentImage!=""){
-      embed.setImage(res[0].contentImage);
-    }
-    embed.setFooter("From: "+res[0].subreddit+" | "+"Upvotes: "+res[0].score+" | ");
-    msg.channel.send(embed);
-  }
-}
+var checkForKeyWords=function(msg,meta){
+  if(msg.content.includes("vai brincar")){
+    var order=msg.content.split('vai brincar ')[1];
+    client.user.setActivity(order,{type:"PLAYING"});
+  }else if(msg.content.toLowerCase().includes("gas")){
+    const { GifFrame, GifUtil, GifCodec } = require('gifwrap');
+    const width = 200, height = 100;
+    const frames = [];
 
-var createCryptoEmbed=function(msg,res){
-  var embed=new Discord.RichEmbed();
-  embed.setTitle(res[0].rank+". "+res[0].name+" ("+res[0].symbol+")");
-  embed.setColor(0x00AE86);
-  embed.addField("Price (€)",parseFloat(res[0].priceEur).toFixed(2)+" €",true);
-  embed.addField("Price ($)",parseFloat(res[0].priceUsd).toFixed(2)+" $",true);
-  var marketcapEur=String(parseFloat(res[0].marketcapEur).toFixed(2)).replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, ' ');
-  embed.addField("Marketcap (€)",marketcapEur+" €",true);
-  var marketcapUsd=String(parseFloat(res[0].marketcapUsd).toFixed(2)).replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, ' ');
-  embed.addField("Marketcap ($)",marketcapUsd+" $",true);
-  var availableSupply=String(parseFloat(res[0].availableSupply).toFixed(2)).replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, ' ');
-  embed.addField("Available Supply",availableSupply+" "+res[0].symbol,true);
-  var totalSupply=String(parseFloat(res[0].totalSupply).toFixed(2)).replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, ' ');
-  embed.addField("Total Supply",totalSupply+" "+res[0].symbol,true);
-  embed.setFooter("1h: "+res[0].change1h+"% | "+"24h: "+res[0].change24h+"% | "+"7d: "+res[0].change7d+"%");
-  msg.channel.send(embed);
-}
+    let frame = new GifFrame(width, height, { delayCentisecs: 10 });
+    // modify the pixels at frame.bitmap.data
+    frames.push(frame);
+    frame = new GifFrame(width, height, { delayCentisecs: 15 });
+    // modify the pixels at frame.bitmap.data
+    frames.push(frame);
+    // add more frames as desired...
 
-var createSearchEmbed=function(msg,res){
-  var embed=new Discord.RichEmbed();
-  embed.setTitle(res[0].topic);
-  embed.setColor(0x00AE86);
-  for(var i=0;i<3;i++){
-    embed.addField(res[i].title,res[i].link);
-    embed.addField("Description",res[i].description);
-  }
-  msg.channel.send(embed);
+    // to write to a file...
+    GifUtil.write("./assets/img/gascreate.gif", frames, { loops: 3 }).then(gif => {
+        console.log("written");
+        //msg.channel.send({"file":"./assets/img/gas.gif"});
+    });
+  }else if(msg.content.includes("vai jogar")){
+    var order=msg.content.split('vai jogar ')[1];
+    client.user.setActivity(order,{type:"PLAYING"});
+  }else if(msg.content.includes("vai ouvir")){
+    var order=msg.content.split('vai ouvir ')[1];
+    client.user.setActivity(order,{type:"LISTENING"});
+  }else if(msg.content.includes("vai ver")){
+    var order=msg.content.split('vai ver ')[1];
+    client.user.setActivity(order,{type:"WATCHING"});
+  }else if(msg.content.includes("define")){
+    utils.define(msg,function(res){
+      embed.createDefineEmbed(msg,res);
+    });
+  }else if(msg.content.includes("procura")){
+    utils.procura(msg,function(res){
+      embed.createSearchEmbed(msg,res);
+    });
+  }else if(msg.content.includes("probabilidade")){
+    var num=Math.floor(Math.random()*100);
+    msg.channel.send("Cerca de "+num+"%");
+  }else if(msg.content.includes("clever")){
+    cleverbot.getReply({
+        input: msg.content
+    }, (error, response) => {
+        if(error) throw error;
+        msg.channel.send(response.output);
+    });
+  }else if(msg.content.includes("?")){
+      utils.responde(msg);
+  }else if(msg.content.includes("crypto")){
+    var coin=msg.content.split('crypto ')[1];
+    crypto.getPrice(coin,function(res){
+      if(res.error) msg.channel.send(res.error);
+      else embed.createCryptoEmbed(msg,res);
+    });
+  }else if(msg.content.includes('youtube')){
+    var channel=msg.content.split('youtube ')[1];
+    youtube.getYoutubeVideo({channel:channel},function(res){
+      if(res==""){
+        msg.channel.send("Esse canal deve estar no xixo porque não o encontro");
+      }else{
+        msg.channel.send(res);
+      }
+    });
+  }else if(msg.content.includes('twitch')){
+    var channel=msg.content.split('twitch ')[1];
+    var url="https://www.twitch.tv/"+channel;
+    msg.channel.send(url);
+    client.user.setActivity(channel,{url:url,type:"WATCHING"});
+  }else if(msg.content.includes(":rodrigo:")){
+    msg.channel.send("Que carinha laroca!");
+  }else if(msg.content.includes("good") || msg.content.includes("nice") || msg.content.includes("bem") || msg.content.includes("bom") || msg.content.includes("best") || msg.content.includes("grande")){
+    meta.likes++;
+    msg.channel.send("Durante a minha existência já gostaram de mim "+meta.likes+" vezes. I can't handle it!!! *touches face violently*");
+  }else if(msg.content.includes("bad") || msg.content.includes("mal") || msg.content.includes("mau") || msg.content.includes("worst") || msg.content.includes("lixo")){
+    meta.dislikes++;
+    msg.channel.send("Durante a minha existência já me deram bullying "+meta.dislikes+" vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*");
+  }/*else{
+    msg.channel.send("Xixo! Bebi demasiado tintinho e não compreendi essa frase.");
+  }*/
 }
