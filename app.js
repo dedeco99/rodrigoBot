@@ -91,6 +91,10 @@ var checkForKeyWords=function(msg,meta){
     utils.procura(msg,function(res){
       embed.createSearchEmbed(msg,res);
     });
+  }else if(msg.content.includes("vote")){
+    utils.vote(msg,function(res){
+      embed.createPollEmbed(client,msg,res);
+    });
   }else if(msg.content.includes("probabilidade")){
     var num=Math.floor(Math.random()*100);
     msg.channel.send("Cerca de "+num+"%");

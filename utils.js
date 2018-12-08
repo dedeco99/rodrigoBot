@@ -143,3 +143,23 @@ exports.responde=function(msg){
 			}
 	}
 }
+
+exports.vote=function(msg,callback){
+	var message=msg.content.split('vote ')[1];
+	var options=message.split(";");
+	var title=options[0];
+	options.splice(0, 1);
+
+	var res={
+		title: title,
+		options: options
+	};
+
+	callback(res);
+}
+
+exports.getvote=function(msg,callback){
+	var poll=msg.content.split('getvote ')[1];
+
+	callback(res);
+}

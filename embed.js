@@ -77,3 +77,22 @@ exports.createTextEmbed=function(msg,res){
   embed.addField("Commands",res.example);
   msg.channel.send(embed);
 }
+
+exports.createPollEmbed=function(client,msg,res){
+  var embed=new discord.RichEmbed();
+  embed.setColor(0x00AE86);
+  embed.setTitle(res.title);
+
+  var reacts=["🇦","🇧","🇨","🇩","🇪","🇫","🇬","🇭","🇮","🇯","🇰"];
+
+  for(var i=0;i<res.options.length;i++){
+    embed.addField("----------",reacts[i]+" - "+res.options[i]);
+  }
+
+  msg.channel.send(embed)
+  .then(async function (message) {
+    for(var i=0;i<res.options.length;i++){
+      await message.react(reacts[i]);
+    }
+  });
+}
