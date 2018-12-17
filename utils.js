@@ -1,77 +1,55 @@
 var request=require("request");
-var Jimp = require("jimp");
+var ytdl = require("ytdl-core");
+var crypto=require("./crypto");
+var embed=require("./embed");
 
-exports.checkForInsideJokes=function(msg,meta){
-	var insideJoke=null;
+exports.checkForUtils=function(msg,callback){
+	var isUtil=true;
 
-	for(var i=0; i<meta.insidejokes.length; i++){
-		if(msg.content.includes(meta.insidejokes[i].word)){
-			insideJoke=meta.insidejokes[i];
-			break;
-		}
+	if(msg.content.includes("define")){
+    define(msg,function(res){
+      embed.createDefineEmbed(msg,res);
+    });
+  }else if(msg.content.includes("procura")){
+    procura(msg,function(res){
+      embed.createSearchEmbed(msg,res);
+    });
+  }else if(msg.content.includes("vote")){
+    vote(msg,function(res){
+      embed.createPollEmbed(client,msg,res);
+    });
+  }else if(msg.content.includes("music")){
+    music(msg);
+  }else if(msg.content.includes("probabilidade")){
+    var num=Math.floor(Math.random()*100);
+    msg.channel.send("Cerca de "+num+"%");
+  }else if(msg.content.includes("math")){
+		var expression=msg.content.split("math ")[1];
+		var result=eval(expression);
+    msg.channel.send("Resultado: "+result);
+	}else if(msg.content.includes("clever")){
+    cleverbot.getReply({
+        input: msg.content
+    }, (error, response) => {
+        if(error) throw error;
+        msg.channel.send(response.output);
+    });
+  }else if(msg.content.includes("?")){
+      responde(msg);
+  }else if(msg.content.includes("crypto")){
+    var coin=msg.content.split('crypto ')[1];
+    crypto.getPrice(coin,function(res){
+      if(res.error) msg.channel.send(res.error);
+      else embed.createCryptoEmbed(msg,res);
+    });
+  }else{
+		isUtil=false;
 	}
 
-	if(insideJoke){
-		var msg;
-		if(insideJoke.message.includes("./assets/")) msg={"file":insideJoke.message};
-		else msg=insideJoke.message;
-
-		return {isInsideJoke:true,msg:msg};
-	}else{
-		return {isInsideJoke:false};
-	}
+	callback({isUtil:isUtil,msg:msg});
 }
 
-exports.checkForMemes=function(msg,callback){
-	var memes=[{name:"truth",position0:{x:250,y:750,max:200}},{name:"safe",position0:{x:350,y:100,max:200}},{name:"drake",position0:{x:400,y:100,max:200},position1:{x:400,y:400,max:200}},{name:"facts",position0:{x:20,y:350,max:200}},{name:"button",position0:{x:100,y:220,max:150}},{name:"choice",position0:{x:100,y:125,max:100},position1:{x:300,y:75,max:100}},{name:"marioluigi",position0:{x:375,y:100,max:100},position1:{x:175,y:375,max:200},position2:{x:400,y:375,max:200}},{name:"pikachu",position0:{x:10,y:10,max:700}}];
-
-	for(var i=0; i<memes.length; i++){
-		if(msg.content.includes(" "+memes[i].name+" ")){
-			makeMeme(msg,memes[i],function(meme){
-				callback({isMeme:true,msg:meme});
-			});
-			break;
-		}
-		if(memes.length-1===i) callback({isMeme:false});
-	}
-}
-
-var makeMeme=function(msg,meme,callback){
-	var message=msg.content.split(meme.name)[1];
-	message=message.split(";");
-
-	var fileName = "./assets/img/memes/templates/"+meme.name+".jpg";
-	var loadedImage;
-
-	Jimp.read(fileName)
-	.then(function (image) {
-		loadedImage = image;
-		return Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-	})
-	.then(function (font) {
-		if(meme.name=="pikachu"){
-			var sum=0;
-			for(var i=0;i<message.length;i++){
-				loadedImage.print(font, meme.position0.x,meme.position0.y+sum, message[i], meme.position0.max)
-				.write("./assets/img/memes/"+meme.name+".jpg");
-				sum+=50;
-			}
-		}else{
-			for(var i=0;i<message.length;i++){
-					loadedImage.print(font, meme["position"+i].x,meme["position"+i].y, message[i], meme["position"+i].max)
-					.write("./assets/img/memes/"+meme.name+".jpg");
-			}
-		}
-	})
-	.then(function () {
-		callback({"file":"./assets/img/memes/"+meme.name+".jpg"});
-	})
-	.catch(function (err) {
-		console.error(err);
-	});
-}
-
-exports.define=function(msg,callback){
+var define=function(msg,callback){
 	var word=msg.content.split('define ')[1];
 	var url="http://api.urbandictionary.com/v0/define?term="+word;
 
@@ -103,7 +81,7 @@ exports.define=function(msg,callback){
 	});
 }
 
-exports.procura=function(msg,callback){
+var procura=function(msg,callback){
 	var topic=msg.content.split('procura ')[1];
 	var res=[];
 	var url="https://www.googleapis.com/customsearch/v1?q="+topic+"&cx=007153606045358422053:uw-koc4dhb8&key="+process.env.youtubeKey;
@@ -123,7 +101,7 @@ exports.procura=function(msg,callback){
 	});
 }
 
-exports.responde=function(msg){
+var responde=function(msg){
 	if(msg.content.includes(" ou ")){
 			var option1=msg.content.split(' ou ')[0].slice(8);
 			var option2=msg.content.split(' ou ')[1].slice(0, -1);
@@ -144,7 +122,7 @@ exports.responde=function(msg){
 	}
 }
 
-exports.vote=function(msg,callback){
+var vote=function(msg,callback){
 	var message=msg.content.split('vote ')[1];
 	var options=message.split(";");
 	var title=options[0];
@@ -158,8 +136,34 @@ exports.vote=function(msg,callback){
 	callback(res);
 }
 
-exports.getvote=function(msg,callback){
+var getvote=function(msg,callback){
 	var poll=msg.content.split('getvote ')[1];
 
 	callback(res);
+}
+
+var music=function(msg){
+	var params=msg.content.split('music ')[1];
+
+	if(params.includes('pause')){
+		dispatcher.pause();
+	}else if(params.includes('resume')){
+		dispatcher.resume();
+	}else if(params.includes('end')){
+		dispatcher.end();
+	}else{
+		if(msg.member.voiceChannel){
+			msg.member.voiceChannel.join().then(connection=>{
+				const stream=ytdl(params,{filter:'audioonly'});
+				const streamOptions={seek:0,volume:0.5};
+				dispatcher=connection.playStream(stream,streamOptions);
+
+				dispatcher.on('end', () => {
+					msg.member.voiceChannel.leave();
+				});
+			}).catch(console.log);
+		}else{
+			msg.reply('Vai para um canal de voz primeiro sua xixada!');
+		}
+	}
 }
