@@ -96,3 +96,13 @@ exports.createPollEmbed=function(client,msg,res){
     }
   });
 }
+
+exports.createInstaEmbed=function(msg,res){
+  var embed=new discord.RichEmbed();
+  embed.setColor(0xbc2a8d);
+  embed.setTitle(res.name);
+  embed.addField("Bio",res.bio);
+  embed.setImage(res.image);
+  embed.setFooter("Posts: "+res.posts+" | "+"Followers: "+res.followers+" | "+"Follows: "+res.follows);
+  msg.channel.send(embed);
+}

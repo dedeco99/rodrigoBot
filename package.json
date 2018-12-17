@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
     "cleverbot-api": "^1.0.3",
     "discord.js": "^11.2.1",
     "gifwrap": "^0.7.5",
