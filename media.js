@@ -43,7 +43,9 @@ exports.checkForMedia=function(msg,client,callback){
 }
 
 var instagram=function(msg){
-	var person=msg.content.split('insta ')[1];
+	var sentence=msg.content.split('insta ')[1];
+	var person=sentence.split(' ')[0];
+	var num = sentence.split(' ').pop();
 	var url="https://www.instagram.com/"+person+"/";
 
 	request(url, function(error, response, html){
@@ -66,11 +68,14 @@ var instagram=function(msg){
 		if(bio=="") bio = "No bio";
 
 		var res = {
+			url:url,
+			profilePic:profilePic,
 			bio:bio,
 			name:name,
 			followers:followers,
 			follows:follows,
 			image:null,
+			error:null,
 			posts:posts
 		}
 
@@ -78,16 +83,17 @@ var instagram=function(msg){
 			var images = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges;
 
 			if(images.length>0){
-				var num=Math.floor(Math.random()*images.length);
+				if(isNaN(num) || num>images.length || num<0){
+					num = Math.floor(Math.random()*images.length);
+				}
+
 				var image = images[num].node.display_url;
 				res.image = image;
 			}else{
-				res.image = profilePic;
+				res.error = "Este perfil não tem fotos";
 			}
 		}else{
-			res.image = profilePic;
-
-			msg.channel.send("Este xixo é privado :wink:");
+			res.error = "Este xixo é privado :wink:";
 		}
 
 		embed.createInstaEmbed(msg,res);

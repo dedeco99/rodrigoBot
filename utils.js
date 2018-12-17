@@ -1,4 +1,5 @@
 var request=require("request");
+var cheerio=require("cheerio");
 var ytdl = require("ytdl-core");
 var crypto=require("./crypto");
 var embed=require("./embed");
@@ -16,11 +17,13 @@ exports.checkForUtils=function(msg,callback){
     });
   }else if(msg.content.includes("vote")){
     vote(msg,function(res){
-      embed.createPollEmbed(client,msg,res);
+      embed.createPollEmbed(msg,res);
     });
   }else if(msg.content.includes("music")){
     music(msg);
-  }else if(msg.content.includes("probabilidade")){
+  }else if(msg.content.includes("price")){
+		amazon(msg);
+	}else if(msg.content.includes("probabilidade")){
     var num=Math.floor(Math.random()*100);
     msg.channel.send("Cerca de "+num+"%");
   }else if(msg.content.includes("math")){
@@ -166,4 +169,37 @@ var music=function(msg){
 			msg.reply('Vai para um canal de voz primeiro sua xixada!');
 		}
 	}
+}
+
+var amazon=function(msg){
+	var thing=msg.content.split('price ')[1];
+	thing=thing.replace(/ /g,"%20");
+	var url="https://www.amazon.es/s?field-keywords="+thing;
+
+	request(url, function(error, response, html){
+		var $ = cheerio.load(html);
+    var res = [];
+		thing=thing.replace(/%20/g," ");
+
+    $("html").find('.a-link-normal.s-access-detail-page.s-color-twister-title-link.a-text-normal').each(function (index, element) {
+			if(index!=0 && index!=1 && index<7){
+	      var productUrl = $(this)[0].attribs.href;
+				var product = $(this)[0].attribs.title.substring(0,50)+"...";
+				res.push({search:thing,url:url,productUrl:productUrl,product:product});
+			}
+    });
+
+		$("html").find('.a-size-base.a-color-price.a-text-bold').each(function (index, element) {
+			if(index<5){
+	      var price = $(this)[0].children[0].data;
+				if(res[index]) res[index].price = price;
+			}
+    });
+
+		if(res.length>0){
+			embed.createPriceEmbed(msg,res);
+		}else{
+			msg.channel.send("Não existe esse produto do xixo");
+		}
+	});
 }

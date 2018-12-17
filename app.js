@@ -31,13 +31,13 @@ client.on("message",msg=>{
           if(checkForMemes.isMeme){
             msg.channel.send(checkForMemes.msg);
           }else{
-            reddit.checkForReddit(msg,function(checkForReddit){
-              if(checkForReddit.isReddit){
-                if(checkForReddit.error) msg.channel.send(checkForReddit.error);
-                else embed.createRedditEmbed(msg,checkForReddit.msg);
-              }else{
-                media.checkForMedia(msg,client,function(checkForMedia){
-                  if(!checkForMedia.isMedia){
+            media.checkForMedia(msg,client,function(checkForMedia){
+              if(!checkForMedia.isMedia){
+                reddit.checkForReddit(msg,function(checkForReddit){
+                  if(checkForReddit.isReddit){
+                    if(checkForReddit.error) msg.channel.send(checkForReddit.error);
+                    else embed.createRedditEmbed(msg,checkForReddit.msg);
+                  }else{
                     insideJokes.checkForInsideJokes(msg,meta,function(checkForInsideJokes){
                       if(checkForInsideJokes.isInsideJoke){
                         msg.channel.send(checkForInsideJokes.msg);
