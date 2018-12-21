@@ -15,6 +15,8 @@ exports.checkForUtils=function(msg,callback){
     procura(msg,function(res){
       embed.createSearchEmbed(msg,res);
     });
+  }else if(msg.content.includes("getvote")){
+    getvote(msg);
   }else if(msg.content.includes("vote")){
     vote(msg,function(res){
       embed.createPollEmbed(msg,res);
@@ -142,7 +144,23 @@ var vote=function(msg,callback){
 var getvote=function(msg,callback){
 	var poll=msg.content.split('getvote ')[1];
 
-	callback(res);
+	msg.channel.fetchMessage(poll)
+	  .then(function(message){
+			var i=0;
+			message.reactions.forEach(function(reaction) {
+				reaction.fetchUsers().then(function(users){
+					var userRes="";
+					users.forEach(function(user) {
+						userRes+=user.username+" | ";
+					});
+					msg.channel.send(reaction._emoji.name+": "+reaction.count+" votos"+"("+userRes+")");
+					i++;
+				});
+			});
+		})
+	  .catch(console.error);
+
+	//callback(res);
 }
 
 var music=function(msg){

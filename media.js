@@ -19,14 +19,30 @@ exports.checkForMedia=function(msg,client,callback){
 		var order=msg.content.split('vai ver ')[1];
 		client.user.setActivity(order,{type:"WATCHING"});
 	}else if(msg.content.includes('youtube')){
-		var channel=msg.content.split('youtube ')[1];
-		youtube.getYoutubeVideo({channel:channel},function(res){
-			if(res==""){
-				msg.channel.send("Esse canal deve estar no xixo porque não o encontro");
-			}else{
+		if(msg.content.includes('add')){
+			var channel=msg.content.split('youtube add ')[1];
+			youtube.addYoutubeChannel({channel:channel},function(res){
 				msg.channel.send(res);
-			}
-		});
+			});
+		}else if(msg.content.includes('remove')){
+			var channel=msg.content.split('youtube remove ')[1];
+			youtube.removeYoutubeChannel({channel:channel},function(res){
+				msg.channel.send(res);
+			});
+		}else if(msg.content.includes('check')){
+			youtube.getYoutubeNotifications(function(res){
+				msg.channel.send(res);
+			});
+		}else if(msg.content.includes('get')){
+			youtube.getYoutubeChannels(function(res){
+				msg.channel.send(res);
+			});
+		}else{
+			var channel=msg.content.split('youtube ')[1];
+			youtube.getYoutubeVideo({channel:channel},function(res){
+				msg.channel.send(res);
+			});
+		}
 	}else if(msg.content.includes('twitch')){
 		var channel=msg.content.split('twitch ')[1];
 		var url="https://www.twitch.tv/"+channel;
@@ -58,44 +74,48 @@ var instagram=function(msg){
 
 		var json = JSON.parse(foto);
 
-		var profilePic = json.entry_data.ProfilePage[0].graphql.user.profile_pic_url_hd;
-		var bio = json.entry_data.ProfilePage[0].graphql.user.biography;
-		var name = json.entry_data.ProfilePage[0].graphql.user.full_name;
-		var followers = json.entry_data.ProfilePage[0].graphql.user.edge_followed_by.count;
-		var follows = json.entry_data.ProfilePage[0].graphql.user.edge_follow.count;
-		var posts = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.count;
+		if(json.entry_data.ProfilePage){
+			var profilePic = json.entry_data.ProfilePage[0].graphql.user.profile_pic_url_hd;
+			var bio = json.entry_data.ProfilePage[0].graphql.user.biography;
+			var name = json.entry_data.ProfilePage[0].graphql.user.full_name;
+			var followers = json.entry_data.ProfilePage[0].graphql.user.edge_followed_by.count;
+			var follows = json.entry_data.ProfilePage[0].graphql.user.edge_follow.count;
+			var posts = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.count;
 
-		if(bio=="") bio = "No bio";
+			if(bio=="") bio = "No bio";
 
-		var res = {
-			url:url,
-			profilePic:profilePic,
-			bio:bio,
-			name:name,
-			followers:followers,
-			follows:follows,
-			image:null,
-			error:null,
-			posts:posts
-		}
-
-		if(!json.entry_data.ProfilePage[0].graphql.user.is_private){
-			var images = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges;
-
-			if(images.length>0){
-				if(isNaN(num) || num>images.length || num<0){
-					num = Math.floor(Math.random()*images.length);
-				}
-
-				var image = images[num].node.display_url;
-				res.image = image;
-			}else{
-				res.error = "Este perfil não tem fotos";
+			var res = {
+				url:url,
+				profilePic:profilePic,
+				bio:bio,
+				name:name,
+				followers:followers,
+				follows:follows,
+				image:null,
+				error:null,
+				posts:posts
 			}
-		}else{
-			res.error = "Este xixo é privado :wink:";
-		}
 
-		embed.createInstaEmbed(msg,res);
+			if(!json.entry_data.ProfilePage[0].graphql.user.is_private){
+				var images = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges;
+
+				if(images.length>0){
+					if(isNaN(num) || num>images.length || num<0){
+						num = Math.floor(Math.random()*images.length);
+					}
+
+					var image = images[num].node.display_url;
+					res.image = image;
+				}else{
+					res.error = "Este perfil não tem fotos";
+				}
+			}else{
+				res.error = "Este xixo é privado :wink:";
+			}
+
+			embed.createInstaEmbed(msg,res);
+		}else{
+			msg.channel.send("Claramente esse xixo não existe");
+		}
 	});
 }

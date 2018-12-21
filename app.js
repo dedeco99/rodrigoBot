@@ -6,6 +6,7 @@ var embed=require("./embed");
 var utils=require("./utils");
 var memeMaker=require("./memeMaker");
 var reddit=require("./reddit");
+var youtube=require("./youtube");
 var media=require("./media");
 var insideJokes=require("./insideJokes");
 
@@ -21,6 +22,13 @@ client.on("ready",()=>{
     console.log("Logged in as "+client.user.tag+"!");
     client.user.setActivity(meta.order,{type:"PLAYING"});
   });
+
+  setInterval(function(){
+    youtube.getYoutubeNotifications(function(res){
+      client.channels.get("525343734746054657").send(res);
+    });
+    console.log("Checked");
+  }, 60000*10);
 });
 
 client.on("message",msg=>{
