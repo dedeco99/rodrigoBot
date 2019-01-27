@@ -25,7 +25,20 @@ exports.checkForUtils=function(msg,callback){
     music(msg);
   }else if(msg.content.includes("price")){
 		amazon(msg);
-	}else if(msg.content.includes("probabilidade")){
+	}else if(msg.content.includes("ordena")){
+		var options=msg.content.split("ordena")[1];
+		options=options.split(";");
+		var randomized = [];
+		var times = options.length;
+
+		for (var i = 0; i < times; i++) {
+        var num = Math.floor(Math.random() * options.length);
+        randomized.push(options[num]);
+				options.splice(num,1);
+    }
+
+    msg.channel.send(randomized.join(" > "));
+  }else if(msg.content.includes("probabilidade")){
     var num=Math.floor(Math.random()*100);
     msg.channel.send("Cerca de "+num+"%");
   }else if(msg.content.includes("math")){
