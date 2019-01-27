@@ -2,6 +2,7 @@ var request=require("request");
 var cheerio=require("cheerio");
 var embed=require("./embed");
 var youtube=require("./youtube");
+var twitch=require("./twitch");
 
 exports.checkForMedia=function(msg,client,callback){
 	var isMedia=true;
@@ -31,7 +32,8 @@ exports.checkForMedia=function(msg,client,callback){
 			});
 		}else if(msg.content.includes('check')){
 			youtube.getYoutubeNotifications(function(res){
-				msg.channel.send(res);
+				msg.channel.send(res.notification);
+	      msg.channel.send(res.video);
 			});
 		}else if(msg.content.includes('get')){
 			youtube.getYoutubeChannels(function(res){
@@ -44,10 +46,31 @@ exports.checkForMedia=function(msg,client,callback){
 			});
 		}
 	}else if(msg.content.includes('twitch')){
-		var channel=msg.content.split('twitch ')[1];
-		var url="https://www.twitch.tv/"+channel;
-		msg.channel.send(url);
-		client.user.setActivity(channel,{url:url,type:"WATCHING"});
+		if(msg.content.includes('add')){
+			var channel=msg.content.split('twitch add ')[1];
+			twitch.addTwitchChannel({channel:channel},function(res){
+				msg.channel.send(res);
+			});
+		}else if(msg.content.includes('remove')){
+			var channel=msg.content.split('twitch remove ')[1];
+			twitch.removeTwitchChannel({channel:channel},function(res){
+				msg.channel.send(res);
+			});
+		}else if(msg.content.includes('check')){
+			twitch.getTwitchNotifications(function(res){
+				msg.channel.send(res.notification);
+	      msg.channel.send(res.video);
+			});
+		}else if(msg.content.includes('get')){
+			twitch.getTwitchChannels(function(res){
+				msg.channel.send(res);
+			});
+		}else{
+			var channel=msg.content.split('twitch ')[1];
+			var url="https://www.twitch.tv/"+channel;
+			msg.channel.send(url);
+			client.user.setActivity(channel,{url:url,type:"WATCHING"});
+		}
 	}else if(msg.content.includes('insta')){
 		instagram(msg);
 		//msg.channel.send(url);
