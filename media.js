@@ -23,65 +23,63 @@ exports.checkForMedia=function(msg,client,callback){
 		if(msg.content.includes('add')){
 			var channel=msg.content.split('youtube add ')[1];
 			youtube.addYoutubeChannel({channel:channel},function(res){
-				msg.channel.send(res);
+				callback({isMedia:isMedia,msg:res});
 			});
 		}else if(msg.content.includes('remove')){
 			var channel=msg.content.split('youtube remove ')[1];
 			youtube.removeYoutubeChannel({channel:channel},function(res){
 				msg.channel.send(res);
+				callback({isMedia:isMedia,msg:res});
 			});
 		}else if(msg.content.includes('check')){
 			youtube.getYoutubeNotifications(function(res){
-				msg.channel.send(res.notification);
-	      msg.channel.send(res.video);
+				callback({isMedia:isMedia,msg:res.notification+" | "+res.video});
 			});
 		}else if(msg.content.includes('get')){
 			youtube.getYoutubeChannels(function(res){
-				msg.channel.send(res);
+				callback({isMedia:isMedia,msg:res});
 			});
 		}else{
 			var channel=msg.content.split('youtube ')[1];
 			youtube.getYoutubeVideo({channel:channel},function(res){
-				msg.channel.send(res);
+				callback({isMedia:isMedia,msg:res});
 			});
 		}
 	}else if(msg.content.includes('twitch')){
 		if(msg.content.includes('add')){
 			var channel=msg.content.split('twitch add ')[1];
 			twitch.addTwitchChannel({channel:channel},function(res){
-				msg.channel.send(res);
+				callback({isMedia:isMedia,msg:res});
 			});
 		}else if(msg.content.includes('remove')){
 			var channel=msg.content.split('twitch remove ')[1];
 			twitch.removeTwitchChannel({channel:channel},function(res){
-				msg.channel.send(res);
+				callback({isMedia:isMedia,msg:res});
 			});
 		}else if(msg.content.includes('check')){
 			twitch.getTwitchNotifications(function(res){
-				msg.channel.send(res.notification);
-	      msg.channel.send(res.video);
+				callback({isMedia:isMedia,msg:res.notification+" | "+res.video});
 			});
 		}else if(msg.content.includes('get')){
 			twitch.getTwitchChannels(function(res){
-				msg.channel.send(res);
+				callback({isMedia:isMedia,msg:res});
 			});
 		}else{
 			var channel=msg.content.split('twitch ')[1];
 			var url="https://www.twitch.tv/"+channel;
-			msg.channel.send(url);
+			callback({isMedia:isMedia,msg:url});
 			client.user.setActivity(channel,{url:url,type:"WATCHING"});
 		}
 	}else if(msg.content.includes('insta')){
-		instagram(msg);
-		//msg.channel.send(url);
+		instagram(msg,function(res){
+			callback({isMedia:isMedia,msg:res});
+		});
 	}else{
-		isMedia=false;
+		callback({isMedia:false,msg:msg});
 	}
-
-	callback({isMedia:isMedia,msg:msg});
 }
 
-var instagram=function(msg){
+var instagram=function(msg,callback){
 	var sentence=msg.content.split('insta ')[1];
 	var person=sentence.split(' ')[0];
 	var num = sentence.split(' ').pop();
@@ -136,9 +134,9 @@ var instagram=function(msg){
 				res.error = "Este xixo é privado :wink:";
 			}
 
-			embed.createInstaEmbed(msg,res);
+			callback(embed.createInstaEmbed(res));
 		}else{
-			msg.channel.send("Claramente esse xixo não existe");
+			callback("Claramente esse xixo não existe");
 		}
 	});
 }

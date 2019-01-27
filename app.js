@@ -12,9 +12,9 @@ var media=require("./media");
 var insideJokes=require("./insideJokes");
 
 var meta={};
+var lastMsg=null;
 
 var client=new discord.Client();
-var cleverbot=new Cleverbot(process.env.cleverBotKey);
 
 client.on("ready",()=>{
   fs.readFile("meta.json","utf8",function(err,data){
@@ -38,15 +38,24 @@ client.on("ready",()=>{
 });
 
 client.on("message",msg=>{
-  if(msg.content.toLowerCase().includes("rodrigo")){
+  var firstWord=msg.content.split(" ")[0].toLowerCase();
+
+  if(firstWord=="rodrigo"){
     utils.checkForUtils(msg,function(checkForUtils){
-      if(!checkForUtils.isUtil){
+      console.log("Utils: "+checkForUtils.isUtil);
+      if(checkForUtils.isUtil){
+        msg.channel.send(checkForUtils.msg);
+      }else{
         memeMaker.checkForMemes(msg,function(checkForMemes){
+          console.log("Memes: "+checkForMemes.isMeme);
           if(checkForMemes.isMeme){
             msg.channel.send(checkForMemes.msg);
           }else{
             media.checkForMedia(msg,client,function(checkForMedia){
-              if(!checkForMedia.isMedia){
+              console.log("Media: "+checkForMedia.isMedia);
+              if(checkForMedia.isMedia){
+                msg.channel.send(checkForMedia.msg);
+              }else{
                 reddit.checkForReddit(msg,function(checkForReddit){
                   if(checkForReddit.isReddit){
                     if(checkForReddit.error) msg.channel.send(checkForReddit.error);
@@ -57,6 +66,11 @@ client.on("message",msg=>{
                         msg.channel.send(checkForInsideJokes.msg);
                       }else if(msg.content.includes(":rodrigo:")){
                         msg.channel.send("Que carinha laroca!");
+                      }else if(msg.content.includes("delete")){
+                        if(lastMsg!=null){
+                          lastMsg.delete();
+                          msg.delete();
+                        }
                       }else if(msg.content.includes("good") || msg.content.includes("nice") || msg.content.includes("bem") || msg.content.includes("bom") || msg.content.includes("best") || msg.content.includes("grande")){
                         meta.likes++;
                         msg.channel.send("Durante a minha existência já gostaram de mim "+meta.likes+" vezes. I can't handle it!!! *touches face violently*");
@@ -77,6 +91,8 @@ client.on("message",msg=>{
     fs.writeFile("meta.json",JSON.stringify(meta),function(err){
       if(err) console.log(err);
     });
+  }else if(msg.author.username=="RodrigoBot"){
+    lastMsg=msg;
   }
 });
 

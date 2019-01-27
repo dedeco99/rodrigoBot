@@ -1,30 +1,37 @@
 var request=require("request");
 var cheerio=require("cheerio");
 var ytdl = require("ytdl-core");
+var Cleverbot=require("cleverbot-api");
 var crypto=require("./crypto");
 var embed=require("./embed");
+
+var cleverbot=new Cleverbot(process.env.cleverBotKey);
 
 exports.checkForUtils=function(msg,callback){
 	var isUtil=true;
 
 	if(msg.content.includes("define")){
     define(msg,function(res){
-      embed.createDefineEmbed(msg,res);
+			callback({isUtil:isUtil,msg:res});
     });
   }else if(msg.content.includes("procura")){
     procura(msg,function(res){
-      embed.createSearchEmbed(msg,res);
+			callback({isUtil:isUtil,msg:res});
     });
   }else if(msg.content.includes("getvote")){
-    getvote(msg);
+		getvote(msg,function(res){
+			callback({isUtil:isUtil,msg:res});
+		});
   }else if(msg.content.includes("vote")){
     vote(msg,function(res){
-      embed.createPollEmbed(msg,res);
+			callback({isUtil:isUtil,msg:res});
     });
   }else if(msg.content.includes("music")){
     music(msg);
   }else if(msg.content.includes("price")){
-		amazon(msg);
+		amazon(msg,function(res){
+			callback({isUtil:isUtil,msg:res});
+    });
 	}else if(msg.content.includes("ordena")){
 		var options=msg.content.split("ordena")[1];
 		options=options.split(";");
@@ -37,34 +44,32 @@ exports.checkForUtils=function(msg,callback){
 				options.splice(num,1);
     }
 
-    msg.channel.send(randomized.join(" > "));
+		callback({isUtil:isUtil,msg:randomized.join(" > ")});
   }else if(msg.content.includes("probabilidade")){
     var num=Math.floor(Math.random()*100);
-    msg.channel.send("Cerca de "+num+"%");
+		callback({isUtil:isUtil,msg:"Cerca de "+num+"%"});
   }else if(msg.content.includes("math")){
 		var expression=msg.content.split("math ")[1];
 		var result=eval(expression);
-    msg.channel.send("Resultado: "+result);
+		callback({isUtil:isUtil,msg:"Resultado: "+result});
 	}else if(msg.content.includes("clever")){
     cleverbot.getReply({
         input: msg.content
     }, (error, response) => {
         if(error) throw error;
-        msg.channel.send(response.output);
+				callback({isUtil:isUtil,msg:response.output});
     });
   }else if(msg.content.includes("?")){
-      responde(msg);
+		callback({isUtil:isUtil,msg:responde(msg)});
   }else if(msg.content.includes("crypto")){
     var coin=msg.content.split('crypto ')[1];
     crypto.getPrice(coin,function(res){
-      if(res.error) msg.channel.send(res.error);
-      else embed.createCryptoEmbed(msg,res);
+      if(res.error) callback({isUtil:isUtil,msg:res.error});
+      else callback({isUtil:isUtil,msg:embed.createCryptoEmbed(msg,res)});
     });
   }else{
-		isUtil=false;
+		callback({isUtil:false});
 	}
-
-	callback({isUtil:isUtil,msg:msg});
 }
 
 var define=function(msg,callback){
@@ -95,7 +100,7 @@ var define=function(msg,callback){
 				example:example
 			};
 		}
-		callback(res);
+		callback(embed.createDefineEmbed(res));
 	});
 }
 
@@ -115,7 +120,7 @@ var procura=function(msg,callback){
 				description:json.items[i].snippet,
 			});
 		}
-		callback(res);
+		callback(embed.createSearchEmbed(res));
 	});
 }
 
@@ -126,16 +131,16 @@ var responde=function(msg){
 
 			var num=Math.floor(Math.random()>=0.5);
 			if(num){
-					msg.channel.send(option1);
+					return option1;
 			}else{
-					msg.channel.send(option2);
+					return option2;
 			}
 	}else{
 			var num=Math.floor(Math.random()>=0.5);
 			if(num){
-					msg.channel.send("Sim");
+					return "Sim";
 			}else{
-					msg.channel.send("Não");
+					return "Não";
 			}
 	}
 }
@@ -151,7 +156,7 @@ var vote=function(msg,callback){
 		options: options
 	};
 
-	callback(res);
+	callback(embed.createPollEmbed(msg,res));
 }
 
 var getvote=function(msg,callback){
@@ -166,14 +171,12 @@ var getvote=function(msg,callback){
 					users.forEach(function(user) {
 						userRes+=user.username+" | ";
 					});
-					msg.channel.send(reaction._emoji.name+": "+reaction.count+" votos"+"("+userRes+")");
+					callback(reaction._emoji.name+": "+reaction.count+" votos"+"("+userRes+")");
 					i++;
 				});
 			});
 		})
 	  .catch(console.error);
-
-	//callback(res);
 }
 
 var music=function(msg){
@@ -228,9 +231,9 @@ var amazon=function(msg){
     });
 
 		if(res.length>0){
-			embed.createPriceEmbed(msg,res);
+			callback(embed.createPriceEmbed(msg,res));
 		}else{
-			msg.channel.send("Não existe esse produto do xixo");
+			callback("Não existe esse produto do xixo");
 		}
 	});
 }

@@ -38,14 +38,14 @@ exports.createCryptoEmbed=function(msg,res){
 
   embed.setFooter("1h: "+res.change1h.toFixed(2)+"% | "+"24h: "+res.change24h.toFixed(2)+"% | "+"7d: "+res.change7d.toFixed(2)+"%");
 
-  msg.channel.send(embed);
+  return embed;
 }
 
 var prettyNumber=function(number){
   return String(parseFloat(number).toFixed(2)).replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, ' ');
 }
 
-exports.createSearchEmbed=function(msg,res){
+exports.createSearchEmbed=function(res){
   var embed=new discord.RichEmbed();
   embed.setTitle(res[0].topic);
   embed.setColor(0x00AE86);
@@ -53,15 +53,15 @@ exports.createSearchEmbed=function(msg,res){
     embed.addField(res[i].title,res[i].link);
     embed.addField("Description",res[i].description);
   }
-  msg.channel.send(embed);
+  return embed;
 }
 
-exports.createDefineEmbed=function(msg,res){
+exports.createDefineEmbed=function(res){
   var embed=new discord.RichEmbed();
   embed.setTitle(res.word);
   embed.setColor(0x00AE86);
   embed.addField(res.definition,res.example);
-  msg.channel.send(embed);
+  return embed;
 }
 
 exports.createImageEmbed=function(msg,res){
@@ -97,7 +97,7 @@ exports.createPollEmbed=function(msg,res){
   });
 }
 
-exports.createInstaEmbed=function(msg,res){
+exports.createInstaEmbed=function(res){
   var embed=new discord.RichEmbed();
   embed.setColor(0xbc2a8d);
   embed.setThumbnail(res.profilePic);
@@ -111,7 +111,8 @@ exports.createInstaEmbed=function(msg,res){
     embed.addField("Erro",res.error);
   }
   embed.setFooter("Posts: "+res.posts+" | "+"Followers: "+res.followers+" | "+"Follows: "+res.follows);
-  msg.channel.send(embed);
+
+  return embed;
 }
 
 exports.createPriceEmbed=function(msg,res){
