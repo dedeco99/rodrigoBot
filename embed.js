@@ -1,9 +1,9 @@
 var discord=require("discord.js");
 
-exports.createRedditEmbed=function(msg,res){
+exports.createRedditEmbed=function(res){
   var embed=new discord.RichEmbed();
   if(res.contentVideo!=""){
-    msg.channel.send(res.contentVideo);
+    return res.contentVideo;
   }else{
     embed.setTitle(res.title);
     embed.setURL(res.url);
@@ -15,7 +15,8 @@ exports.createRedditEmbed=function(msg,res){
       embed.setImage(res.contentImage);
     }
     embed.setFooter("From: "+res.subreddit+" | "+"Upvotes: "+res.score+" | ");
-    msg.channel.send(embed);
+
+    return embed;
   }
 }
 

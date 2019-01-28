@@ -1,4 +1,5 @@
 var request=require("request");
+var embed=require("./embed");
 
 exports.checkForReddit=function(msg,callback){
 	var subs=[{name:"piada",subreddit:"jokes"},{name:"gif",subreddit:"gif"},{name:"video",subreddit:"videos"},{name:"meme",subreddit:"2meirl4meirl+boottoobig+dankmemes+greentext+insanepeoplefacebook+oldpeoplefacebook+memes+meme+imgoingtohellforthis+prequelmemes"},{name:"pornstar",subreddit:"AvaAddams+Ava_Addams+RileyReid+Riley_Reid+RemyLaCroix+Remy_Lacroix+JadaStevens+BrandiLove+Melissamoore"},{name:"porn",subreddit:"pornvids+porninfifteenseconds+nsfwhardcore+lesbians+grool+quiver+porn_gifs"},{name:"tits",subreddit:"tessafowler+SexyFlowerWater+gonewild+NSFW_GIF+nsfw+BustyPetite+milf+OnOff+TittyDrop+LegalTeens+suicidegirls+boobbounce"},{name:"pussy",subreddit:"ass+pawg+gettingherselfoff+asstastic+thick+GodPussy+BonerAlert+StraightGirlsPlaying+workgonewild+rearpussy+gwcumsluts+pussy+facedownassup+cumonclothes+jilling"},{name:"soft",subreddit:"collegesluts+girlsinyogapants+FestivalSluts+tightdresses+randomsexiness+burstingout"}];
@@ -56,8 +57,7 @@ var getRedditPosts=function(data,accessToken,callback){
     if(error) console.log(error);
     try{
       var json=JSON.parse(html);
-      //var num=Math.floor(Math.random()*100);
-			var num=1;
+      var num=Math.floor(Math.random()*json.data.children.length);
 
       var image="";
       if(json.data.children[num].data.thumbnail=="self" || json.data.children[num].data.thumbnail=="default"){
@@ -98,10 +98,10 @@ var getRedditPosts=function(data,accessToken,callback){
         created:json.data.children[num].data.created,
         after:json.data.after
       };
-			
-      callback({isReddit:true,msg:res});
+
+      callback({isReddit:true,msg:embed.createRedditEmbed(res)});
     }catch(err){
-      callback({isReddit:true,error:"Esse subreddit deve estar no xixo porque não o encontro"});
+      callback({isReddit:true,msg:"Esse subreddit deve estar no xixo porque não o encontro"});
     }
   });
 }

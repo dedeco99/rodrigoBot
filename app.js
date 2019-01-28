@@ -2,7 +2,6 @@ var discord=require("discord.js");
 var Cleverbot=require("cleverbot-api");
 var fs=require("fs");
 var secrets=require("./secrets");
-var embed=require("./embed");
 var utils=require("./utils");
 var memeMaker=require("./memeMaker");
 var reddit=require("./reddit");
@@ -40,24 +39,20 @@ client.on("message",msg=>{
 
   if(firstWord=="rodrigo"){
     utils.checkForUtils(msg,function(checkForUtils){
-      console.log("Utils: "+checkForUtils.isUtil);
       if(checkForUtils.isUtil){
         msg.channel.send(checkForUtils.msg);
       }else{
         memeMaker.checkForMemes(msg,function(checkForMemes){
-          console.log("Memes: "+checkForMemes.isMeme);
           if(checkForMemes.isMeme){
             msg.channel.send(checkForMemes.msg);
           }else{
             media.checkForMedia(msg,client,function(checkForMedia){
-              console.log("Media: "+checkForMedia.isMedia);
               if(checkForMedia.isMedia){
                 msg.channel.send(checkForMedia.msg);
               }else{
                 reddit.checkForReddit(msg,function(checkForReddit){
                   if(checkForReddit.isReddit){
-                    if(checkForReddit.error) msg.channel.send(checkForReddit.error);
-                    else embed.createRedditEmbed(msg,checkForReddit.msg);
+                    msg.channel.send(checkForReddit.msg);
                   }else{
                     insideJokes.checkForInsideJokes(msg,meta,function(checkForInsideJokes){
                       if(checkForInsideJokes.isInsideJoke){
