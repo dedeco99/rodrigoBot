@@ -28,7 +28,6 @@ exports.checkForMedia=function(msg,client,callback){
 		}else if(msg.content.includes('remove')){
 			var channel=msg.content.split('youtube remove ')[1];
 			youtube.removeYoutubeChannel({channel:channel},function(res){
-				msg.channel.send(res);
 				callback({isMedia:isMedia,msg:res});
 			});
 		}else if(msg.content.includes('check')){

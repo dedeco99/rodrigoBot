@@ -97,17 +97,23 @@ exports.addYoutubeChannel=function(data,callback){
 }
 
 exports.removeYoutubeChannel=function(data,callback){
-  checkIfChannelInDatabase({"field":"name","channel":data.channel,platform:"youtube"},function(exists,id){
+  checkIfChannelExists(data,function(exists,json){
     if(exists){
-      var url="https://api.mlab.com/api/1/databases/rodrigo/collections/channels/"+id+"?apiKey="+process.env.databaseKey;
+      checkIfChannelInDatabase({"field":"channel","channel":json.items[0].id.channelId,platform:"youtube"},function(exists,id){
+        if(exists){
+          var url="https://api.mlab.com/api/1/databases/rodrigo/collections/channels/"+id+"?apiKey="+process.env.databaseKey;
 
-      request.delete(url,function(error,response,html){
-        if(error) console.log(error);
+          request.delete(url,function(error,response,html){
+            if(error) console.log(error);
 
-        callback("Canal removido com sucesso my dude");
+            callback("Canal removido com sucesso my dude");
+          });
+        }else{
+          callback("Esse canal deve estar no xixo porque não o encontro");
+        }
       });
     }else{
-      callback("Esse canal deve estar no xixo porque não o encontro");
+      callback("Esse canal deve estar no xixo porque não o encontroyt");
     }
   });
 }

@@ -26,12 +26,10 @@ client.on("ready",()=>{
 
   setInterval(function(){
     youtube.getYoutubeNotifications(function(res){
-      client.channels.get("525343734746054657").send(res.notification);
-      client.channels.get("525343734746054657").send(res.video);
+      client.channels.get("525343734746054657").send(res.notification+" | "+res.video);
     });
     twitch.getTwitchNotifications(function(res){
-      client.channels.get("525343734746054657").send(res.notification);
-      client.channels.get("525343734746054657").send(res.video);
+      client.channels.get("525343734746054657").send(res.notification+" | "+res.video);
     });
     console.log("Checked");
   }, 60000*10);
