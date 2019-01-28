@@ -46,7 +46,7 @@ function isFile(pathname){
 }
 
 var getRedditPosts=function(data,accessToken,callback){
-  var url="https://oauth.reddit.com/r/"+data.subreddit+"?limit=1000&sort=hot";
+  var url="https://oauth.reddit.com/r/"+data.subreddit+"?limit=100&sort=hot";
   var headers={
     "User-Agent":"Entertainment-Hub by dedeco99",
     "Authorization":"bearer "+accessToken
@@ -56,7 +56,8 @@ var getRedditPosts=function(data,accessToken,callback){
     if(error) console.log(error);
     try{
       var json=JSON.parse(html);
-      var num=Math.floor(Math.random()*100);
+      //var num=Math.floor(Math.random()*100);
+			var num=1;
 
       var image="";
       if(json.data.children[num].data.thumbnail=="self" || json.data.children[num].data.thumbnail=="default"){
@@ -74,8 +75,6 @@ var getRedditPosts=function(data,accessToken,callback){
         else content="Click link to view";
       }else if(url.includes(".gifv") || url.includes("youtu")){
         contentVideo=url;
-      }else if(imgTypes.includes(url.substr(url.lastIndexOf(".")+1))!=-1){
-        contentImage=url;
       }else if(url.includes("imgur.com")!==-1){
         if(isFile(url)){
           contentImage=url;
@@ -83,8 +82,9 @@ var getRedditPosts=function(data,accessToken,callback){
           contentVideo=url;
         }
       }else if(url.includes("gfycat.com")){
-        url="https://gfycat.com/gifs/detail"+url.slice(url.lastIndexOf("/"),url.length);
         contentVideo=url;
+      }else if(imgTypes.includes(url.substr(url.lastIndexOf(".")+1))!=-1){
+        contentImage=url;
       }
       var res={
         image:image,
@@ -98,6 +98,7 @@ var getRedditPosts=function(data,accessToken,callback){
         created:json.data.children[num].data.created,
         after:json.data.after
       };
+			
       callback({isReddit:true,msg:res});
     }catch(err){
       callback({isReddit:true,error:"Esse subreddit deve estar no xixo porque não o encontro"});
