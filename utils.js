@@ -2,75 +2,10 @@ var request=require("request");
 var cheerio=require("cheerio");
 var ytdl = require("ytdl-core");
 var Cleverbot=require("cleverbot-api");
-var crypto=require("./crypto");
+var Crypto=require("./crypto");
 var embed=require("./embed");
 
 var cleverbot=new Cleverbot(process.env.cleverBotKey);
-
-exports.checkForUtils=function(msg,callback){
-	var isUtil=true;
-
-	if(msg.content.includes("define")){
-    define(msg,function(res){
-			callback({isUtil:isUtil,msg:res});
-    });
-  }else if(msg.content.includes("procura")){
-    procura(msg,function(res){
-			callback({isUtil:isUtil,msg:res});
-    });
-  }else if(msg.content.includes("getvote")){
-		getvote(msg,function(res){
-			callback({isUtil:isUtil,msg:res});
-		});
-  }else if(msg.content.includes("vote")){
-    vote(msg,function(res){
-			callback({isUtil:isUtil,msg:res});
-    });
-  }else if(msg.content.includes("music")){
-    music(msg);
-  }else if(msg.content.includes("price")){
-		amazon(msg,function(res){
-			callback({isUtil:isUtil,msg:res});
-    });
-	}else if(msg.content.includes("ordena")){
-		var options=msg.content.split("ordena")[1];
-		options=options.split(";");
-		var randomized = [];
-		var times = options.length;
-
-		for (var i = 0; i < times; i++) {
-        var num = Math.floor(Math.random() * options.length);
-        randomized.push(options[num]);
-				options.splice(num,1);
-    }
-
-		callback({isUtil:isUtil,msg:randomized.join(" > ")});
-  }else if(msg.content.includes("probabilidade")){
-    var num=Math.floor(Math.random()*100);
-		callback({isUtil:isUtil,msg:"Cerca de "+num+"%"});
-  }else if(msg.content.includes("math")){
-		var expression=msg.content.split("math ")[1];
-		var result=eval(expression);
-		callback({isUtil:isUtil,msg:"Resultado: "+result});
-	}else if(msg.content.includes("clever")){
-    cleverbot.getReply({
-        input: msg.content
-    }, (error, response) => {
-        if(error) throw error;
-				callback({isUtil:isUtil,msg:response.output});
-    });
-  }else if(msg.content.includes("?")){
-		callback({isUtil:isUtil,msg:responde(msg)});
-  }else if(msg.content.includes("crypto")){
-    var coin=msg.content.split('crypto ')[1];
-    crypto.getPrice(coin,function(res){
-      if(res.error) callback({isUtil:isUtil,msg:res.error});
-      else callback({isUtil:isUtil,msg:embed.createCryptoEmbed(msg,res)});
-    });
-  }else{
-		callback({isUtil:false});
-	}
-}
 
 var define=function(msg,callback){
 	var word=msg.content.split('define ')[1];
@@ -124,25 +59,73 @@ var procura=function(msg,callback){
 	});
 }
 
-var responde=function(msg){
+var probabilidade=function(msg,callback){
+	var num=Math.floor(Math.random()*100);
+	callback("Cerca de "+num+"%");
+}
+
+var responde=function(msg,callback){
 	if(msg.content.includes(" ou ")){
 			var option1=msg.content.split(' ou ')[0].slice(8);
 			var option2=msg.content.split(' ou ')[1].slice(0, -1);
 
 			var num=Math.floor(Math.random()>=0.5);
 			if(num){
-					return option1;
+					callback(option1);
 			}else{
-					return option2;
+					callback(option2);
 			}
 	}else{
 			var num=Math.floor(Math.random()>=0.5);
 			if(num){
-					return "Sim";
+					callback("Sim");
 			}else{
-					return "Não";
+					callback("Não");
 			}
 	}
+}
+
+var math=function(msg,callback){
+	var expression=msg.content.split("math ")[1];
+	var result=eval(expression);
+	callback("Resultado: "+result);
+}
+
+var ordena=function(msg,callback){
+	var options=msg.content.split("ordena")[1];
+	options=options.split(";");
+	var randomized = [];
+	var times = options.length;
+
+	for (var i = 0; i < times; i++) {
+			var num = Math.floor(Math.random() * options.length);
+			randomized.push(options[num]);
+			options.splice(num,1);
+	}
+
+	callback(randomized.join(" > "));
+}
+
+var converte=function(msg,callback){
+	var numberToConvert=msg.content.split(' ')[2];
+	var currencyToConvert=msg.content.split(' ')[3].toUpperCase();
+	var currencyConverted=msg.content.split(' ')[5].toUpperCase();
+	var url="https://api.exchangeratesapi.io/latest";
+
+	request(url,function(error,response,html){
+		if(error) console.log(error);
+		var json=JSON.parse(html);
+
+		var converted=0;
+
+		if(currencyToConvert=="EUR"){
+			converted=(numberToConvert*json.rates[currencyConverted]).toFixed(2);
+		}else{
+			converted=(numberToConvert/json.rates[currencyToConvert]).toFixed(2);
+		}
+
+		callback(converted);
+	});
 }
 
 var vote=function(msg,callback){
@@ -179,33 +162,15 @@ var getvote=function(msg,callback){
 	  .catch(console.error);
 }
 
-var music=function(msg){
-	var params=msg.content.split('music ')[1];
-
-	if(params.includes('pause')){
-		dispatcher.pause();
-	}else if(params.includes('resume')){
-		dispatcher.resume();
-	}else if(params.includes('end')){
-		dispatcher.end();
-	}else{
-		if(msg.member.voiceChannel){
-			msg.member.voiceChannel.join().then(connection=>{
-				const stream=ytdl(params,{filter:'audioonly'});
-				const streamOptions={seek:0,volume:0.5};
-				dispatcher=connection.playStream(stream,streamOptions);
-
-				dispatcher.on('end', () => {
-					msg.member.voiceChannel.leave();
-				});
-			}).catch(console.log);
-		}else{
-			msg.reply('Vai para um canal de voz primeiro sua xixada!');
-		}
-	}
+var crypto=function(msg,callback){
+	var coin=msg.content.split('crypto ')[1];
+	Crypto.getPrice(coin,function(res){
+		if(res.error) callback(res.error);
+		else callback(embed.createCryptoEmbed(res));
+	});
 }
 
-var amazon=function(msg){
+var amazon=function(msg,callback){
 	var thing=msg.content.split('price ')[1];
 	thing=thing.replace(/ /g,"%20");
 	var url="https://www.amazon.es/s?field-keywords="+thing;
@@ -231,9 +196,72 @@ var amazon=function(msg){
     });
 
 		if(res.length>0){
-			callback(embed.createPriceEmbed(msg,res));
+			callback(embed.createPriceEmbed(res));
 		}else{
 			callback("Não existe esse produto do xixo");
 		}
 	});
+}
+
+var clever=function(msg,callback){
+	cleverbot.getReply({
+			input: msg.content
+	}, (error, response) => {
+			if(error) throw error;
+			callback(response.output);
+	});
+}
+
+var music=function(msg,callback){
+	var params=msg.content.split('music ')[1];
+
+	if(params.includes('pause')){
+		dispatcher.pause();
+	}else if(params.includes('resume')){
+		dispatcher.resume();
+	}else if(params.includes('end')){
+		dispatcher.end();
+	}else{
+		if(msg.member.voiceChannel){
+			msg.member.voiceChannel.join().then(connection=>{
+				const stream=ytdl(params,{filter:'audioonly'});
+				const streamOptions={seek:0,volume:0.5};
+				dispatcher=connection.playStream(stream,streamOptions);
+
+				dispatcher.on('end', () => {
+					msg.member.voiceChannel.leave();
+				});
+			}).catch(console.log);
+		}else{
+			msg.reply('Vai para um canal de voz primeiro sua xixada!');
+		}
+	}
+}
+
+var functions=[{command:"define",func:define},{command:"procura",func:procura},{command:"probabilidade",func:probabilidade},{command:"?",func:responde},{command:"math",func:math},{command:"ordena",func:ordena},{command:"converte",func:converte},{command:"vote",func:vote},{command:"getvote",func:getvote},{command:"crypto",func:crypto},{command:"price",func:amazon},{command:"clever",func:clever},{command:"music",func:music}];
+
+exports.checkForUtils=function(msg,callback){
+	var isUtil=false;
+	var command=msg.content.split(" ")[1];
+
+	if(msg.content.slice(-1)=="?"){
+		responde(msg,function(res){
+			callback({isUtil:true,msg:res});
+		});
+		isUtil=true;
+	}else{
+		for(var i=0;i<functions.length;i++){
+			if(functions[i].command==command){
+				functions[i].func(msg,function(res){
+					callback({isUtil:true,msg:res});
+				});
+				isUtil=true;
+				break;
+			}
+		}
+	}
+
+	if(!isUtil){
+		callback({isUtil:false});
+	}
 }

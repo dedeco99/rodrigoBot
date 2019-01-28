@@ -20,7 +20,7 @@ exports.createRedditEmbed=function(res){
   }
 }
 
-exports.createCryptoEmbed=function(msg,res){
+exports.createCryptoEmbed=function(res){
   var embed=new discord.RichEmbed();
 
   embed.setTitle(res.rank+". "+res.name+" ("+res.symbol+")");
@@ -116,7 +116,7 @@ exports.createInstaEmbed=function(res){
   return embed;
 }
 
-exports.createPriceEmbed=function(msg,res){
+exports.createPriceEmbed=function(res){
   var embed=new discord.RichEmbed();
   embed.setColor(0xff9900);
   embed.setTitle(res[0].search);
@@ -127,5 +127,5 @@ exports.createPriceEmbed=function(msg,res){
   }
 
   //embed.setFooter("Posts: "+res.posts+" | "+"Followers: "+res.followers+" | "+"Follows: "+res.follows);
-  msg.channel.send(embed);
+  return embed;
 }

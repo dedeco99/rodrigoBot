@@ -149,11 +149,8 @@ exports.getYoutubeNotifications=function(callback){
         if(error) console.log(error);
         var json=JSON.parse(html);
 
-        console.log(json.items[0].snippet);
-
         var ONE_HOUR = 60 * 60 * 1000;
         if((new Date()) - (new Date(json.items[0].snippet.publishedAt)) < ONE_HOUR){
-          console.log(json.items[0].snippet);
           checkIfNotificationExists({video:json.items[0].id.videoId},function(exists){
             if(!exists){
               callback({notification:"**"+json.items[0].snippet.channelTitle+"** postou um novo video!",video:"https://youtu.be/"+json.items[0].id.videoId});
