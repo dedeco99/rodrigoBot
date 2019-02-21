@@ -64,24 +64,20 @@ var probabilidade=function(msg,callback){
 	callback("Cerca de "+num+"%");
 }
 
+var nota=function(msg,callback){
+	var num=Math.floor(Math.random()*20);
+	callback(num);
+}
+
 var responde=function(msg,callback){
+	var num=Math.floor(Math.random()>=0.5);
 	if(msg.content.includes(" ou ")){
 			var option1=msg.content.split(' ou ')[0].slice(8);
 			var option2=msg.content.split(' ou ')[1].slice(0, -1);
 
-			var num=Math.floor(Math.random()>=0.5);
-			if(num){
-					callback(option1);
-			}else{
-					callback(option2);
-			}
+			num ? callback(option1) : callback(option2);
 	}else{
-			var num=Math.floor(Math.random()>=0.5);
-			if(num){
-					callback("Sim");
-			}else{
-					callback("Não");
-			}
+			num ? callback("Sim") : callback("Não");
 	}
 }
 
@@ -238,30 +234,24 @@ var music=function(msg,callback){
 	}
 }
 
-var functions=[{command:"define",func:define},{command:"procura",func:procura},{command:"probabilidade",func:probabilidade},{command:"?",func:responde},{command:"math",func:math},{command:"ordena",func:ordena},{command:"converte",func:converte},{command:"vote",func:vote},{command:"getvote",func:getvote},{command:"crypto",func:crypto},{command:"price",func:amazon},{command:"clever",func:clever},{command:"music",func:music}];
+var functions=[{command:"define",func:define},{command:"procura",func:procura},{command:"probabilidade",func:probabilidade},{command:"nota",func:nota},{command:"responde",func:responde},{command:"math",func:math},{command:"ordena",func:ordena},{command:"converte",func:converte},{command:"vote",func:vote},{command:"getvote",func:getvote},{command:"crypto",func:crypto},{command:"price",func:amazon},{command:"clever",func:clever},{command:"music",func:music}];
 
 exports.checkForUtils=function(msg,callback){
-	var isUtil=false;
-	var command=msg.content.split(" ")[1];
+	var command=checkCommand(msg);
+	var response=null;
 
-	if(msg.content.slice(-1)=="?"){
-		responde(msg,function(res){
-			callback({isUtil:true,msg:res});
-		});
-		isUtil=true;
-	}else{
-		for(var i=0;i<functions.length;i++){
-			if(functions[i].command==command){
-				functions[i].func(msg,function(res){
-					callback({isUtil:true,msg:res});
-				});
-				isUtil=true;
-				break;
-			}
+	for(var i=0;i<functions.length;i++){
+		if(functions[i].command==command){
+			functions[i].func(msg,function(res){
+				response=res;
+			});
+			break;
 		}
 	}
 
-	if(!isUtil){
-		callback({isUtil:false});
-	}
+	!response ? callback({isUtil:false}) : callback({isUtil:true,msg:response});
+}
+
+function checkCommand(msg){
+	return msg.content.slice(-1)=="?" ? "responde" : msg.content.split(" ")[1];
 }
