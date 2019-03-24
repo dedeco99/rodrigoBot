@@ -243,13 +243,14 @@ exports.checkForUtils=function(msg,callback){
 	for(var i=0;i<functions.length;i++){
 		if(functions[i].command==command){
 			functions[i].func(msg,function(res){
-				response=res;
+				console.log(res);
+				callback({isUtil:true,msg:res})
 			});
 			break;
+		}else if(i==functions.length-1){
+			callback({isUtil:false});
 		}
 	}
-
-	!response ? callback({isUtil:false}) : callback({isUtil:true,msg:response});
 }
 
 function checkCommand(msg){

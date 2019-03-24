@@ -55,16 +55,29 @@ var addNotification=function(videoId){
     });
 }
 
+const getChannelsPlaylist = (data, callback) => {
+  var url = "https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=" + data + "&maxResults=50&key="+process.env.youtubeKey;
+
+  request(url, (error, response, html) => {
+    if(error) console.log(error);
+    var json = JSON.parse(html);
+
+    callback(json.items);
+  });
+}
+
 exports.getYoutubeVideo=function(data,callback){
   checkIfChannelExists(data,function(exists,json){
     if(exists){
-      var url="https://www.googleapis.com/youtube/v3/search?order=date&part=snippet&channelId="+json.items[0].id.channelId+"&maxResults=5&key="+process.env.youtubeKey;
+      getChannelsPlaylist(json.items[0].id.channelId, (items) => {
+        var url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + items[0].contentDetails.relatedPlaylists.uploads + "&maxResults=5&key="+process.env.youtubeKey;
 
-      request(url,function(error,response,html){
-        if(error) console.log(error);
-        var json=JSON.parse(html);
+        request(url,function(error,response,html){
+          if(error) console.log(error);
+          var json=JSON.parse(html);
 
-        callback("https://youtu.be/"+json.items[0].id.videoId);
+          callback("https://youtu.be/"+json.items[0].snippet.resourceId.videoId);
+        });
       });
     }else{
       callback("Esse canal deve estar no xixo porque não o encontro");
@@ -142,23 +155,31 @@ exports.getYoutubeNotifications=function(callback){
     if(error) console.log(error);
     var json=JSON.parse(html);
 
+    var channelsString = "";
+
     for(var i=0;i<json.length;i++){
-      var url="https://www.googleapis.com/youtube/v3/search?order=date&part=snippet&channelId="+json[i].channel+"&maxResults=5&key="+process.env.youtubeKey;
-
-      request(url,function(error,response,html){
-        if(error) console.log(error);
-        var json=JSON.parse(html);
-
-        var ONE_HOUR = 60 * 60 * 1000;
-        if((new Date()) - (new Date(json.items[0].snippet.publishedAt)) < ONE_HOUR){
-          checkIfNotificationExists({video:json.items[0].id.videoId},function(exists){
-            if(!exists){
-              callback({notification:"**"+json.items[0].snippet.channelTitle+"** postou um novo video!",video:"https://youtu.be/"+json.items[0].id.videoId});
-              addNotification(json.items[0].id.videoId);
-            }
-          });
-        }
-      });
+      channelsString += json[i].channel + ",";
     }
+
+    getChannelsPlaylist(channelsString, (items) => {
+      for(var i=0;i<items.length;i++){
+        var url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + items[i].contentDetails.relatedPlaylists.uploads + "&maxResults=1&key="+process.env.youtubeKey;
+
+        request(url,function(error,response,html){
+          if(error) console.log(error);
+          var json=JSON.parse(html);
+
+          var ONE_HOUR = 60 * 60 * 1000;
+          if((new Date()) - (new Date(json.items[0].snippet.publishedAt)) < ONE_HOUR){
+            checkIfNotificationExists({video:json.items[0].snippet.resourceId.videoId},function(exists){
+              if(!exists){
+                callback({notification:"**"+json.items[0].snippet.channelTitle+"** postou um novo video!",video:"https://youtu.be/"+json.items[0].snippet.resourceId.videoId});
+                addNotification(json.items[0].snippet.resourceId.videoId);
+              }
+            });
+          }
+        });
+      }
+    });
   });
 }
