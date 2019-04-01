@@ -1,48 +1,48 @@
-var request=require("request");
+var request = require("request");
 
-var checkIfChannelExists=function(data,callback){
-	var url="https://api.twitch.tv/helix/users?login="+data.channel;
+var checkIfChannelExists = (data, callback) => {
+	var url = "https://api.twitch.tv/helix/users?login=" + data.channel;
 
-	var headers={
+	var headers = {
     "Accept":"application/vnd.twitchtv.v5+json",
-    "Client-ID":process.env.twitchClientId
+    "Client-ID": process.env.twitchClientId
   };
 
-  request({headers:headers,url:url},function(error,response,html){
+  request({headers, url}, (error, response, html) => {
     if(error) console.log(error);
-    var json=JSON.parse(html);
+    var json = JSON.parse(html);
 
-    if(json.data.length>0){
-      callback(true,json);
+    if(json.data.length > 0){
+      callback(true, json);
     }else{
-      callback(false,json);
+      callback(false, json);
     }
   });
 }
 
-var checkIfChannelInDatabase=function(data,callback){
-  var url="https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={"+data.field+":'"+data.channel+"','platform':'"+data.platform+"'}&apiKey="+process.env.databaseKey;
+var checkIfChannelInDatabase = (data, callback) => {
+  var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={" + data.field + ":'" + data.channel + "','platform':'" + data.platform + "'}&apiKey=" + process.env.databaseKey;
 
-  request(url,function(error,response,html){
+  request(url, (error, response, html) => {
     if(error) console.log(error);
-    var json=JSON.parse(html);
+    var json = JSON.parse(html);
 
-    if(json.length>0){
-      callback(true,json[0]._id.$oid);
+    if(json.length > 0){
+      callback(true, json[0]._id.$oid);
     }else{
       callback(false);
     }
   });
 }
 
-var checkIfNotificationExists=function(data,callback){
-  var url="https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'"+data.video+"','started':'"+data.started+"'}&apiKey="+process.env.databaseKey;
+var checkIfNotificationExists = (data, callback) => {
+  var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'" + data.video + "','started':'" + data.started + "'}&apiKey=" + process.env.databaseKey;
 
-  request(url,function(error,response,html){
+  request(url, (error, response, html) => {
     if(error) console.log(error);
-    var json=JSON.parse(html);
+    var json = JSON.parse(html);
 
-    if(json.length>0){
+    if(json.length > 0){
       callback(true);
     }else{
       callback(false);
@@ -50,41 +50,24 @@ var checkIfNotificationExists=function(data,callback){
   });
 }
 
-var addNotification=function(data){
-    var url="https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey="+process.env.databaseKey;
+var addNotification = (data) => {
+    var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=" + process.env.databaseKey;
 
-    request.post({url:url,body:data,json:true},function(error,response,html){
+    request.post({url, body: data, json: true}, (error, response, html) => {
       if(error) console.log(error);
     });
 }
 
-exports.getYoutubeVideo=function(data,callback){
-  checkIfChannelExists(data,function(exists,json){
+exports.addTwitchChannel = (data, callback) => {
+  checkIfChannelExists(data, (exists, json) => {
     if(exists){
-      var url="https://www.googleapis.com/youtube/v3/search?order=date&part=snippet&channelId="+json.items[0].id.channelId+"&maxResults=5&key="+process.env.youtubeKey;
-
-      request(url,function(error,response,html){
-        if(error) console.log(error);
-        var json=JSON.parse(html);
-
-        callback("https://youtu.be/"+json.items[0].id.videoId);
-      });
-    }else{
-      callback("Esse canal deve estar no xixo porque não o encontro");
-    }
-  });
-}
-
-exports.addTwitchChannel=function(data,callback){
-  checkIfChannelExists(data,function(exists,json){
-    if(exists){
-      checkIfChannelInDatabase({"field":"channel","channel":json.data[0].login},function(exists){
+      checkIfChannelInDatabase({"field": "channel", "channel": json.data[0].login}, (exists) => {
         if(!exists){
-          var url="https://api.mlab.com/api/1/databases/rodrigo/collections/channels?apiKey="+process.env.databaseKey;
+          var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?apiKey=" + process.env.databaseKey;
 
-          var res={"name":json.data[0].login,"channel":json.data[0].login,"platform":"twitch"};
+          var res={"name": json.data[0].login, "channel": json.data[0].login, "platform": "twitch"};
 
-          request.post({url:url,body:res,json:true},function(error,response,html){
+          request.post({url, body: res, json: true}, (error, response, html) => {
             if(error) console.log(error);
 
             callback("Canal adicionado com sucesso my dude");
@@ -97,12 +80,12 @@ exports.addTwitchChannel=function(data,callback){
   });
 }
 
-exports.removeTwitchChannel=function(data,callback){
-  checkIfChannelInDatabase({"field":"name","channel":data.channel,"platform":"twitch"},function(exists,id){
+exports.removeTwitchChannel = (data, callback) => {
+  checkIfChannelInDatabase({"field": "name", "channel": data.channel, "platform": "twitch"}, (exists, id) => {
     if(exists){
-      var url="https://api.mlab.com/api/1/databases/rodrigo/collections/channels/"+id+"?apiKey="+process.env.databaseKey;
+      var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels/" + id + "?apiKey=" + process.env.databaseKey;
 
-      request.delete(url,function(error,response,html){
+      request.delete(url, (error, response, html) => {
         if(error) console.log(error);
 
         callback("Canal removido com sucesso my dude");
@@ -113,58 +96,58 @@ exports.removeTwitchChannel=function(data,callback){
   });
 }
 
-exports.getTwitchChannels=function(callback){
-  var url="https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&s={'name':1}&apiKey="+process.env.databaseKey;
+exports.getTwitchChannels = (callback) => {
+  var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&s={'name':1}&apiKey=" + process.env.databaseKey;
 
-  request(url,function(error,response,html){
+  request(url, (error, response, html){
     if(error) console.log(error);
-    var json=JSON.parse(html);
+    var json = JSON.parse(html);
 
-    var res="";
+    var res = "";
 
-    for(var i=0;i<json.length;i++){
-      res+=json[i].name+" | ";
+    for(var i = 0; i < json.length; i++){
+      res += json[i].name + " | ";
     }
 
     callback(res);
   });
 }
 
-exports.getTwitchNotifications=function(callback){
-	var url="https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&apiKey="+process.env.databaseKey;
+exports.getTwitchNotifications = (callback) => {
+	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&apiKey=" + process.env.databaseKey;
 
-	request(url,function(error,response,html){
+	request(url, (error, response, html) => {
     if(error) console.log(error);
-    var json=JSON.parse(html);
+    var json = JSON.parse(html);
 
-		var channels="";
+		var channels = "";
 
-		for(var i=0;i<json.length;i++){
-			channels+="user_login="+json[i].channel+"&";
+		for(var i = 0; i < json.length; i++){
+			channels += "user_login=" + json[i].channel + "&";
 		}
 
-		channels=channels.slice(0, -1);
+		channels = channels.slice(0, -1);
 
-		var url="https://api.twitch.tv/helix/streams?"+channels;
+		var url = "https://api.twitch.tv/helix/streams?" + channels;
 
-		var headers={
-	    "Accept":"application/vnd.twitchtv.v5+json",
-	    "Client-ID":process.env.twitchClientId
+		var headers = {
+	    "Accept": "application/vnd.twitchtv.v5+json",
+	    "Client-ID": process.env.twitchClientId
 	  };
 
-	  request({headers:headers,url:url},function(error,response,html){
+	  request({headers, url}, (error, response, html) => {
 	    if(error) console.log(error);
-	    var json=JSON.parse(html);
+	    var json = JSON.parse(html);
 
 			console.log(json);
 
-			for(var i=0;i<json.data.length;i++){
+			for(var i = 0; i < json.data.length; i++){
 				var ONE_HOUR = 60 * 60 * 1000;
         if((new Date()) - (new Date(json.data[i].started_at)) < ONE_HOUR){
-					var link={notification:"**"+json.data[i].user_name+"** está live!",video:"https://twitch.tv/"+json.data[i].user_name};
-					var data={video:json.data[i].user_name,started:json.data[i].started_at};
+					var link={notification: "**" + json.data[i].user_name + "** está live!", video: "https://twitch.tv/" + json.data[i].user_name};
+					var data={video: json.data[i].user_name, started: json.data[i].started_at};
 
-          checkIfNotificationExists(data,function(exists){
+          checkIfNotificationExists(data, (exists) => {
             if(!exists){
               callback(link);
               addNotification(data);

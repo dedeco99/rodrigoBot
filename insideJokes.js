@@ -1,20 +1,24 @@
-exports.checkForInsideJokes=function(msg,meta,callback){
-	var insideJoke=null;
+exports.checkForInsideJokes = (msg, meta, callback) => {
+	var insideJoke = null;
 
-	for(var i=0; i<meta.insidejokes.length; i++){
+	for(var i = 0; i < meta.insidejokes.length; i++){
 		if(msg.content.includes(meta.insidejokes[i].word)){
-			insideJoke=meta.insidejokes[i];
+			insideJoke = meta.insidejokes[i];
 			break;
 		}
 	}
 
 	if(insideJoke){
-		var msg;
-		if(insideJoke.message.includes("./assets/")) msg={"file":insideJoke.message};
-		else msg=insideJoke.message;
+		var message;
 
-		callback({isInsideJoke:true,msg:msg});
+		if(insideJoke.message.includes("./assets/")){
+			message = {"file": insideJoke.message};
+		}else{
+			message = insideJoke.message;
+		}
+
+		callback({isInsideJoke: true, msg: message});
 	}else{
-		callback({isInsideJoke:false});
+		callback({isInsideJoke: false});
 	}
-}
+};

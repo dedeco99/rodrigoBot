@@ -1,107 +1,120 @@
-var request=require("request");
-var embed=require("./embed");
-
-exports.checkForReddit=function(msg,callback){
-	var subs=[{name:"piada",subreddit:"jokes"},{name:"gif",subreddit:"gif"},{name:"video",subreddit:"videos"},{name:"meme",subreddit:"2meirl4meirl+boottoobig+dankmemes+greentext+insanepeoplefacebook+oldpeoplefacebook+memes+meme+imgoingtohellforthis+prequelmemes"},{name:"pornstar",subreddit:"AvaAddams+Ava_Addams+RileyReid+Riley_Reid+RemyLaCroix+Remy_Lacroix+JadaStevens+BrandiLove+Melissamoore"},{name:"porn",subreddit:"pornvids+porninfifteenseconds+nsfwhardcore+lesbians+grool+quiver+porn_gifs"},{name:"tits",subreddit:"tessafowler+SexyFlowerWater+gonewild+NSFW_GIF+nsfw+BustyPetite+milf+OnOff+TittyDrop+LegalTeens+suicidegirls+boobbounce"},{name:"pussy",subreddit:"ass+pawg+gettingherselfoff+asstastic+thick+GodPussy+BonerAlert+StraightGirlsPlaying+workgonewild+rearpussy+gwcumsluts+pussy+facedownassup+cumonclothes+jilling"},{name:"soft",subreddit:"collegesluts+girlsinyogapants+FestivalSluts+tightdresses+randomsexiness+burstingout"}];
-
-	for(var i=0; i<subs.length; i++){
-		if(msg.content.includes('reddit')){
-	    var sub=msg.content.split('reddit ')[1];
-	    getAccessToken({subreddit:sub},function(res){
-				callback(res);
-	    });
-			break;
-	  }else if(msg.content.includes(" "+subs[i].name)){
-			getAccessToken(subs[i],function(res){
-        callback(res);
-      });
-      break;
-		}
-    if(subs.length-1===i) callback({isReddit:false});
-	}
-}
-
-var getAccessToken=function(data,callback){
-    var url="https://www.reddit.com/api/v1/access_token"
-            +"?refresh_token="+process.env.redditRefreshToken
-            +"&grant_type=refresh_token";
-
-    var auth="Basic "+new Buffer(process.env.redditClientId+":"+process.env.redditSecret).toString("base64");
-
-    var headers={
-      "User-Agent":"Entertainment-Hub by dedeco99",
-      "Authorization":auth
-    };
-
-    request.post({url:url,headers:headers},function(error,response,html){
-      if(error) console.log(error);
-      var json=JSON.parse(html);
-      getRedditPosts(data,json.access_token,function(res){
-        callback(res);
-      });
-    });
-}
+var request = require("request");
+var embed = require("./embed");
 
 function isFile(pathname){
-  return pathname.split('/').pop().lastIndexOf(".")>-1;
-}
+  return pathname.split("/").pop().lastIndexOf(".")>-1;
+};
 
-var getRedditPosts=function(data,accessToken,callback){
-  var url="https://oauth.reddit.com/r/"+data.subreddit+"?limit=100&sort=hot";
-  var headers={
-    "User-Agent":"Entertainment-Hub by dedeco99",
-    "Authorization":"bearer "+accessToken
+var getRedditPosts = (data, accessToken, callback) => {
+  var url="https://oauth.reddit.com/r/" + data.subreddit + "?limit=100&sort=hot";
+  var headers = {
+    "User-Agent": "Entertainment-Hub by dedeco99",
+    "Authorization": "bearer " + accessToken
   };
 
-  request({url:url,headers:headers},function(error,response,html){
+  request({url, headers}, (error, response, html) => {
     if(error) console.log(error);
     try{
-      var json=JSON.parse(html);
-      var num=Math.floor(Math.random()*json.data.children.length);
+      var json = JSON.parse(html);
+      var num = Math.floor(Math.random() * json.data.children.length);
 
-      var image="";
-      if(json.data.children[num].data.thumbnail=="self" || json.data.children[num].data.thumbnail=="default"){
-        image="";
+      var image = "";
+      if(json.data.children[num].data.thumbnail === "self" || json.data.children[num].data.thumbnail === "default"){
+        image = "";
       }else{
-        image=json.data.children[num].data.thumbnail;
+        image = json.data.children[num].data.thumbnail;
       }
-      var content="";
-      var contentImage="";
-      var contentVideo="";
-      var url=json.data.children[num].data.url;
-      var imgTypes=["jpg","jpeg","png","gif"];
-      if(url.indexOf("reddit.com")!==-1){
-        if(json.data.children[num].data.selftext.length<1024) content=json.data.children[num].data.selftext;
-        else content="Click link to view";
+      var content = "";
+      var contentImage = "";
+      var contentVideo = "";
+      var url = json.data.children[num].data.url;
+      var imgTypes = ["jpg", "jpeg", "png", "gif"];
+      if(url.indexOf("reddit.com") !== -1){
+        if(json.data.children[num].data.selftext.length < 1024){
+					content = json.data.children[num].data.selftext;
+				}else{
+					content = "Click link to view";
+				}
       }else if(url.includes(".gifv") || url.includes("youtu")){
-        contentVideo=url;
-      }else if(url.includes("imgur.com")!==-1){
+        contentVideo = url;
+      }else if(url.includes("imgur.com") !== -1){
         if(isFile(url)){
-          contentImage=url;
+          contentImage = url;
         }else{
-          contentVideo=url;
+          contentVideo = url;
         }
       }else if(url.includes("gfycat.com")){
-        contentVideo=url;
-      }else if(imgTypes.includes(url.substr(url.lastIndexOf(".")+1))!=-1){
-        contentImage=url;
+        contentVideo = url;
+      }else if(imgTypes.includes(url.substr(url.lastIndexOf(".")+1)) !== -1){
+        contentImage = url;
       }
-      var res={
-        image:image,
+      var res = {
+        image,
         subreddit:json.data.children[num].data.subreddit,
         title:json.data.children[num].data.title,
-        url:url,
+        url,
         score:json.data.children[num].data.score,
-        content:content,
-        contentImage:contentImage,
-        contentVideo:contentVideo,
+        content,
+        contentImage,
+        contentVideo,
         created:json.data.children[num].data.created,
         after:json.data.after
       };
 
-      callback({isReddit:true,msg:embed.createRedditEmbed(res)});
+      callback({isReddit: true, msg: embed.createRedditEmbed(res)});
     }catch(err){
-      callback({isReddit:true,msg:"Esse subreddit deve estar no xixo porque não o encontro"});
+      callback({isReddit: true, msg: "Esse subreddit deve estar no xixo porque não o encontro"});
     }
   });
-}
+};
+
+var getAccessToken = (data, callback) => {
+    var url = "https://www.reddit.com/api/v1/access_token"
+            + "?refresh_token=" + process.env.redditRefreshToken
+            + "&grant_type=refresh_token";
+
+    var auth = "Basic " + new Buffer(process.env.redditClientId + ":" + process.env.redditSecret).toString("base64");
+
+    var headers = {
+      "User-Agent": "Entertainment-Hub by dedeco99",
+      "Authorization": auth
+    };
+
+    request.post({url, headers}, (error, response, html) => {
+      if(error) console.log(error);
+      var json = JSON.parse(html);
+      getRedditPosts(data, json.access_token, (res) => {
+        callback(res);
+      });
+    });
+};
+
+exports.checkForReddit = (msg, callback) => {
+	var subs=[
+		{name: "piada", subreddit: "jokes"},
+		{name: "gif", subreddit: "gif"},
+		{name: "video", subreddit: "videos"},
+		{name: "meme", subreddit: "2meirl4meirl+boottoobig+dankmemes+greentext+insanepeoplefacebook+oldpeoplefacebook+memes+meme+imgoingtohellforthis+prequelmemes"},
+		{name: "pornstar", subreddit: "AvaAddams+Ava_Addams+RileyReid+Riley_Reid+RemyLaCroix+Remy_Lacroix+JadaStevens+BrandiLove+Melissamoore"},
+		{name: "porn", subreddit: "pornvids+porninfifteenseconds+nsfwhardcore+lesbians+grool+quiver+porn_gifs"},
+		{name: "tits", subreddit: "tessafowler+SexyFlowerWater+gonewild+NSFW_GIF+nsfw+BustyPetite+milf+OnOff+TittyDrop+LegalTeens+suicidegirls+boobbounce"},
+		{name: "pussy", subreddit: "ass+pawg+gettingherselfoff+asstastic+thick+GodPussy+BonerAlert+StraightGirlsPlaying+workgonewild+rearpussy+gwcumsluts+pussy+facedownassup+cumonclothes+jilling"},
+		{name: "soft", subreddit: "collegesluts+girlsinyogapants+FestivalSluts+tightdresses+randomsexiness+burstingout"}];
+
+	for(var i = 0; i < subs.length; i++){
+		if(msg.content.includes("reddit")){
+	    var sub = msg.content.split("reddit ")[1];
+	    getAccessToken({subreddit: sub}, (res) => {
+				callback(res);
+	    });
+			break;
+	  }else if(msg.content.includes(" " + subs[i].name)){
+			getAccessToken(subs[i], (res) => {
+        callback(res);
+      });
+      break;
+		}
+
+    if(subs.length-1 === i) callback({isReddit: false});
+	}
+};
