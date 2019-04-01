@@ -57,19 +57,11 @@ client.on("message", (msg) => {
                     insideJokes.checkForInsideJokes(msg, meta, (checkForInsideJokes) => {
                       if(checkForInsideJokes.isInsideJoke){
                         msg.channel.send(checkForInsideJokes.msg);
-                      }else if(msg.content.includes(":rodrigo:")){
-                        msg.channel.send("Que carinha laroca!");
                       }else if(msg.content.includes("delete")){
                         if(lastMsg != null){
                           lastMsg.delete();
                           msg.delete();
                         }
-                      }else if(msg.content.includes("good") || msg.content.includes("nice") || msg.content.includes("bem") || msg.content.includes("bom") || msg.content.includes("best") || msg.content.includes("grande")){
-                        meta.likes++;
-                        msg.channel.send("Durante a minha existência já gostaram de mim " + meta.likes + " vezes. I can't handle it!!! *touches face violently*");
-                      }else if(msg.content.includes("bad") || msg.content.includes("mal") || msg.content.includes("mau") || msg.content.includes("worst") || msg.content.includes("lixo")){
-                        meta.dislikes++;
-                        msg.channel.send("Durante a minha existência já me deram bullying " + meta.dislikes + " vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*");
                       }
                     });
                   }
@@ -86,6 +78,16 @@ client.on("message", (msg) => {
     });
   }else if(msg.author.username === "RodrigoBot"){
     lastMsg = msg;
+  }else{
+    if(msg.content.includes(":rodrigo:")){
+      msg.channel.send("Que carinha laroca!");
+    }else if(msg.content.includes("good") || msg.content.includes("nice") || msg.content.includes("bem") || msg.content.includes("bom") || msg.content.includes("best") || msg.content.includes("grande")){
+      meta.likes++;
+      msg.channel.send("Durante a minha existência já gostaram de mim " + meta.likes + " vezes. I can't handle it!!! *touches face violently*");
+    }else if(msg.content.includes("bad") || msg.content.includes("mal") || msg.content.includes("mau") || msg.content.includes("worst") || msg.content.includes("lixo")){
+      meta.dislikes++;
+      msg.channel.send("Durante a minha existência já me deram bullying " + meta.dislikes + " vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*");
+    }
   }
 });
 

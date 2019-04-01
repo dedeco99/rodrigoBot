@@ -1,4 +1,5 @@
 var request = require("request");
+var embed = require("./embed");
 
 exports.getPost = (msg, callback) => {
 	var sentence = msg.content.split("insta ")[1];
@@ -24,7 +25,7 @@ exports.getPost = (msg, callback) => {
 			var follows = json.entry_data.ProfilePage[0].graphql.user.edge_follow.count;
 			var posts = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.count;
 
-			if(bio == "") bio = "No bio";
+			if(bio === "") bio = "No bio";
 
 			var res = {
 				url,
@@ -36,7 +37,7 @@ exports.getPost = (msg, callback) => {
 				image:null,
 				error:null,
 				posts
-			}
+			};
 
 			if(!json.entry_data.ProfilePage[0].graphql.user.is_private){
 				var images = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges;

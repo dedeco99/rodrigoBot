@@ -1,7 +1,7 @@
 var request = require("request");
 var embed = require("./embed");
 
-function isFile(pathname){
+var isFile = (pathname) => {
   return pathname.split("/").pop().lastIndexOf(".")>-1;
 };
 

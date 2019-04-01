@@ -13,7 +13,7 @@ var checkIfChannelExists = (data, callback) => {
       callback(false, json);
     }
   });
-}
+};
 
 var checkIfChannelInDatabase = (data, callback) => {
   var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={" + data.field + ":'" + data.channel + "'}&apiKey=" + process.env.databaseKey;
@@ -28,7 +28,7 @@ var checkIfChannelInDatabase = (data, callback) => {
       callback(false);
     }
   });
-}
+};
 
 var checkIfNotificationExists = (data, callback) => {
   var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'" + data.video + "'}&apiKey=" + process.env.databaseKey;
@@ -43,7 +43,7 @@ var checkIfNotificationExists = (data, callback) => {
       callback(false);
     }
   });
-}
+};
 
 var addNotification = (videoId) => {
     var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=" + process.env.databaseKey;
@@ -53,7 +53,7 @@ var addNotification = (videoId) => {
     request.post({url, body: res, json: true}, (error, response, html) => {
       if(error) console.log(error);
     });
-}
+};
 
 const getChannelsPlaylist = (data, callback) => {
   var url = "https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=" + data + "&maxResults=50&key=" + process.env.youtubeKey;
@@ -64,7 +64,7 @@ const getChannelsPlaylist = (data, callback) => {
 
     callback(json.items);
   });
-}
+};
 
 exports.getYoutubeVideo = (data, callback) => {
   checkIfChannelExists(data, (exists, json) => {
@@ -83,7 +83,7 @@ exports.getYoutubeVideo = (data, callback) => {
       callback("Esse canal deve estar no xixo porque não o encontro");
     }
   });
-}
+};
 
 exports.addYoutubeChannel = (data, callback) => {
   checkIfChannelExists(data, (exists, json) => {
@@ -107,7 +107,7 @@ exports.addYoutubeChannel = (data, callback) => {
       callback("Esse canal deve estar no xixo porque não o encontro");
     }
   });
-}
+};
 
 exports.removeYoutubeChannel = (data, callback) => {
   checkIfChannelExists(data, (exists, json) => {
@@ -129,7 +129,7 @@ exports.removeYoutubeChannel = (data, callback) => {
       callback("Esse canal deve estar no xixo porque não o encontro");
     }
   });
-}
+};
 
 exports.getYoutubeChannels = (callback) => {
   var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'youtube'}&s={'name':1}&apiKey=" + process.env.databaseKey;
@@ -146,7 +146,7 @@ exports.getYoutubeChannels = (callback) => {
 
     callback(res);
   });
-}
+};
 
 exports.getYoutubeNotifications = (callback) => {
   var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'youtube'}&apiKey=" + process.env.databaseKey;
@@ -165,7 +165,7 @@ exports.getYoutubeNotifications = (callback) => {
       for(var i = 0; i < items.length; i++){
         var url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + items[i].contentDetails.relatedPlaylists.uploads + "&maxResults=1&key=" + process.env.youtubeKey;
 
-        request(url, (error, response, html) =>{
+        request(url, (error, response, html) => {
           if(error) console.log(error);
           var json = JSON.parse(html);
 
@@ -182,4 +182,4 @@ exports.getYoutubeNotifications = (callback) => {
       }
     });
   });
-}
+};

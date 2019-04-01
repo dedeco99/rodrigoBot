@@ -25,8 +25,8 @@ var define = (msg, callback) => {
 			};
 		}else{
 			var cleanString = (string) => {
-				return string.substring(0,255).replace(/\[/g, "").replace(/\]/g, "");
-			}
+				return string.substring(0, 255).replace(/\[/g, "").replace(/\]/g, "");
+			};
 
 			var example = cleanString(json.list[0].example);
 			if(json.list[0].example === "") example = "Não há exemplo";
@@ -213,6 +213,22 @@ var clever = (msg, callback) => {
 	});
 };
 
+var checkIfInVoiceChannel = (msg, params, dispatcher) => {
+	if(msg.member.voiceChannel){
+		msg.member.voiceChannel.join().then((connection) => {
+			const stream = ytdl(params, {filter: "audioonly"});
+			const streamOptions = {seek: 0, volume: 0.5};
+			dispatcher = connection.playStream(stream, streamOptions);
+
+			dispatcher.on("end", () => {
+				msg.member.voiceChannel.leave();
+			});
+		}).catch(console.log);
+	}else{
+		msg.reply("Vai para um canal de voz primeiro sua xixada!");
+	}
+};
+
 var music = (msg, callback) => {
 	var params = msg.content.split("music ")[1];
 	var dispatcher = null;
@@ -224,19 +240,7 @@ var music = (msg, callback) => {
 	}else if(params.includes("end")){
 		dispatcher.end();
 	}else{
-		if(msg.member.voiceChannel){
-			msg.member.voiceChannel.join().then((connection) => {
-				const stream = ytdl(params, {filter: "audioonly"});
-				const streamOptions = {seek: 0, volume: 0.5};
-				dispatcher = connection.playStream(stream, streamOptions);
-
-				dispatcher.on("end", () => {
-					msg.member.voiceChannel.leave();
-				});
-			}).catch(console.log);
-		}else{
-			msg.reply("Vai para um canal de voz primeiro sua xixada!");
-		}
+		checkIfInVoiceChannel(msg, params, dispatcher);
 	}
 };
 
@@ -269,7 +273,7 @@ exports.checkForUtils = (msg, callback) => {
 		if(functions[i].command === command){
 			functions[i].func(msg, (res) => {
 				console.log(res);
-				callback({isUtil: true, msg: res})
+				callback({isUtil: true, msg: res});
 			});
 			break;
 		}else if(i === functions.length-1){

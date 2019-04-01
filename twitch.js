@@ -18,7 +18,7 @@ var checkIfChannelExists = (data, callback) => {
       callback(false, json);
     }
   });
-}
+};
 
 var checkIfChannelInDatabase = (data, callback) => {
   var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={" + data.field + ":'" + data.channel + "','platform':'" + data.platform + "'}&apiKey=" + process.env.databaseKey;
@@ -33,7 +33,7 @@ var checkIfChannelInDatabase = (data, callback) => {
       callback(false);
     }
   });
-}
+};
 
 var checkIfNotificationExists = (data, callback) => {
   var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'" + data.video + "','started':'" + data.started + "'}&apiKey=" + process.env.databaseKey;
@@ -48,7 +48,7 @@ var checkIfNotificationExists = (data, callback) => {
       callback(false);
     }
   });
-}
+};
 
 var addNotification = (data) => {
     var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=" + process.env.databaseKey;
@@ -56,7 +56,7 @@ var addNotification = (data) => {
     request.post({url, body: data, json: true}, (error, response, html) => {
       if(error) console.log(error);
     });
-}
+};
 
 exports.addTwitchChannel = (data, callback) => {
   checkIfChannelExists(data, (exists, json) => {
@@ -78,7 +78,7 @@ exports.addTwitchChannel = (data, callback) => {
       callback("Esse canal deve estar no xixo porque não o encontro");
     }
   });
-}
+};
 
 exports.removeTwitchChannel = (data, callback) => {
   checkIfChannelInDatabase({"field": "name", "channel": data.channel, "platform": "twitch"}, (exists, id) => {
@@ -94,12 +94,12 @@ exports.removeTwitchChannel = (data, callback) => {
       callback("Esse canal deve estar no xixo porque não o encontro");
     }
   });
-}
+};
 
 exports.getTwitchChannels = (callback) => {
   var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&s={'name':1}&apiKey=" + process.env.databaseKey;
 
-  request(url, (error, response, html){
+  request(url, (error, response, html) => {
     if(error) console.log(error);
     var json = JSON.parse(html);
 
@@ -111,6 +111,13 @@ exports.getTwitchChannels = (callback) => {
 
     callback(res);
   });
+};
+
+var checkIfExists = (exists) => {
+	if(!exists){
+		callback(link);
+		addNotification(data);
+	}
 }
 
 exports.getTwitchNotifications = (callback) => {
@@ -147,14 +154,9 @@ exports.getTwitchNotifications = (callback) => {
 					var link={notification: "**" + json.data[i].user_name + "** está live!", video: "https://twitch.tv/" + json.data[i].user_name};
 					var data={video: json.data[i].user_name, started: json.data[i].started_at};
 
-          checkIfNotificationExists(data, (exists) => {
-            if(!exists){
-              callback(link);
-              addNotification(data);
-            }
-          });
+          checkIfNotificationExists(data, checkIfExists);
         }
 			}
 	  });
 	});
-}
+};
