@@ -7,7 +7,6 @@
     "cheerio": "^1.0.0-rc.2",
     "cleverbot-api": "^1.0.3",
     "discord.js": "^11.2.1",
-    "forever": "^0.15.3",
     "gifwrap": "^0.7.5",
     "jimp": "^0.5.6",
     "opusscript": "0.0.6",
