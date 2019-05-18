@@ -2,9 +2,8 @@ var request = require("request");
 var embed = require("./embed");
 
 exports.getPost = (msg, callback) => {
-	var sentence = msg.content.split("insta ")[1];
-	var person = sentence.split(" ")[0];
-	var num = sentence.split(" ").pop();
+	var person = msg.content.split(" ")[2];
+	var num = msg.content.split(" ").pop();
 	var url = "https://www.instagram.com/" + person + "/";
 
 	request(url, (error, response, html) => {
@@ -43,8 +42,10 @@ exports.getPost = (msg, callback) => {
 				var images = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges;
 
 				if(images.length > 0){
-					if(isNaN(num) || num > images.length || num < 0){
+					if(num === "random"){
 						num = Math.floor(Math.random() * images.length);
+					}else if(isNaN(num) || num > images.length || num < 0){
+						num = 0;
 					}
 
 					var image = images[num].node.display_url;

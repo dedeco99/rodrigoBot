@@ -7,7 +7,7 @@ var embed = require("./embed");
 
 var cleverbot = new Cleverbot(process.env.cleverBotKey);
 
-var define = (msg, callback) => {
+exports.define = (msg, callback) => {
 	var word = msg.content.split("define ")[1];
 	var url = "http://api.urbandictionary.com/v0/define?term=" + word;
 
@@ -41,7 +41,7 @@ var define = (msg, callback) => {
 	});
 };
 
-var procura = (msg, callback) => {
+exports.procura = (msg, callback) => {
 	var topic=msg.content.split("procura ")[1];
 	var res=[];
 	var url="https://www.googleapis.com/customsearch/v1?q="+topic+"&cx=007153606045358422053:uw-koc4dhb8&key="+process.env.youtubeKey;
@@ -61,35 +61,31 @@ var procura = (msg, callback) => {
 	});
 };
 
-var probabilidade = (msg, callback) => {
-	var num = Math.floor(Math.random() * 100);
-	callback("Cerca de " + num + "%");
-};
-
-var nota = (msg, callback) => {
-	var num = Math.floor(Math.random() * 20);
-	callback(num);
-};
-
-var responde = (msg, callback) => {
+exports.responde = (msg, callback) => {
 	var num = Math.floor(Math.random() >= 0.5);
 	if(msg.content.includes(" ou ")){
 			var option1 = msg.content.split(" ou ")[0].slice(8);
 			var option2 = msg.content.split(" ou ")[1].slice(0, -1);
 
 			num ? callback(option1) : callback(option2);
+	}else if(msg.content.includes(" probabilidade ")){
+		num = Math.floor(Math.random() * 100);
+		callback("Cerca de " + num + "%");
+	}else if(msg.content.includes(" nota ")){
+		num = Math.floor(Math.random() * 20);
+		callback(num);
 	}else{
 			num ? callback("Sim") : callback("Não");
 	}
 };
 
-var math = (msg, callback) => {
+exports.math = (msg, callback) => {
 	var expression = msg.content.split("math ")[1];
 	var result = eval(expression);
 	callback("Resultado: " + result);
 };
 
-var ordena = (msg, callback) => {
+exports.ordena = (msg, callback) => {
 	var options = msg.content.split("ordena")[1];
 	options = options.split(";");
 	var randomized = [];
@@ -104,7 +100,7 @@ var ordena = (msg, callback) => {
 	callback(randomized.join(" > "));
 };
 
-var converte = (msg, callback) => {
+exports.converte = (msg, callback) => {
 	var numberToConvert = msg.content.split(" ")[2];
 	var currencyToConvert = msg.content.split(" ")[3].toUpperCase();
 	var currencyConverted = msg.content.split(" ")[5].toUpperCase();
@@ -126,7 +122,7 @@ var converte = (msg, callback) => {
 	});
 };
 
-var vote = (msg, callback) => {
+exports.vote = (msg, callback) => {
 	var message = msg.content.split("vote ")[1];
 	var options = message.split(";");
 	var title = options[0];
@@ -140,7 +136,7 @@ var vote = (msg, callback) => {
 	callback(embed.createPollEmbed(msg, res));
 };
 
-var getvote = (msg, callback) => {
+exports.getvote = (msg, callback) => {
 	var poll = msg.content.split("getvote ")[1];
 
 	msg.channel.fetchMessage(poll)
@@ -160,7 +156,7 @@ var getvote = (msg, callback) => {
   .catch(console.error);
 };
 
-var crypto = (msg, callback) => {
+exports.crypto = (msg, callback) => {
 	var coin = msg.content.split("crypto ")[1];
 	Crypto.getPrice(coin, (res) => {
 		if(res.error){
@@ -171,7 +167,7 @@ var crypto = (msg, callback) => {
 	});
 };
 
-var amazon = (msg, callback) => {
+exports.amazon = (msg, callback) => {
 	var thing = msg.content.split("price ")[1];
 	thing = thing.replace(/ /g, "%20");
 	var url = "https://www.amazon.es/s?field-keywords=" + thing;
@@ -204,7 +200,7 @@ var amazon = (msg, callback) => {
 	});
 };
 
-var clever = (msg, callback) => {
+exports.clever = (msg, callback) => {
 	cleverbot.getReply({
 		input: msg.content
 	}, (error, response) => {
@@ -229,7 +225,7 @@ var checkIfInVoiceChannel = (msg, params, dispatcher) => {
 	}
 };
 
-var music = (msg, callback) => {
+exports.music = (msg, callback) => {
 	var params = msg.content.split("music ")[1];
 	var dispatcher = null;
 
@@ -241,43 +237,5 @@ var music = (msg, callback) => {
 		dispatcher.end();
 	}else{
 		checkIfInVoiceChannel(msg, params, dispatcher);
-	}
-};
-
-var functions = [
-	{command: "define", func: define},
-	{command: "procura", func: procura},
-	{command: "probabilidade", func: probabilidade},
-	{command: "nota", func: nota},
-	{command: "responde", func: responde},
-	{command: "math", func: math},
-	{command: "ordena", func: ordena},
-	{command: "converte", func: converte},
-	{command: "vote", func: vote},
-	{command: "getvote", func: getvote},
-	{command: "crypto", func: crypto},
-	{command: "price", func: amazon},
-	{command: "clever", func: clever},
-	{command: "music", func: music}
-];
-
-var checkCommand = (msg) => {
-	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
-};
-
-exports.checkForUtils = (msg, callback) => {
-	var command = checkCommand(msg);
-	var response = null;
-
-	for(var i = 0; i < functions.length; i++){
-		if(functions[i].command === command){
-			functions[i].func(msg, (res) => {
-				console.log(res);
-				callback({isUtil: true, msg: res});
-			});
-			break;
-		}else if(i === functions.length-1){
-			callback({isUtil: false});
-		}
 	}
 };
