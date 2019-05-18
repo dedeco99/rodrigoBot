@@ -1,3 +1,5 @@
+var fs = require("fs");
+
 var checkIfFile = (insideJoke) => {
 	if(insideJoke.message.includes("./assets/")){
 		return {"file": insideJoke.message};
@@ -6,7 +8,14 @@ var checkIfFile = (insideJoke) => {
 	}
 };
 
-exports.checkForInsideJokes = (msg, meta, callback) => {
+var meta = {};
+
+fs.readFile("meta.json", "utf8", (err, data) => {
+	if(err) throw err;
+	meta = JSON.parse(data);
+});
+
+exports.checkForInsideJokes = (msg, callback) => {
 	var isInsideJoke = false;
 	var insideJoke, message;
 

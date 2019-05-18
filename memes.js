@@ -40,7 +40,7 @@ var makeMeme= (msg, meme, callback) => {
 };
 
 exports.checkForMemes = (msg, callback) => {
-	var memes=[
+	const memes=[
 		{name: "truth", position0: {x:250, y:750, max:200}},
 		{name: "safe", position0: {x:350, y:100, max:200}},
 		{name: "drake", position0: {x:400, y:100, max:200}, position1: {x:400, y:400, max:200}},
@@ -51,13 +51,10 @@ exports.checkForMemes = (msg, callback) => {
 		{name: "pikachu", position0: {x:10, y:10, max:700}}
 	];
 
-	for(var i = 0; i < memes.length; i++){
-		if(msg.content.includes(" " + memes[i].name + " ")){
-			makeMeme(msg, memes[i], (meme) => {
-				callback({isMeme:true, msg: meme});
-			});
-			break;
-		}
-		if(memes.length-1 === i) callback({isMeme: false});
-	}
+	const searchedMeme = msg.content.split(" ")[2];
+  const meme = memes.find(meme => meme.name === searchedMeme);
+
+	makeMeme(msg, meme, (res) => {
+		callback(res);
+	});
 };

@@ -61,9 +61,9 @@ var getRedditPosts = (data, accessToken, callback) => {
         after:json.data.after
       };
 
-      callback({isReddit: true, msg: embed.createRedditEmbed(res)});
+      callback(embed.createRedditEmbed(res));
     }catch(err){
-      callback({isReddit: true, msg: "Esse subreddit deve estar no xixo porque não o encontro"});
+      callback("Esse subreddit deve estar no xixo porque não o encontro");
     }
   });
 };
@@ -90,7 +90,7 @@ var getAccessToken = (data, callback) => {
 };
 
 exports.checkForReddit = (msg, callback) => {
-	var subs=[
+	const subs=[
 		{name: "piada", subreddit: "jokes"},
 		{name: "gif", subreddit: "gif"},
 		{name: "video", subreddit: "videos"},
@@ -99,22 +99,13 @@ exports.checkForReddit = (msg, callback) => {
 		{name: "porn", subreddit: "pornvids+porninfifteenseconds+nsfwhardcore+lesbians+grool+quiver+porn_gifs"},
 		{name: "tits", subreddit: "tessafowler+SexyFlowerWater+gonewild+NSFW_GIF+nsfw+BustyPetite+milf+OnOff+TittyDrop+LegalTeens+suicidegirls+boobbounce"},
 		{name: "pussy", subreddit: "ass+pawg+gettingherselfoff+asstastic+thick+GodPussy+BonerAlert+StraightGirlsPlaying+workgonewild+rearpussy+gwcumsluts+pussy+facedownassup+cumonclothes+jilling"},
-		{name: "soft", subreddit: "collegesluts+girlsinyogapants+FestivalSluts+tightdresses+randomsexiness+burstingout"}];
+		{name: "soft", subreddit: "collegesluts+girlsinyogapants+FestivalSluts+tightdresses+randomsexiness+burstingout"}
+  ];
 
-	for(var i = 0; i < subs.length; i++){
-		if(msg.content.includes("reddit")){
-	    var sub = msg.content.split("reddit ")[1];
-	    getAccessToken({subreddit: sub}, (res) => {
-				callback(res);
-	    });
-			break;
-	  }else if(msg.content.includes(" " + subs[i].name)){
-			getAccessToken(subs[i], (res) => {
-        callback(res);
-      });
-      break;
-		}
+  const searchedSub = msg.content.split(" ")[2];
+  const sub = subs.find(sub => sub.name === searchedSub);
 
-    if(subs.length-1 === i) callback({isReddit: false});
-	}
+  getAccessToken({subreddit: sub ? sub.subreddit : searchedSub}, (res) => {
+    callback(res);
+  });
 };
