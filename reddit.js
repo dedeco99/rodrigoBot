@@ -73,10 +73,10 @@ var getAccessToken = (data, callback) => {
             + "?refresh_token=" + process.env.redditRefreshToken
             + "&grant_type=refresh_token";
 
-    var auth = "Basic " + new Buffer(process.env.redditClientId + ":" + process.env.redditSecret).toString("base64");
+    var auth = "Basic " + new Buffer.from(process.env.redditClientId + ":" + process.env.redditSecret).toString("base64");
 
     var headers = {
-      "User-Agent": "Entertainment-Hub by dedeco99",
+      "User-Agent": "RodrigoBot",
       "Authorization": auth
     };
 
@@ -89,7 +89,29 @@ var getAccessToken = (data, callback) => {
     });
 };
 
+const getRefreshToken = () => {
+  var url = "https://www.reddit.com/api/v1/access_token"
+          + "?code=EnnCAq3ndBzr0QYjBNCRgRxnzvg"
+          + "&grant_type=authorization_code"
+          + "&redirect_uri=http://localhost:5000/lul";
+
+  var auth = "Basic " + new Buffer.from(process.env.redditClientId + ":" + process.env.redditSecret).toString("base64");
+
+  var headers = {
+    "User-Agent": "RodrigoBot",
+    "Authorization": auth
+  };
+
+  request.post({url, headers}, (error, response, html) => {
+    if(error) console.log(error);
+    var json = JSON.parse(html);
+    console.log(json);
+  });
+};
+
 exports.checkForReddit = (msg, callback) => {
+  //getRefreshToken();
+  
 	const subs=[
 		{name: "piada", subreddit: "jokes"},
 		{name: "gif", subreddit: "gif"},

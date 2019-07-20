@@ -10,6 +10,8 @@ var lastMsg = null;
 
 var client = new discord.Client();
 
+client.login(process.env.discordKey);
+
 client.on("ready", () => {
   fs.readFile("meta.json", "utf8", (err, data) => {
     if(err) throw err;
@@ -22,9 +24,9 @@ client.on("ready", () => {
     youtube.getYoutubeNotifications((res) => {
       client.channels.get("525343734746054657").send(res.notification + " | " + res.video);
     });
-    twitch.getTwitchNotifications((res) => {
+    /*twitch.getTwitchNotifications((res) => {
       client.channels.get("525343734746054657").send(res.notification + " | " + res.video);
-    });
+    });*/
     console.log("Checked");
   }, 60000*10);
 });
@@ -49,7 +51,7 @@ client.on("message", (msg) => {
     if(msg.content.includes(":rodrigo:")){
       msg.channel.send("Que carinha laroca!");
     }else{
-      if(firstWord === "rodrigo"){
+      if(msg.content.includes("rodrigo")){
         if(msg.content.includes("good") || msg.content.includes("nice") || msg.content.includes("bem") || msg.content.includes("bom") || msg.content.includes("best") || msg.content.includes("grande")){
           meta.likes++;
           msg.channel.send("Durante a minha existência já gostaram de mim " + meta.likes + " vezes. I can't handle it!!! *touches face violently*");
@@ -69,5 +71,3 @@ client.on("message", (msg) => {
     }
   }
 });
-
-client.login(process.env.discordKey);
