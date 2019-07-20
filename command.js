@@ -20,9 +20,9 @@ var features = [
 
 	{command: "meme", func: memes.checkForMemes},
 
-	{command: "vai jogar", func: media.play},
-	{command: "vai ver", func: media.watch},
-	{command: "vai ouvir", func: media.listen},
+	{command: "play", func: media.play},
+	{command: "watch", func: media.watch},
+	{command: "listen", func: media.listen},
 	{command: "youtube add", func: media.youtubeAdd},
 	{command: "youtube remove", func: media.youtubeRemove},
 	{command: "youtube get", func: media.youtubeGet},
@@ -42,24 +42,36 @@ var checkCommand = (msg) => {
 	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
 };
 
-exports.checkForCommand = (msg, callback) => {
+var twoWordCommand = (msg) => {
+	return msg.content.split(" ")[1] + " " + msg.content.split(" ")[2];
+};
+
+exports.checkForCommand = (msg, callback, client) => {
 	var command = checkCommand(msg);
 	console.log(command);
-	var response = null;
 
-	const feature = features.find(feature => feature.command === command);
+	let feature = features.find(feature => feature.command === command);
 
 	if(feature){
 		feature.func(msg, (res) => {
 			callback({isCommand: true, msg: res});
-		});
+		}, client);
 	}else{
-		insideJokes.checkForInsideJokes(msg, (checkForInsideJokes) => {
-			if(checkForInsideJokes.isInsideJoke){
-				callback({isCommand: true, msg: checkForInsideJokes.msg});
-			}else{
-				callback({isCommand: false});
-			}
-		});
+		//TODO: Find better way to handle two word commands
+		feature = features.find(feature => feature.command === twoWordCommand(msg));
+
+		if(feature){
+			feature.func(msg, (res) => {
+				callback({isCommand: true, msg: res});
+			}, client);
+		}else{
+			insideJokes.checkForInsideJokes(msg, (checkForInsideJokes) => {
+				if(checkForInsideJokes.isInsideJoke){
+					callback({isCommand: true, msg: checkForInsideJokes.msg});
+				}else{
+					callback({isCommand: false});
+				}
+			});
+		}
 	}
 };

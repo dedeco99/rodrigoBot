@@ -1,24 +1,20 @@
 var discord = require("discord.js");
-var fs = require("fs");
 var secrets = require("./secrets");
+var Meta = require("./meta");
 var command = require("./command");
 var youtube = require("./youtube");
 var twitch = require("./twitch");
-
-var meta = {};
-var lastMsg = null;
 
 var client = new discord.Client();
 
 client.login(process.env.discordKey);
 
+Meta.getMeta();
+var lastMsg = null;
+
 client.on("ready", () => {
-  fs.readFile("meta.json", "utf8", (err, data) => {
-    if(err) throw err;
-    meta = JSON.parse(data);
-    console.log("Logged in as " + client.user.tag + "!");
-    client.user.setActivity(meta.order, { type: "PLAYING" });
-  });
+  console.log("Logged in as " + client.user.tag + "!");
+  client.user.setActivity(process.env.meta.action, { type: "PLAYING" });
 
   setInterval(() => {
     youtube.getYoutubeNotifications((res) => {
@@ -33,6 +29,7 @@ client.on("ready", () => {
 
 client.on("message", (msg) => {
   var firstWord = msg.content.split(" ")[0].toLowerCase();
+  let meta = JSON.parse(process.env.meta);
 
   if(firstWord === "rodrigo"){
     command.checkForCommand(msg, (checkForCommand) => {
@@ -44,7 +41,7 @@ client.on("message", (msg) => {
           msg.delete();
         }
       }
-    });
+    }, client);
   }else if(msg.author.username === "RodrigoBot"){
     lastMsg = msg;
   }else{
@@ -56,16 +53,12 @@ client.on("message", (msg) => {
           meta.likes++;
           msg.channel.send("Durante a minha existência já gostaram de mim " + meta.likes + " vezes. I can't handle it!!! *touches face violently*");
 
-          fs.writeFile("meta.json", JSON.stringify(meta), (err) => {
-            if(err) console.log(err);
-          });
+          Meta.updateMeta({ likes: meta.likes });
         }else if(msg.content.includes("bad") || msg.content.includes("mal") || msg.content.includes("mau") || msg.content.includes("worst") || msg.content.includes("lixo")){
           meta.dislikes++;
           msg.channel.send("Durante a minha existência já me deram bullying " + meta.dislikes + " vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*");
-
-          fs.writeFile("meta.json", JSON.stringify(meta), (err) => {
-            if(err) console.log(err);
-          });
+          
+          Meta.updateMeta({ dislikes: meta.dislikes });
         }
       }
     }

@@ -1,20 +1,27 @@
+var meta = require("./meta");
 var youtube = require("./youtube");
 var twitch = require("./twitch");
 var instagram = require("./instagram");
 
 exports.play = (msg, callback, client) => {
-	var order = msg.content.split("vai jogar ")[1];
-	client.user.setActivity(order, {type: "PLAYING"});
+	var action = msg.content.split("play")[1];
+	client.user.setActivity(action, {type: "PLAYING"});
+
+	meta.updateMeta({ action });
 };
 
 exports.watch = (msg, callback, client) => {
-	var order = msg.content.split("vai ver ")[1];
-	client.user.setActivity(order, {type: "WATCHING"});
+	var action = msg.content.split("watch")[1];
+	client.user.setActivity(action, {type: "WATCHING"});
+
+	meta.updateMeta({ action });
 };
 
 exports.listen = (msg, callback, client) => {
-	var order = msg.content.split("vai ouvir ")[1];
-	client.user.setActivity(order, {type: "LISTENING"});
+	var action = msg.content.split("listen")[1];
+	client.user.setActivity(action, {type: "LISTENING"});
+
+	meta.updateMeta({ action });
 };
 
 exports.youtubeAdd = (msg, callback) => {
