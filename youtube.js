@@ -1,6 +1,7 @@
 const request = require("request");
 
 const secrets = require("./secrets");
+const database = require("./database");
 const log = require("./log");
 
 const checkIfChannelExists = (channel, callback) => {
@@ -15,48 +16,6 @@ const checkIfChannelExists = (channel, callback) => {
 		}
 
 		return callback(false, json);
-	});
-};
-
-const checkIfChannelInDatabase = (data, callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={${ data.field}:'${data.channel}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
-
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
-
-		if (json.length > 0) {
-			return callback(true, json[0]._id.$oid);
-		}
-
-		return callback(false);
-	});
-};
-
-const checkIfNotificationExists = (data, callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'${data.video}'}&apiKey=${secrets.databaseKey}`;
-
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
-
-		if (json.length > 0) {
-			return callback(true);
-		}
-
-		return callback(false);
-	});
-};
-
-const addNotification = (videoId) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=${secrets.databaseKey}`;
-
-	const res = { "video": videoId };
-
-	request.post({ url, body: res, json: true }, error => {
-		if (error) return log.error(error.stack);
-		return null;
 	});
 };
 
@@ -88,32 +47,41 @@ const getVideo = (msg, callback) => {
 					return callback(`https://youtu.be/${json.items[0].snippet.resourceId.videoId}`);
 				});
 			});
+		} else {
+			return callback("Esse canal deve estar no xixo porque não o encontro");
 		}
-
-		return callback("Esse canal deve estar no xixo porque não o encontro");
 	});
+};
+
+const checkIfChannelInDatabase = async (query) => {
+	const channels = await database.getChannels(query);
+
+	return channels.length > 0 ? { exists: true, id: channels[0]._id } : false;
+};
+
+const checkIfNotificationExists = async (query) => {
+	const notifications = await database.getNotifications(query);
+
+	return notifications.length > 0;
 };
 
 const addChannel = (msg, callback) => {
 	const channel = msg.content.split("youtube add ")[1];
 
-	checkIfChannelExists(channel, (exists, json) => {
+	checkIfChannelExists(channel, async (exists, json) => {
 		if (exists) {
-			checkIfChannelInDatabase({ "field": "channel", "channel": json.items[0].id.channelId, "platform": "youtube" }, (exists) => {
-				if (exists) return callback("Esse canal já existe seu lixo");
+			const { exists } = await checkIfChannelInDatabase({ "channel": json.items[0].id.channelId, "platform": "youtube" });
+			if (exists) return callback("Esse canal já existe seu lixo");
 
-				const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels?apiKey=${secrets.databaseKey}`;
+			const channel = {
+				"name": json.items[0].snippet.title,
+				"channel": json.items[0].id.channelId,
+				"platform": "youtube"
+			};
 
-				const res = { "name": json.items[0].snippet.title, "channel": json.items[0].id.channelId, "platform": "youtube" };
+			database.postChannel(channel);
 
-				request.post({ url, body: res, json: true }, error => {
-					if (error) return log.error(error.stack);
-
-					return callback("Canal adicionado com sucesso my dude");
-				});
-
-				return null;
-			});
+			return callback("Canal adicionado com sucesso my dude");
 		}
 
 		return callback("Esse canal deve estar no xixo porque não o encontro");
@@ -123,93 +91,61 @@ const addChannel = (msg, callback) => {
 const removeChannel = (msg, callback) => {
 	const channel = msg.content.split("youtube remove ")[1];
 
-	checkIfChannelExists(channel, (exists, json) => {
+	checkIfChannelExists(channel, async (exists, json) => {
 		if (exists) {
-			checkIfChannelInDatabase({ "field": "channel", "channel": json.items[0].id.channelId, platform: "youtube" }, (exists, id) => {
-				if (exists) {
-					const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels/${id}?apiKey=${secrets.databaseKey}`;
+			const { exists, id } = await checkIfChannelInDatabase({ "channel": json.items[0].id.channelId, platform: "youtube" });
 
-					request.delete(url, error => {
-						if (error) return log.error(error.stack);
-
-						return callback("Canal removido com sucesso my dude");
-					});
-				}
-
-				return callback("Esse canal deve estar no xixo porque não o encontro");
-			});
+			if (exists) {
+				database.deleteChannel(id);
+				return callback("Canal removido com sucesso my dude");
+			}
 		}
 
 		return callback("Esse canal deve estar no xixo porque não o encontro");
 	});
 };
 
-const getChannels = (msg, callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={'platform':'youtube'}&s={'name':1}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
+const getChannels = async (msg, callback) => {
+	let channels = await database.getChannels({ platform: "youtube" });
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	channels = channels.map(channel => channel.name).join(" | ");
 
-		let res = "";
-
-		for (let i = 0; i < json.length; i++) {
-			res += `${json[i].name} | `;
-		}
-
-		return callback(res);
-	});
+	return callback(channels);
 };
 
-exports.getNotifications = (callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={'platform':'youtube'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
+const getNotifications = async (callback) => {
+	let channels = await database.getChannels({ platform: "youtube" });
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	channels = channels.map(channel => channel.name).join(",");
 
-		let channelsString = "";
+	getChannelsPlaylist(channels, (items) => {
+		for (const item of items) {
+			const url = `https://www.googleapis.com/youtube/v3/playlistItems
+				?part=snippet&playlistId=${item.contentDetails.relatedPlaylists.uploads}
+				&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
-		for (let i = 0; i < json.length; i++) {
-			channelsString += `${json[i].channel},`;
-		}
+			request(url, async (error, response, html) => {
+				if (error) return log.error(error.stack);
+				const json = JSON.parse(html);
 
-		getChannelsPlaylist(channelsString, (items) => {
-			for (let i = 0; i < items.length; i++) {
-				const url = `https://www.googleapis.com/youtube/v3/playlistItems
-					?part=snippet&playlistId=${items[i].contentDetails.relatedPlaylists.uploads}
-					&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
+				const item = json.items[0];
 
-				request(url, (error, response, html) => {
-					if (error) return log.error(error.stack);
-					const json = JSON.parse(html);
+				const ONE_HOUR = 60 * 60 * 1000;
+				if (new Date() - new Date(item.snippet.publishedAt) < ONE_HOUR) {
+					const exists = await checkIfNotificationExists({ video: item.snippet.resourceId.videoId });
+					if (!exists) {
+						database.addNotification({ "video": item.snippet.resourceId.videoId });
 
-					const ONE_HOUR = 60 * 60 * 1000;
-					if (new Date() - new Date(json.items[0].snippet.publishedAt) < ONE_HOUR) {
-						checkIfNotificationExists({ video: json.items[0].snippet.resourceId.videoId }, (exists) => {
-							if (!exists) {
-								addNotification(json.items[0].snippet.resourceId.videoId);
-
-								return callback(`**${json.items[0].snippet.channelTitle}** postou um novo video! | 
-									https://youtu.be/${json.items[0].snippet.resourceId.videoId}`.replace(/\t/g, "").replace(/\n/g, ""));
-							}
-
-							return null;
-						});
+						return callback(`**${item.snippet.channelTitle}** postou um novo video! | 
+							https://youtu.be/${item.snippet.resourceId.videoId}`.replace(/\t/g, "").replace(/\n/g, ""));
 					}
-
-					return null;
-				});
-			}
-		});
-
-		return null;
+				}
+			});
+		}
 	});
 };
 
-exports.checkForCommand = (msg, callback) => {
+const checkForCommand = (msg, callback) => {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
@@ -228,4 +164,9 @@ exports.checkForCommand = (msg, callback) => {
 			return callback(res);
 		});
 	}
+};
+
+module.exports = {
+	getNotifications,
+	checkForCommand
 };

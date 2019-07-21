@@ -1,7 +1,7 @@
 const discord = require("discord.js");
 
 const secrets = require("./secrets");
-const meta = require("./meta");
+const database = require("./database");
 const command = require("./command");
 const youtube = require("./youtube");
 const twitch = require("./twitch");
@@ -28,12 +28,12 @@ const handleMessage = async (msg, lastMsg, client, callback) => {
 		const insults = ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"];
 
 		if (compliments.find(compliment => msg.content.includes(compliment))) {
-			const metaInfo = await meta.updateMeta({ likes: true });
+			const metaInfo = await database.updateMeta({ likes: true });
 
 			msg.channel.send(`Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes.
 							I can't handle it!!! *touches face violently*`.replace(/\t/g, "").replace(/\n/g, ""));
 		} else if (insults.find(insult => msg.content.includes(insult))) {
-			const metaInfo = await meta.updateMeta({ dislikes: true });
+			const metaInfo = await database.updateMeta({ dislikes: true });
 
 			msg.channel.send(`Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes.
 							Vou chamar os meus pais. *cries while getting hit with a laptop*`.replace(/\t/g, "").replace(/\n/g, ""));
@@ -47,7 +47,7 @@ const run = async () => {
 	const client = new discord.Client();
 	client.login(secrets.discordKey);
 
-	const metaInfo = await meta.getMeta();
+	const metaInfo = await database.getMeta();
 	let lastMsg = null;
 
 	client.on("ready", () => {

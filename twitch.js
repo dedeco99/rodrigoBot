@@ -1,6 +1,7 @@
 const request = require("request");
 
 const secrets = require("./secrets");
+const database = require("./database");
 const log = require("./log");
 
 const checkIfChannelExists = (channel, callback) => {
@@ -23,47 +24,6 @@ const checkIfChannelExists = (channel, callback) => {
 	});
 };
 
-const checkIfChannelInDatabase = (data, callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={${data.field}:'${data.channel}','platform':'${data.platform}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
-
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
-
-		if (json.length > 0) {
-			return callback(true, json[0]._id.$oid);
-		}
-
-		return callback(false);
-	});
-};
-
-const checkIfNotificationExists = (data, callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications
-		?q={'video':'${data.video}','started':'${data.started}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
-
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
-
-		if (json.length > 0) {
-			return callback(true);
-		}
-
-		return callback(false);
-	});
-};
-
-const addNotification = (data) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=${secrets.databaseKey}`;
-
-	request.post({ url, body: data, json: true }, error => {
-		if (error) return log.error(error.stack);
-		return null;
-	});
-};
-
 const getStream = (msg, callback, client) => {
 	const channel = msg.content.split("twitch ")[1];
 	const url = `https://www.twitch.tv/${channel}`;
@@ -73,110 +33,99 @@ const getStream = (msg, callback, client) => {
 	return callback(url);
 };
 
+const checkIfChannelInDatabase = async (query) => {
+	const channels = await database.getChannels(query);
+
+	return channels.length > 0 ? { exists: true, id: channels[0]._id } : false;
+};
+
+const checkIfNotificationExists = async (query) => {
+	const notifications = await database.getNotifications(query);
+
+	return notifications.length > 0;
+};
+
 const addChannel = (msg, callback) => {
 	const channel = msg.content.split("twitch add ")[1];
 
-	checkIfChannelExists(channel, (exists, json) => {
+	checkIfChannelExists(channel, async (exists, json) => {
 		if (exists) {
-			checkIfChannelInDatabase({ "field": "channel", "channel": json.data[0].login }, (exists) => {
-				if (!exists) {
-					const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels?apiKey=${secrets.databaseKey}`;
+			const { exists } = await checkIfChannelInDatabase({ "channel": json.data[0].login, "platform": "twitch" });
+			if (exists) return callback("Esse canal já existe seu lixo");
 
-					const res = { "name": json.data[0].login, "channel": json.data[0].login, "platform": "twitch" };
+			const channel = {
+				"name": json.data[0].login,
+				"channel": json.data[0].login,
+				"platform": "twitch"
+			};
 
-					request.post({ url, body: res, json: true }, error => {
-						if (error) return log.error(error.stack);
+			database.postChannel(channel);
 
-						return callback("Canal adicionado com sucesso my dude");
-					});
-				}
-			});
+			return callback("Canal adicionado com sucesso my dude");
 		}
 
 		return callback("Esse canal deve estar no xixo porque não o encontro");
 	});
 };
 
-const removeChannel = (msg, callback) => {
+const removeChannel = async (msg, callback) => {
 	const channel = msg.content.split("twitch remove ")[1];
 
-	checkIfChannelInDatabase({ "field": "name", "channel": channel, "platform": "twitch" }, (exists, id) => {
-		if (exists) {
-			const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels/${id}?apiKey=${secrets.databaseKey}`;
+	const { exists, id } = await checkIfChannelInDatabase({ "name": channel, "platform": "twitch" });
 
-			request.delete(url, error => {
-				if (error) return log.error(error.stack);
+	if (exists) {
+		database.deleteChannel(id);
+		return callback("Canal removido com sucesso my dude");
+	}
 
-				return callback("Canal removido com sucesso my dude");
-			});
-		}
-
-		return callback("Esse canal deve estar no xixo porque não o encontro");
-	});
+	return callback("Esse canal deve estar no xixo porque não o encontro");
 };
 
-const getChannels = (msg, callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={'platform':'twitch'}&s={'name':1}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
+const getChannels = async (msg, callback) => {
+	let channels = await database.getChannels({ platform: "twitch" });
 
-	request(url, (error, response, html) => {
+	channels = channels.map(channel => channel.name).join(" | ");
+
+	return callback(channels);
+};
+
+const getNotifications = async (callback) => {
+	const channels = await database.getChannels({ platform: "twitch" });
+
+	let channelsString = channels.map(channel => channel.name).join(",");
+
+	for (const channel of channels) {
+		channelsString += `user_login=${channel.channel}&`;
+	}
+
+	channelsString = channelsString.slice(0, -1);
+
+	const url = `https://api.twitch.tv/helix/streams?${channelsString}`;
+
+	const headers = {
+		"Accept": "application/vnd.twitchtv.v5+json",
+		"Client-ID": secrets.twitchClientId
+	};
+
+	request({ headers, url }, async (error, response, html) => {
 		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
-		let res = "";
+		for (let i = 0; i < json.data.length; i++) {
+			const ONE_HOUR = 60 * 60 * 1000;
+			if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
+				const exists = await checkIfNotificationExists({ video: json.data[i].user_name, started: json.data[i].started_at });
+				if (!exists) {
+					database.addNotification({ "video": json.items[0].snippet.resourceId.videoId });
 
-		for (let i = 0; i < json.length; i++) {
-			res += `${json[i].name} | `;
-		}
-
-		return callback(res);
-	});
-};
-
-exports.getNotifications = (callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&apiKey=${secrets.databaseKey}`;
-
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
-
-		let channels = "";
-
-		for (let i = 0; i < json.length; i++) {
-			channels += `user_login=${json[i].channel}&`;
-		}
-
-		channels = channels.slice(0, -1);
-
-		const url = `https://api.twitch.tv/helix/streams?${channels}`;
-
-		const headers = {
-			"Accept": "application/vnd.twitchtv.v5+json",
-			"Client-ID": secrets.twitchClientId
-		};
-
-		request({ headers, url }, (error, response, html) => {
-			if (error) return log.error(error.stack);
-			const json = JSON.parse(html);
-
-			for (let i = 0; i < json.data.length; i++) {
-				const ONE_HOUR = 60 * 60 * 1000;
-				if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
-					checkIfNotificationExists({ video: json.data[i].user_name, started: json.data[i].started_at }, (exists) => {
-						if (!exists) {
-							addNotification(json.items[0].snippet.resourceId.videoId);
-							return callback(`**${json.data[i].user_name}** está live! | https://twitch.tv/${json.data[i].user_name}`);
-						}
-
-						return null;
-					});
+					return callback(`**${json.data[i].user_name}** está live! | https://twitch.tv/${json.data[i].user_name}`);
 				}
 			}
-		});
+		}
 	});
 };
 
-exports.checkForCommand = (msg, callback, client) => {
+const checkForCommand = (msg, callback, client) => {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
@@ -195,4 +144,9 @@ exports.checkForCommand = (msg, callback, client) => {
 			return callback(res);
 		}, client);
 	}
+};
+
+module.exports = {
+	getNotifications,
+	checkForCommand
 };
