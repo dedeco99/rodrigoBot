@@ -1,7 +1,7 @@
-var request = require("request");
+const request = require("request");
 
-var checkIfChannelExists = (data, callback) => {
-	var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + data.channel + "&type=channel&key=" + process.env.youtubeKey;
+const checkIfChannelExists = (channel, callback) => {
+	var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + channel + "&type=channel&key=" + process.env.youtubeKey;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -15,7 +15,7 @@ var checkIfChannelExists = (data, callback) => {
 	});
 };
 
-var checkIfChannelInDatabase = (data, callback) => {
+const checkIfChannelInDatabase = (data, callback) => {
 	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={" + data.field + ":'" + data.channel + "'}&apiKey=" + process.env.databaseKey;
 
 	request(url, (error, response, html) => {
@@ -30,7 +30,7 @@ var checkIfChannelInDatabase = (data, callback) => {
 	});
 };
 
-var checkIfNotificationExists = (data, callback) => {
+const checkIfNotificationExists = (data, callback) => {
 	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'" + data.video + "'}&apiKey=" + process.env.databaseKey;
 
 	request(url, (error, response, html) => {
@@ -45,7 +45,7 @@ var checkIfNotificationExists = (data, callback) => {
 	});
 };
 
-var addNotification = (videoId) => {
+const addNotification = (videoId) => {
 	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=" + process.env.databaseKey;
 
 	var res = { "video": videoId };
@@ -66,8 +66,10 @@ const getChannelsPlaylist = (data, callback) => {
 	});
 };
 
-exports.getYoutubeVideo = (data, callback) => {
-	checkIfChannelExists(data, (exists, json) => {
+const getVideo = (msg, callback) => {
+	var channel = msg.content.split("youtube ")[1];
+
+	checkIfChannelExists(channel, (exists, json) => {
 		if (exists) {
 			getChannelsPlaylist(json.items[0].id.channelId, (items) => {
 				var url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + items[0].contentDetails.relatedPlaylists.uploads + "&maxResults=5&key=" + process.env.youtubeKey;
@@ -85,8 +87,10 @@ exports.getYoutubeVideo = (data, callback) => {
 	});
 };
 
-exports.addYoutubeChannel = (data, callback) => {
-	checkIfChannelExists(data, (exists, json) => {
+const addChannel = (msg, callback) => {
+	const channel = msg.content.split("youtube add ")[1];
+
+	checkIfChannelExists(channel, (exists, json) => {
 		if (exists) {
 			checkIfChannelInDatabase({ "field": "channel", "channel": json.items[0].id.channelId, "platform": "youtube" }, (exists) => {
 				if (!exists) {
@@ -109,8 +113,10 @@ exports.addYoutubeChannel = (data, callback) => {
 	});
 };
 
-exports.removeYoutubeChannel = (data, callback) => {
-	checkIfChannelExists(data, (exists, json) => {
+const removeChannel = (msg, callback) => {
+	const channel = msg.content.split("youtube remove ")[1];
+
+	checkIfChannelExists(channel, (exists, json) => {
 		if (exists) {
 			checkIfChannelInDatabase({ "field": "channel", "channel": json.items[0].id.channelId, platform: "youtube" }, (exists, id) => {
 				if (exists) {
@@ -131,7 +137,7 @@ exports.removeYoutubeChannel = (data, callback) => {
 	});
 };
 
-exports.getYoutubeChannels = (callback) => {
+const getChannels = (msg, callback) => {
 	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'youtube'}&s={'name':1}&apiKey=" + process.env.databaseKey;
 
 	request(url, (error, response, html) => {
@@ -148,7 +154,7 @@ exports.getYoutubeChannels = (callback) => {
 	});
 };
 
-exports.getYoutubeNotifications = (callback) => {
+exports.getNotifications = (callback) => {
 	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'youtube'}&apiKey=" + process.env.databaseKey;
 
 	request(url, (error, response, html) => {
@@ -173,7 +179,7 @@ exports.getYoutubeNotifications = (callback) => {
 					if ((new Date()) - (new Date(json.items[0].snippet.publishedAt)) < ONE_HOUR) {
 						checkIfNotificationExists({ video: json.items[0].snippet.resourceId.videoId }, (exists) => {
 							if (!exists) {
-								callback({ notification: "**" + json.items[0].snippet.channelTitle + "** postou um novo video!", video: "https://youtu.be/" + json.items[0].snippet.resourceId.videoId });
+								callback("**" + json.items[0].snippet.channelTitle + "** postou um novo video! | https://youtu.be/" + json.items[0].snippet.resourceId.videoId);
 								addNotification(json.items[0].snippet.resourceId.videoId);
 							}
 						});
@@ -182,4 +188,25 @@ exports.getYoutubeNotifications = (callback) => {
 			}
 		});
 	});
+};
+
+exports.checkForCommand = (msg, callback, client) => {
+	const features = [
+		{ command: "add", func: addChannel },
+		{ command: "remove", func: removeChannel },
+		{ command: "get", func: getChannels }
+	];
+
+	const command = msg.content.split(" ")[2];
+	const feature = features.find(feature => feature.command === command);
+
+	if (feature) {
+		feature.func(msg, (res) => {
+			callback(res);
+		});
+	} else {
+		getVideo(msg, (res) => {
+			callback(res);
+		});
+	}
 };

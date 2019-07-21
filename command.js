@@ -2,6 +2,8 @@ var utils = require("./utils");
 var memes = require("./memes");
 var media = require("./media");
 var reddit = require("./reddit");
+var youtube = require("./youtube");
+var twitch = require("./twitch");
 var insideJokes = require("./insideJokes");
 
 var features = [
@@ -23,27 +25,18 @@ var features = [
 	{ command: "play", func: media.play },
 	{ command: "watch", func: media.watch },
 	{ command: "listen", func: media.listen },
-	{ command: "youtube add", func: media.youtubeAdd },
-	{ command: "youtube remove", func: media.youtubeRemove },
-	{ command: "youtube get", func: media.youtubeGet },
-	{ command: "youtube check", func: media.youtubeCheck },
-	{ command: "youtube", func: media.youtubeElse },
-	{ command: "twitch add", func: media.twitchAdd },
-	{ command: "twitch remove", func: media.twitchRemove },
-	{ command: "twitch get", func: media.twitchGet },
-	{ command: "twitch check", func: media.twitchCheck },
-	{ command: "twitch", func: media.twitchElse },
+
 	{ command: "insta", func: media.insta },
 
 	{ command: "reddit", func: reddit.checkForReddit },
+
+	{ command: "youtube", func: youtube.checkForCommand },
+
+	{ command: "twitch", func: twitch.checkForCommand },
 ];
 
 var checkCommand = (msg) => {
 	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
-};
-
-var twoWordCommand = (msg) => {
-	return msg.content.split(" ")[1] + " " + msg.content.split(" ")[2];
 };
 
 exports.checkForCommand = (msg, callback, client) => {
@@ -57,21 +50,12 @@ exports.checkForCommand = (msg, callback, client) => {
 			callback({ isCommand: true, msg: res });
 		}, client);
 	} else {
-		//TODO: Find better way to handle two word commands
-		feature = features.find(feature => feature.command === twoWordCommand(msg));
-
-		if (feature) {
-			feature.func(msg, (res) => {
-				callback({ isCommand: true, msg: res });
-			}, client);
-		} else {
-			insideJokes.checkForInsideJokes(msg, (checkForInsideJokes) => {
-				if (checkForInsideJokes.isInsideJoke) {
-					callback({ isCommand: true, msg: checkForInsideJokes.msg });
-				} else {
-					callback({ isCommand: false });
-				}
-			});
-		}
+		insideJokes.checkForInsideJokes(msg, (checkForInsideJokes) => {
+			if (checkForInsideJokes.isInsideJoke) {
+				callback({ isCommand: true, msg: checkForInsideJokes.msg });
+			} else {
+				callback({ isCommand: false });
+			}
+		});
 	}
 };
