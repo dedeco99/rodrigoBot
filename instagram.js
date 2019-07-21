@@ -12,11 +12,11 @@ exports.getPost = (msg, callback) => {
 			html.lastIndexOf("</script>")
 		);
 
-		foto = foto.substring(0, foto.indexOf("</script>")-1);
+		foto = foto.substring(0, foto.indexOf("</script>") - 1);
 
 		var json = JSON.parse(foto);
 
-		if(json.entry_data.ProfilePage){
+		if (json.entry_data.ProfilePage) {
 			var profilePic = json.entry_data.ProfilePage[0].graphql.user.profile_pic_url_hd;
 			var bio = json.entry_data.ProfilePage[0].graphql.user.biography;
 			var name = json.entry_data.ProfilePage[0].graphql.user.full_name;
@@ -24,7 +24,7 @@ exports.getPost = (msg, callback) => {
 			var follows = json.entry_data.ProfilePage[0].graphql.user.edge_follow.count;
 			var posts = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.count;
 
-			if(bio === "") bio = "No bio";
+			if (bio === "") bio = "No bio";
 
 			var res = {
 				url,
@@ -33,32 +33,32 @@ exports.getPost = (msg, callback) => {
 				name,
 				followers,
 				follows,
-				image:null,
-				error:null,
+				image: null,
+				error: null,
 				posts
 			};
 
-			if(!json.entry_data.ProfilePage[0].graphql.user.is_private){
+			if (!json.entry_data.ProfilePage[0].graphql.user.is_private) {
 				var images = json.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges;
 
-				if(images.length > 0){
-					if(num === "random"){
+				if (images.length > 0) {
+					if (num === "random") {
 						num = Math.floor(Math.random() * images.length);
-					}else if(isNaN(num) || num > images.length || num < 0){
+					} else if (isNaN(num) || num > images.length || num < 0) {
 						num = 0;
 					}
 
 					var image = images[num].node.display_url;
 					res.image = image;
-				}else{
+				} else {
 					res.error = "Este perfil não tem fotos";
 				}
-			}else{
+			} else {
 				res.error = "Este xixo é privado :wink:";
 			}
 
 			callback(embed.createInstaEmbed(res));
-		}else{
+		} else {
 			callback("Claramente esse xixo não existe");
 		}
 	});
