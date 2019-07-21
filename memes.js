@@ -1,11 +1,11 @@
-var Jimp = require("jimp");
+const Jimp = require("jimp");
 
-var makeMeme = (msg, meme, callback) => {
-	var message = msg.content.split(meme.name)[1];
+const makeMeme = (msg, meme, callback) => {
+	let message = msg.content.split(meme.name)[1];
 	message = message.split(";");
 
-	var fileName = "./assets/img/memes/templates/" + meme.name + ".jpg";
-	var loadedImage;
+	const fileName = `./assets/img/memes/templates/${meme.name}.jpg`;
+	let loadedImage = null;
 
 	Jimp.read(fileName)
 		.then((image) => {
@@ -13,26 +13,26 @@ var makeMeme = (msg, meme, callback) => {
 			return Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
 		})
 		.then((font) => {
-			var currentMsg;
-			var i = 0;
+			let currentMsg = null;
+			let i = 0;
 			if (meme.name === "pikachu") {
-				var sum = 0;
+				let sum = 0;
 				for (i = 0; i < message.length; i++) {
 					currentMsg = message[i];
 					loadedImage.print(font, meme.position0.x, meme.position0.y + sum, currentMsg, meme.position0.max)
-						.write("./assets/img/memes/" + meme.name + ".jpg");
+						.write(`./assets/img/memes/${meme.name}.jpg`);
 					sum += 50;
 				}
 			} else {
 				for (i = 0; i < message.length; i++) {
 					currentMsg = message[i];
-					loadedImage.print(font, meme["position" + i].x, meme["position" + i].y, currentMsg, meme["position" + i].max)
-						.write("./assets/img/memes/" + meme.name + ".jpg");
+					loadedImage.print(font, meme[`position${i}`].x, meme[`position${i}`].y, currentMsg, meme[`position${i}`].max)
+						.write(`./assets/img/memes/${meme.name}.jpg`);
 				}
 			}
 		})
 		.then(() => {
-			callback({ "file": "./assets/img/memes/" + meme.name + ".jpg" });
+			return callback({ "file": `./assets/img/memes/${meme.name}.jpg` });
 		})
 		.catch((err) => {
 			console.error(err);
@@ -47,7 +47,12 @@ exports.checkForMemes = (msg, callback) => {
 		{ name: "facts", position0: { x: 20, y: 350, max: 200 } },
 		{ name: "button", position0: { x: 100, y: 220, max: 150 } },
 		{ name: "choice", position0: { x: 100, y: 125, max: 100 }, position1: { x: 300, y: 75, max: 100 } },
-		{ name: "marioluigi", position0: { x: 375, y: 100, max: 100 }, position1: { x: 175, y: 375, max: 200 }, position2: { x: 400, y: 375, max: 200 } },
+		{
+			name: "marioluigi",
+			position0: { x: 375, y: 100, max: 100 },
+			position1: { x: 175, y: 375, max: 200 },
+			position2: { x: 400, y: 375, max: 200 }
+		},
 		{ name: "pikachu", position0: { x: 10, y: 10, max: 700 } }
 	];
 
@@ -55,6 +60,6 @@ exports.checkForMemes = (msg, callback) => {
 	const meme = memes.find(meme => meme.name === searchedMeme);
 
 	makeMeme(msg, meme, (res) => {
-		callback(res);
+		return callback(res);
 	});
 };

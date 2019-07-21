@@ -1,89 +1,96 @@
 const request = require("request");
 
+const secrets = require("./secrets");
+
 const checkIfChannelExists = (channel, callback) => {
-	var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&q=" + channel + "&type=channel&key=" + process.env.youtubeKey;
+	const url = `https://www.googleapis.com/youtube/v3/search
+		?part=snippet&q=${ channel}&type=channel&key=${secrets.youtubeKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
-		var json = JSON.parse(html);
+		const json = JSON.parse(html);
 
 		if (json.pageInfo.totalResults > 0) {
-			callback(true, json);
-		} else {
-			callback(false, json);
+			return callback(true, json);
 		}
+
+		return callback(false, json);
 	});
 };
 
 const checkIfChannelInDatabase = (data, callback) => {
-	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={" + data.field + ":'" + data.channel + "'}&apiKey=" + process.env.databaseKey;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
+		?q={${ data.field}:'${data.channel}'}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
-		var json = JSON.parse(html);
+		const json = JSON.parse(html);
 
 		if (json.length > 0) {
-			callback(true, json[0]._id.$oid);
-		} else {
-			callback(false);
+			return callback(true, json[0]._id.$oid);
 		}
+
+		return callback(false);
 	});
 };
 
 const checkIfNotificationExists = (data, callback) => {
-	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'" + data.video + "'}&apiKey=" + process.env.databaseKey;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications
+		?q={'video':'${data.video}'}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
-		var json = JSON.parse(html);
+		const json = JSON.parse(html);
 
 		if (json.length > 0) {
-			callback(true);
-		} else {
-			callback(false);
+			return callback(true);
 		}
+
+		return callback(false);
 	});
 };
 
 const addNotification = (videoId) => {
-	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=" + process.env.databaseKey;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=${secrets.databaseKey}`;
 
-	var res = { "video": videoId };
+	const res = { "video": videoId };
 
-	request.post({ url, body: res, json: true }, (error, response, html) => {
+	request.post({ url, body: res, json: true }, error => {
 		if (error) console.log(error);
 	});
 };
 
 const getChannelsPlaylist = (data, callback) => {
-	var url = "https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=" + data + "&maxResults=50&key=" + process.env.youtubeKey;
+	const url = `https://www.googleapis.com/youtube/v3/channels
+		?part=contentDetails&id=${data}&maxResults=50&key=${secrets.youtubeKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
-		var json = JSON.parse(html);
+		const json = JSON.parse(html);
 
-		callback(json.items);
+		return callback(json.items);
 	});
 };
 
 const getVideo = (msg, callback) => {
-	var channel = msg.content.split("youtube ")[1];
+	const channel = msg.content.split("youtube ")[1];
 
 	checkIfChannelExists(channel, (exists, json) => {
 		if (exists) {
 			getChannelsPlaylist(json.items[0].id.channelId, (items) => {
-				var url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + items[0].contentDetails.relatedPlaylists.uploads + "&maxResults=5&key=" + process.env.youtubeKey;
+				const url = `https://www.googleapis.com/youtube/v3/playlistItems
+					?part=snippet&playlistId=${items[0].contentDetails.relatedPlaylists.uploads}&maxResults=5&key=${secrets.youtubeKey}`;
 
 				request(url, (error, response, html) => {
 					if (error) console.log(error);
-					var json = JSON.parse(html);
+					const json = JSON.parse(html);
 
-					callback("https://youtu.be/" + json.items[0].snippet.resourceId.videoId);
+					return callback(`https://youtu.be/${json.items[0].snippet.resourceId.videoId}`);
 				});
 			});
-		} else {
-			callback("Esse canal deve estar no xixo porque não o encontro");
 		}
+
+		return callback("Esse canal deve estar no xixo porque não o encontro");
 	});
 };
 
@@ -93,23 +100,23 @@ const addChannel = (msg, callback) => {
 	checkIfChannelExists(channel, (exists, json) => {
 		if (exists) {
 			checkIfChannelInDatabase({ "field": "channel", "channel": json.items[0].id.channelId, "platform": "youtube" }, (exists) => {
-				if (!exists) {
-					var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?apiKey=" + process.env.databaseKey;
+				if (exists) return callback("Esse canal já existe seu lixo");
 
-					var res = { "name": json.items[0].snippet.title, "channel": json.items[0].id.channelId, "platform": "youtube" };
+				const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels?apiKey=${secrets.databaseKey}`;
 
-					request.post({ url, body: res, json: true }, (error, response, html) => {
-						if (error) console.log(error);
+				const res = { "name": json.items[0].snippet.title, "channel": json.items[0].id.channelId, "platform": "youtube" };
 
-						callback("Canal adicionado com sucesso my dude");
-					});
-				} else {
-					callback("Esse canal já existe seu lixo");
-				}
+				request.post({ url, body: res, json: true }, error => {
+					if (error) console.log(error);
+
+					return callback("Canal adicionado com sucesso my dude");
+				});
+
+				return null;
 			});
-		} else {
-			callback("Esse canal deve estar no xixo porque não o encontro");
 		}
+
+		return callback("Esse canal deve estar no xixo porque não o encontro");
 	});
 };
 
@@ -120,68 +127,75 @@ const removeChannel = (msg, callback) => {
 		if (exists) {
 			checkIfChannelInDatabase({ "field": "channel", "channel": json.items[0].id.channelId, platform: "youtube" }, (exists, id) => {
 				if (exists) {
-					var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels/" + id + "?apiKey=" + process.env.databaseKey;
+					const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels/${id}?apiKey=${secrets.databaseKey}`;
 
-					request.delete(url, (error, response, html) => {
+					request.delete(url, error => {
 						if (error) console.log(error);
 
-						callback("Canal removido com sucesso my dude");
+						return callback("Canal removido com sucesso my dude");
 					});
-				} else {
-					callback("Esse canal deve estar no xixo porque não o encontro");
 				}
+
+				return callback("Esse canal deve estar no xixo porque não o encontro");
 			});
-		} else {
-			callback("Esse canal deve estar no xixo porque não o encontro");
 		}
+
+		return callback("Esse canal deve estar no xixo porque não o encontro");
 	});
 };
 
 const getChannels = (msg, callback) => {
-	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'youtube'}&s={'name':1}&apiKey=" + process.env.databaseKey;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
+		?q={'platform':'youtube'}&s={'name':1}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
-		var json = JSON.parse(html);
+		const json = JSON.parse(html);
 
-		var res = "";
+		let res = "";
 
-		for (var i = 0; i < json.length; i++) {
-			res += json[i].name + " | ";
+		for (let i = 0; i < json.length; i++) {
+			res += `${json[i].name} | `;
 		}
 
-		callback(res);
+		return callback(res);
 	});
 };
 
 exports.getNotifications = (callback) => {
-	var url = "https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'youtube'}&apiKey=" + process.env.databaseKey;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
+		?q={'platform':'youtube'}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
-		var json = JSON.parse(html);
+		const json = JSON.parse(html);
 
-		var channelsString = "";
+		let channelsString = "";
 
-		for (var i = 0; i < json.length; i++) {
-			channelsString += json[i].channel + ",";
+		for (let i = 0; i < json.length; i++) {
+			channelsString += `${json[i].channel},`;
 		}
 
 		getChannelsPlaylist(channelsString, (items) => {
-			for (var i = 0; i < items.length; i++) {
-				var url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + items[i].contentDetails.relatedPlaylists.uploads + "&maxResults=1&key=" + process.env.youtubeKey;
+			for (let i = 0; i < items.length; i++) {
+				const url = `https://www.googleapis.com/youtube/v3/playlistItems
+					?part=snippet&playlistId=${items[i].contentDetails.relatedPlaylists.uploads}&maxResults=1&key=${secrets.youtubeKey}`;
 
 				request(url, (error, response, html) => {
 					if (error) console.log(error);
-					var json = JSON.parse(html);
+					const json = JSON.parse(html);
 
-					var ONE_HOUR = 60 * 60 * 1000;
-					if ((new Date()) - (new Date(json.items[0].snippet.publishedAt)) < ONE_HOUR) {
+					const ONE_HOUR = 60 * 60 * 1000;
+					if (new Date() - new Date(json.items[0].snippet.publishedAt) < ONE_HOUR) {
 						checkIfNotificationExists({ video: json.items[0].snippet.resourceId.videoId }, (exists) => {
 							if (!exists) {
-								callback("**" + json.items[0].snippet.channelTitle + "** postou um novo video! | https://youtu.be/" + json.items[0].snippet.resourceId.videoId);
 								addNotification(json.items[0].snippet.resourceId.videoId);
+
+								return callback(`**${json.items[0].snippet.channelTitle}** postou um novo video! | 
+									https://youtu.be/${json.items[0].snippet.resourceId.videoId}`);
 							}
+
+							return null;
 						});
 					}
 				});
@@ -190,7 +204,7 @@ exports.getNotifications = (callback) => {
 	});
 };
 
-exports.checkForCommand = (msg, callback, client) => {
+exports.checkForCommand = (msg, callback) => {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
@@ -202,11 +216,11 @@ exports.checkForCommand = (msg, callback, client) => {
 
 	if (feature) {
 		feature.func(msg, (res) => {
-			callback(res);
+			return callback(res);
 		});
 	} else {
 		getVideo(msg, (res) => {
-			callback(res);
+			return callback(res);
 		});
 	}
 };

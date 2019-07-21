@@ -1,19 +1,21 @@
-var request = require("request");
+const request = require("request");
+
+const secrets = require("./secrets");
 
 exports.getMeta = () => {
-	const url = "https://api.mlab.com/api/1/databases/rodrigo/collections/meta?apiKey=" + process.env.databaseKey;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/meta?apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
 		const json = JSON.parse(html);
 
-		process.env.meta = JSON.stringify(json[0]);
+		secrets.meta = JSON.stringify(json[0]);
 	});
 };
 
 exports.updateMeta = (obj) => {
-	let meta = JSON.parse(process.env.meta);
-	const url = "https://api.mlab.com/api/1/databases/rodrigo/collections/meta/" + meta._id.$oid + "?apiKey=" + process.env.databaseKey;
+	const meta = JSON.parse(secrets.meta);
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/meta/${meta._id.$oid}?apiKey=${secrets.databaseKey}`;
 
 	const body = {
 		"action": obj.action ? obj.action : meta.action,
@@ -25,6 +27,6 @@ exports.updateMeta = (obj) => {
 		if (error) console.log(error);
 		const json = html;
 
-		process.env.meta = JSON.stringify(json);
+		secrets.meta = JSON.stringify(json);
 	});
 };

@@ -1,12 +1,13 @@
-var utils = require("./utils");
-var memes = require("./memes");
-var media = require("./media");
-var reddit = require("./reddit");
-var youtube = require("./youtube");
-var twitch = require("./twitch");
-var insideJokes = require("./insideJokes");
+const utils = require("./utils");
+const memes = require("./memes");
+const media = require("./media");
+const reddit = require("./reddit");
+const youtube = require("./youtube");
+const twitch = require("./twitch");
+const instagram = require("./instagram");
+const insideJokes = require("./insideJokes");
 
-var features = [
+const features = [
 	{ command: "define", func: utils.define },
 	{ command: "procura", func: utils.procura },
 	{ command: "responde", func: utils.responde },
@@ -26,36 +27,36 @@ var features = [
 	{ command: "watch", func: media.watch },
 	{ command: "listen", func: media.listen },
 
-	{ command: "insta", func: media.insta },
+	{ command: "insta", func: instagram.getPost },
 
 	{ command: "reddit", func: reddit.checkForReddit },
 
 	{ command: "youtube", func: youtube.checkForCommand },
 
-	{ command: "twitch", func: twitch.checkForCommand },
+	{ command: "twitch", func: twitch.checkForCommand }
 ];
 
-var checkCommand = (msg) => {
+const checkCommand = (msg) => {
 	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
 };
 
 exports.checkForCommand = (msg, callback, client) => {
-	var command = checkCommand(msg);
+	const command = checkCommand(msg);
 	console.log(command);
 
-	let feature = features.find(feature => feature.command === command);
+	const feature = features.find(feat => feat.command === command);
 
 	if (feature) {
 		feature.func(msg, (res) => {
-			callback({ isCommand: true, msg: res });
+			return callback({ isCommand: true, msg: res });
 		}, client);
 	} else {
 		insideJokes.checkForInsideJokes(msg, (checkForInsideJokes) => {
 			if (checkForInsideJokes.isInsideJoke) {
-				callback({ isCommand: true, msg: checkForInsideJokes.msg });
-			} else {
-				callback({ isCommand: false });
+				return callback({ isCommand: true, msg: checkForInsideJokes.msg });
 			}
+
+			return callback({ isCommand: false });
 		});
 	}
 };
