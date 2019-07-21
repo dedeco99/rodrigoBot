@@ -24,7 +24,7 @@ const checkIfChannelExists = (channel, callback) => {
 
 const checkIfChannelInDatabase = (data, callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={${data.field}:'${data.channel}','platform':'${data.platform}'}&apiKey=${secrets.databaseKey}`;
+		?q={${data.field}:'${data.channel}','platform':'${data.platform}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -40,7 +40,7 @@ const checkIfChannelInDatabase = (data, callback) => {
 
 const checkIfNotificationExists = (data, callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications
-		?q={'video':'${data.video}','started':'${data.started}'}&apiKey=${secrets.databaseKey}`;
+		?q={'video':'${data.video}','started':'${data.started}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -115,7 +115,7 @@ const removeChannel = (msg, callback) => {
 
 const getChannels = (msg, callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={'platform':'twitch'}&s={'name':1}&apiKey=${secrets.databaseKey}`;
+		?q={'platform':'twitch'}&s={'name':1}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -132,8 +132,7 @@ const getChannels = (msg, callback) => {
 };
 
 exports.getNotifications = (callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={'platform':'twitch'}&apiKey=${secrets.databaseKey}`;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);

@@ -81,7 +81,7 @@ const getRedditPosts = (data, accessToken, callback) => {
 
 const getAccessToken = (data, callback) => {
 	const url = `https://www.reddit.com/api/v1/access_token
-		?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`;
+		?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`.replace(/\t/g, "").replace(/\n/g, "");
 
 	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
@@ -90,7 +90,7 @@ const getAccessToken = (data, callback) => {
 		"User-Agent": "RodrigoBot",
 		"Authorization": auth
 	};
-
+	console.log(url);
 	request.post({ url, headers }, (error, response, html) => {
 		if (error) console.log(error);
 		const json = JSON.parse(html);
@@ -102,7 +102,7 @@ const getAccessToken = (data, callback) => {
 
 const getRefreshToken = () => { /* eslint-disable-line no-unused-vars */
 	const url = `https://www.reddit.com/api/v1/access_token
-		?code=EnnCAq3ndBzr0QYjBNCRgRxnzvg&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul`;
+		?code=EnnCAq3ndBzr0QYjBNCRgRxnzvg&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul`.replace(/\t/g, "").replace(/\n/g, "");
 
 	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;

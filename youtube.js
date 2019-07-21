@@ -3,8 +3,7 @@ const request = require("request");
 const secrets = require("./secrets");
 
 const checkIfChannelExists = (channel, callback) => {
-	const url = `https://www.googleapis.com/youtube/v3/search
-		?part=snippet&q=${ channel}&type=channel&key=${secrets.youtubeKey}`;
+	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -20,7 +19,7 @@ const checkIfChannelExists = (channel, callback) => {
 
 const checkIfChannelInDatabase = (data, callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={${ data.field}:'${data.channel}'}&apiKey=${secrets.databaseKey}`;
+		?q={${ data.field}:'${data.channel}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -35,8 +34,7 @@ const checkIfChannelInDatabase = (data, callback) => {
 };
 
 const checkIfNotificationExists = (data, callback) => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications
-		?q={'video':'${data.video}'}&apiKey=${secrets.databaseKey}`;
+	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'${data.video}'}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -61,8 +59,7 @@ const addNotification = (videoId) => {
 };
 
 const getChannelsPlaylist = (data, callback) => {
-	const url = `https://www.googleapis.com/youtube/v3/channels
-		?part=contentDetails&id=${data}&maxResults=50&key=${secrets.youtubeKey}`;
+	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${data}&maxResults=50&key=${secrets.youtubeKey}`;
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -79,7 +76,8 @@ const getVideo = (msg, callback) => {
 		if (exists) {
 			getChannelsPlaylist(json.items[0].id.channelId, (items) => {
 				const url = `https://www.googleapis.com/youtube/v3/playlistItems
-					?part=snippet&playlistId=${items[0].contentDetails.relatedPlaylists.uploads}&maxResults=5&key=${secrets.youtubeKey}`;
+					?part=snippet&playlistId=${items[0].contentDetails.relatedPlaylists.uploads}
+					&maxResults=5&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 				request(url, (error, response, html) => {
 					if (error) console.log(error);
@@ -146,7 +144,7 @@ const removeChannel = (msg, callback) => {
 
 const getChannels = (msg, callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={'platform':'youtube'}&s={'name':1}&apiKey=${secrets.databaseKey}`;
+		?q={'platform':'youtube'}&s={'name':1}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -164,7 +162,7 @@ const getChannels = (msg, callback) => {
 
 exports.getNotifications = (callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels
-		?q={'platform':'youtube'}&apiKey=${secrets.databaseKey}`;
+		?q={'platform':'youtube'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
 		if (error) console.log(error);
@@ -179,7 +177,8 @@ exports.getNotifications = (callback) => {
 		getChannelsPlaylist(channelsString, (items) => {
 			for (let i = 0; i < items.length; i++) {
 				const url = `https://www.googleapis.com/youtube/v3/playlistItems
-					?part=snippet&playlistId=${items[i].contentDetails.relatedPlaylists.uploads}&maxResults=1&key=${secrets.youtubeKey}`;
+					?part=snippet&playlistId=${items[i].contentDetails.relatedPlaylists.uploads}
+					&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 				request(url, (error, response, html) => {
 					if (error) console.log(error);
@@ -192,7 +191,7 @@ exports.getNotifications = (callback) => {
 								addNotification(json.items[0].snippet.resourceId.videoId);
 
 								return callback(`**${json.items[0].snippet.channelTitle}** postou um novo video! | 
-									https://youtu.be/${json.items[0].snippet.resourceId.videoId}`);
+									https://youtu.be/${json.items[0].snippet.resourceId.videoId}`.replace(/\t/g, "").replace(/\n/g, ""));
 							}
 
 							return null;
