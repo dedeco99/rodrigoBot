@@ -1,32 +1,42 @@
 const request = require("request");
 
 const secrets = require("./secrets");
+const log = require("./log");
 
-exports.getMeta = () => {
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/meta?apiKey=${secrets.databaseKey}`;
+const getMeta = () => {
+	return new Promise(res => {
+		const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/meta?apiKey=${secrets.databaseKey}`;
 
-	request(url, (error, response, html) => {
-		if (error) console.log(error);
-		const json = JSON.parse(html);
+		request(url, (error, response, html) => {
+			if (error) return log.error(error.stack);
+			const json = JSON.parse(html);
 
-		secrets.meta = JSON.stringify(json[0]);
+			return res(json[0]);
+		});
 	});
 };
 
-exports.updateMeta = (obj) => {
-	const meta = JSON.parse(secrets.meta);
-	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/meta/${meta._id.$oid}?apiKey=${secrets.databaseKey}`;
+const updateMeta = async (obj) => {
+	const meta = await getMeta();
 
-	const body = {
-		"action": obj.action ? obj.action : meta.action,
-		"likes": obj.likes ? obj.likes : meta.likes,
-		"dislikes": obj.dislikes ? obj.dislikes : meta.dislikes
-	};
+	return new Promise(res => {
+		const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/meta?apiKey=${secrets.databaseKey}`;
 
-	request.put({ url, body, json: true }, (error, response, html) => {
-		if (error) console.log(error);
-		const json = html;
+		const body = {
+			action: obj.action ? obj.action : meta.action,
+			likes: obj.likes ? meta.likes + 1 : meta.likes,
+			dislikes: obj.dislikes ? meta.dislikes + 1 : meta.dislikes
+		};
 
-		secrets.meta = JSON.stringify(json);
+		request.put({ url, body, json: true }, error => {
+			if (error) return log.error(error.stack);
+
+			return res(meta);
+		});
 	});
+};
+
+module.exports = {
+	getMeta,
+	updateMeta
 };
