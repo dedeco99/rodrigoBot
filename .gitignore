@@ -57,6 +57,7 @@ typings/
 # dotenv environment variables file
 .env
 
+ffmpeg/
 /secrets.js
 /runRodrigo.bat
-/meta.json
+/logs.txt
