@@ -1,62 +1,49 @@
-const request = require("request");
-
+const { get } = require("./request");
 const secrets = require("./secrets");
 const database = require("./database");
-const log = require("./log");
 
-const checkIfChannelExists = (channel, callback) => {
+const checkIfChannelExists = async (channel) => {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await get(url);
+	const json = JSON.parse(res);
 
-		if (json.pageInfo.totalResults > 0) {
-			return callback(true, json);
-		}
-
-		return callback(false, json);
-	});
+	return json.pageInfo.totalResults > 0 ? { "exists": true, "item": json.items[0] } : { "exists": false };
 };
 
-const getChannelsPlaylist = (data, callback) => {
-	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${data}&maxResults=50&key=${secrets.youtubeKey}`;
+const getChannelsPlaylist = async (channel) => {
+	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channel}&maxResults=50&key=${secrets.youtubeKey}`;
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await get(url);
+	const json = JSON.parse(res);
 
-		return callback(json.items);
-	});
+	return json.items;
 };
 
-const getVideo = (msg, callback) => {
+const getVideo = async (msg) => {
 	const channel = msg.content.split("youtube ")[1];
 
-	checkIfChannelExists(channel, (exists, json) => {
-		if (exists) {
-			getChannelsPlaylist(json.items[0].id.channelId, (items) => {
-				const url = `https://www.googleapis.com/youtube/v3/playlistItems
-					?part=snippet&playlistId=${items[0].contentDetails.relatedPlaylists.uploads}
-					&maxResults=5&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
+	const { exists, item } = await checkIfChannelExists(channel);
 
-				request(url, (error, response, html) => {
-					if (error) return log.error(error.stack);
-					const json = JSON.parse(html);
+	if (exists) {
+		const playlist = await getChannelsPlaylist(item.id.channelId);
+		const url = `https://www.googleapis.com/youtube/v3/playlistItems
+				?part=snippet&playlistId=${playlist[0].contentDetails.relatedPlaylists.uploads}
+				&maxResults=5&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
-					return callback(`https://youtu.be/${json.items[0].snippet.resourceId.videoId}`);
-				});
-			});
-		} else {
-			return callback("Esse canal deve estar no xixo porque não o encontro");
-		}
-	});
+		const res = await get(url);
+		const json = JSON.parse(res);
+
+		return `https://youtu.be/${json.items[0].snippet.resourceId.videoId}`;
+	}
+
+	return "Esse canal deve estar no xixo porque não o encontro";
 };
 
 const checkIfChannelInDatabase = async (query) => {
 	const channels = await database.getChannels(query);
 
-	return channels.length > 0 ? { exists: true, id: channels[0]._id } : false;
+	return channels.length > 0 ? { "exists": true, "id": channels[0]._id } : false;
 };
 
 const checkIfNotificationExists = async (query) => {
@@ -65,87 +52,83 @@ const checkIfNotificationExists = async (query) => {
 	return notifications.length > 0;
 };
 
-const addChannel = (msg, callback) => {
+const addChannel = async (msg) => {
 	const channel = msg.content.split("youtube add ")[1];
 
-	checkIfChannelExists(channel, async (exists, json) => {
-		if (exists) {
-			const { exists } = await checkIfChannelInDatabase({ "channel": json.items[0].id.channelId, "platform": "youtube" });
-			if (exists) return callback("Esse canal já existe seu lixo");
+	const { exists, item } = await checkIfChannelExists(channel);
+	if (exists) {
+		const { exists } = await checkIfChannelInDatabase({ "channel": item.id.channelId, "platform": "youtube" });
+		if (exists) return "Esse canal já existe seu lixo";
 
-			const channel = {
-				"name": json.items[0].snippet.title,
-				"channel": json.items[0].id.channelId,
-				"platform": "youtube"
-			};
+		const channel = {
+			"name": item.snippet.title,
+			"channel": item.id.channelId,
+			"platform": "youtube"
+		};
 
-			database.postChannel(channel);
+		database.postChannel(channel);
 
-			return callback("Canal adicionado com sucesso my dude");
-		}
+		return "Canal adicionado com sucesso my dude";
+	}
 
-		return callback("Esse canal deve estar no xixo porque não o encontro");
-	});
+	return "Esse canal deve estar no xixo porque não o encontro";
 };
 
-const removeChannel = (msg, callback) => {
+const removeChannel = async (msg) => {
 	const channel = msg.content.split("youtube remove ")[1];
 
-	checkIfChannelExists(channel, async (exists, json) => {
+	const { exists, item } = await checkIfChannelExists(channel);
+	if (exists) {
+		const { exists, id } = await checkIfChannelInDatabase({ "channel": item.id.channelId, "platform": "youtube" });
+
 		if (exists) {
-			const { exists, id } = await checkIfChannelInDatabase({ "channel": json.items[0].id.channelId, platform: "youtube" });
-
-			if (exists) {
-				database.deleteChannel(id);
-				return callback("Canal removido com sucesso my dude");
-			}
+			database.deleteChannel(id);
+			return "Canal removido com sucesso my dude";
 		}
+	}
 
-		return callback("Esse canal deve estar no xixo porque não o encontro");
-	});
+	return "Esse canal deve estar no xixo porque não o encontro";
 };
 
-const getChannels = async (msg, callback) => {
+const getChannels = async () => {
 	let channels = await database.getChannels({ platform: "youtube" });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
-	return callback(channels);
+	return channels;
 };
 
-const getNotifications = async (callback) => {
+const getNotifications = async () => {
 	let channels = await database.getChannels({ platform: "youtube" });
 
 	channels = channels.map(channel => channel.name).join(",");
 
-	getChannelsPlaylist(channels, (items) => {
-		for (const item of items) {
-			const url = `https://www.googleapis.com/youtube/v3/playlistItems
-				?part=snippet&playlistId=${item.contentDetails.relatedPlaylists.uploads}
-				&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
+	const playlists = await getChannelsPlaylist(channels);
 
-			request(url, async (error, response, html) => {
-				if (error) return log.error(error.stack);
-				const json = JSON.parse(html);
+	for (const playlist of playlists) {
+		const url = `https://www.googleapis.com/youtube/v3/playlistItems
+			?part=snippet&playlistId=${playlist.contentDetails.relatedPlaylists.uploads}
+			&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
-				const item = json.items[0];
+		const res = get(url);
+		const json = JSON.parse(res);
 
-				const ONE_HOUR = 60 * 60 * 1000;
-				if (new Date() - new Date(item.snippet.publishedAt) < ONE_HOUR) {
-					const exists = await checkIfNotificationExists({ video: item.snippet.resourceId.videoId });
-					if (!exists) {
-						database.addNotification({ "video": item.snippet.resourceId.videoId });
+		const item = json.items[0];
 
-						return callback(`**${item.snippet.channelTitle}** postou um novo video! | 
-							https://youtu.be/${item.snippet.resourceId.videoId}`.replace(/\t/g, "").replace(/\n/g, ""));
-					}
-				}
-			});
+		const ONE_HOUR = 60 * 60 * 1000;
+		if (new Date() - new Date(item.snippet.publishedAt) < ONE_HOUR) {
+			const exists = await checkIfNotificationExists({ video: item.snippet.resourceId.videoId });
+			if (!exists) {
+				database.addNotification({ "video": item.snippet.resourceId.videoId });
+
+				return `**${item.snippet.channelTitle}** postou um novo video! | 
+					https://youtu.be/${item.snippet.resourceId.videoId}`.replace(/\t/g, "").replace(/\n/g, "");
+			}
 		}
-	});
+	}
 };
 
-const checkForCommand = (msg, callback) => {
+const checkForCommand = async (msg) => {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
@@ -155,15 +138,14 @@ const checkForCommand = (msg, callback) => {
 	const command = msg.content.split(" ")[2];
 	const feature = features.find(feature => feature.command === command);
 
+	let res = null;
 	if (feature) {
-		feature.func(msg, (res) => {
-			return callback(res);
-		});
+		res = await feature.func(msg);
 	} else {
-		getVideo(msg, (res) => {
-			return callback(res);
-		});
+		res = await getVideo(msg);
 	}
+
+	return res;
 };
 
 module.exports = {

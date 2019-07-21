@@ -6,19 +6,17 @@ const command = require("./command");
 const youtube = require("./youtube");
 const twitch = require("./twitch");
 
-const handleMessage = async (msg, lastMsg, client, callback) => {
+const handleMessage = async (msg, lastMsg, client) => {
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 	const res = {};
 
 	if (firstWord === "rodrigo") {
-		command.checkForCommand(msg, (checkForCommand) => {
-			if (checkForCommand.isCommand) {
-				msg.channel.send(checkForCommand.msg);
-			} else if (msg.content.includes("delete") && lastMsg) {
-				lastMsg.delete();
-				msg.delete();
-			}
-		}, client);
+		const { isCommand, response } = await command.checkForCommand(msg, client);
+
+		if (isCommand) msg.channel.send(response);
+	} else if (msg.content.includes("delete") && lastMsg) {
+		lastMsg.delete();
+		msg.delete();
 	} else if (msg.author.username === "RodrigoBot") {
 		res.lastMsg = msg;
 	} else if (msg.content.includes(":rodrigo:")) {
@@ -40,7 +38,7 @@ const handleMessage = async (msg, lastMsg, client, callback) => {
 		}
 	}
 
-	return callback(res);
+	return res;
 };
 
 const run = async () => {

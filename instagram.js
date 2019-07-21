@@ -1,5 +1,4 @@
-const request = require("request");
-
+const { get } = require("./request");
 const embed = require("./embed");
 
 const formatResponse = (url, num, profilePage) => {
@@ -47,27 +46,26 @@ const formatResponse = (url, num, profilePage) => {
 	return res;
 };
 
-exports.getPost = (msg, callback) => {
+exports.getPost = async (msg) => {
 	const person = msg.content.split(" ")[2];
 	const num = msg.content.split(" ").pop();
 	const url = `https://www.instagram.com/${person}/`;
 
-	request(url, (error, response, html) => {
-		let foto = html.substring(
-			html.lastIndexOf("window._sharedData = ") + 21,
-			html.lastIndexOf("</script>")
-		);
+	const res = await get(url);
+	let foto = res.substring(
+		res.lastIndexOf("window._sharedData = ") + 21,
+		res.lastIndexOf("</script>")
+	);
 
-		foto = foto.substring(0, foto.indexOf("</script>") - 1);
+	foto = foto.substring(0, foto.indexOf("</script>") - 1);
 
-		const json = JSON.parse(foto);
+	const json = JSON.parse(foto);
 
-		if (json.entry_data.ProfilePage) {
-			const res = formatResponse(url, num, json.entry_data.ProfilePage[0]);
+	if (json.entry_data.ProfilePage) {
+		const res = formatResponse(url, num, json.entry_data.ProfilePage[0]);
 
-			return callback(embed.createInstaEmbed(res));
-		}
+		return embed.createInstaEmbed(res);
+	}
 
-		return callback("Claramente esse xixo não existe");
-	});
+	return "Claramente esse xixo não existe";
 };

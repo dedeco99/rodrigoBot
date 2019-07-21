@@ -1,7 +1,5 @@
-const request = require("request");
-
+const { get, post } = require("./request");
 const secrets = require("./secrets");
-const log = require("./log");
 const embed = require("./embed");
 
 const isFile = (pathname) => {
@@ -60,28 +58,25 @@ const formatResponse = (json) => {
 	return res;
 };
 
-const getRedditPosts = (data, accessToken, callback) => {
+const getRedditPosts = async (data, accessToken) => {
 	const url = `https://oauth.reddit.com/r/${data.subreddit}?limit=100&sort=hot`;
 	const headers = {
 		"User-Agent": "Entertainment-Hub by dedeco99",
 		"Authorization": `bearer ${accessToken}`
 	};
 
-	request({ url, headers }, (error, response, html) => {
-		if (error) return log.error(error.stack);
+	try {
+		const res = await get(url, headers);
+		const json = JSON.parse(res);
+		const response = formatResponse(json);
 
-		try {
-			const json = JSON.parse(html);
-			const res = formatResponse(json);
-
-			return callback(embed.createRedditEmbed(res));
-		} catch (err) {
-			return callback("Esse subreddit deve estar no xixo porque não o encontro");
-		}
-	});
+		return embed.createRedditEmbed(response);
+	} catch (err) {
+		return "Esse subreddit deve estar no xixo porque não o encontro";
+	}
 };
 
-const getAccessToken = (data, callback) => {
+const getAccessToken = async (data) => {
 	const url = `https://www.reddit.com/api/v1/access_token
 		?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`.replace(/\t/g, "").replace(/\n/g, "");
 
@@ -93,17 +88,15 @@ const getAccessToken = (data, callback) => {
 		"Authorization": auth
 	};
 
-	request.post({ url, headers }, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await post(url, headers);
+	const json = JSON.parse(res);
 
-		getRedditPosts(data, json.access_token, (res) => {
-			return callback(res);
-		});
-	});
+	const response = await getRedditPosts(data, json.access_token);
+
+	return response;
 };
 
-const getRefreshToken = () => { /* eslint-disable-line no-unused-vars */
+const getRefreshToken = async () => { /* eslint-disable-line no-unused-vars */
 	const url = `https://www.reddit.com/api/v1/access_token
 		?code=EnnCAq3ndBzr0QYjBNCRgRxnzvg&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul`.replace(/\t/g, "").replace(/\n/g, "");
 
@@ -115,14 +108,14 @@ const getRefreshToken = () => { /* eslint-disable-line no-unused-vars */
 		"Authorization": auth
 	};
 
-	request.post({ url, headers }, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
-		console.log(json);
-	});
+	const res = await post({ url, headers });
+
+	const json = JSON.parse(res);
+
+	console.log(json);
 };
 
-exports.checkForReddit = (msg, callback) => {
+exports.checkForReddit = async (msg) => {
 	//getRefreshToken();
 
 	//TODO: get subreddits from database
@@ -142,7 +135,7 @@ exports.checkForReddit = (msg, callback) => {
 	const searchedSub = msg.content.split(" ")[2];
 	const sub = subs.find(sub => sub.name === searchedSub);
 
-	getAccessToken({ subreddit: sub ? sub.subreddit : searchedSub }, (res) => {
-		return callback(res);
-	});
+	const res = await getAccessToken({ subreddit: sub ? sub.subreddit : searchedSub });
+
+	return res;
 };

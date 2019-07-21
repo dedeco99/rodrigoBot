@@ -1,101 +1,94 @@
-const request = require("request");
+const { get } = require("./request");
+
 const cheerio = require("cheerio");
 const ytdl = require("ytdl-core");
 const Cleverbot = require("cleverbot-api");
 
 const secrets = require("./secrets");
-const log = require("./log");
-const Crypto = require("./crypto");
 const embed = require("./embed");
 
 const cleverbot = new Cleverbot(secrets.cleverBotKey);
 
-exports.define = (msg, callback) => {
+const define = async (msg) => {
 	const word = msg.content.split("define ")[1];
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await get(url);
+	const json = JSON.parse(res);
 
-		let res = null;
+	let response = null;
+	if (json.list.length === 0) {
+		response = {
+			word,
+			"definition": "Não há definição para esta palavra",
+			"example": "Não há exemplo"
+		};
+	} else {
+		const cleanString = (string) => {
+			return string.substring(0, 255).replace(/\[/g, "").replace(/\]/g, "");
+		};
 
-		if (json.list.length === 0) {
-			res = {
-				word,
-				definition: "Não há definição para esta palavra",
-				example: "Não há exemplo"
-			};
-		} else {
-			const cleanString = (string) => {
-				return string.substring(0, 255).replace(/\[/g, "")
-					.replace(/\]/g, "");
-			};
+		let example = cleanString(json.list[0].example);
+		if (json.list[0].example === "") example = "Não há exemplo";
 
-			let example = cleanString(json.list[0].example);
-			if (json.list[0].example === "") example = "Não há exemplo";
+		response = {
+			word,
+			definition: cleanString(json.list[0].definition),
+			example
+		};
+	}
 
-			res = {
-				word,
-				definition: cleanString(json.list[0].definition),
-				example
-			};
-		}
-
-		return callback(embed.createDefineEmbed(res));
-	});
+	return embed.createDefineEmbed(response);
 };
 
-exports.procura = (msg, callback) => {
+const procura = async (msg) => {
 	const topic = msg.content.split("procura ")[1];
-	const res = [];
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await get(url);
+	const json = JSON.parse(res);
 
-		for (let i = 0; i < 3; i++) {
-			res.push({
-				topic,
-				title: json.items[i].title,
-				link: json.items[i].link,
-				description: json.items[i].snippet
-			});
-		}
+	const response = [];
+	for (let i = 0; i < 3; i++) {
+		response.push({
+			topic,
+			title: json.items[i].title,
+			link: json.items[i].link,
+			description: json.items[i].snippet
+		});
+	}
 
-		return callback(embed.createSearchEmbed(res));
-	});
+	return embed.createSearchEmbed(response);
 };
 
-exports.responde = (msg, callback) => {
+const responde = (msg) => {
 	let num = Math.floor(Math.random() >= 0.5);
 	if (msg.content.includes(" ou ")) {
 		const option1 = msg.content.split(" ou ")[0].slice(8);
 		const option2 = msg.content.split(" ou ")[1].slice(0, -1);
 
-		return num ? callback(option1) : callback(option2);
+		return num ? option1 : option2;
 	} else if (msg.content.includes(" probabilidade ")) {
 		num = Math.floor(Math.random() * 100);
 
-		return callback(`Cerca de ${num}%`);
+		return `Cerca de ${num}%`;
 	} else if (msg.content.includes(" nota ")) {
 		num = Math.floor(Math.random() * 20);
 
-		return callback(num);
+		return num;
 	}
 
-	return num ? callback("Sim") : callback("Não");
+	return num ? "Sim" : "Não";
 };
 
-exports.math = (msg, callback) => {
+const math = (msg) => {
 	const expression = msg.content.split("math ")[1];
 	const result = eval(expression);
 
-	return callback(`Resultado: ${result}`);
+	return `Resultado: ${result}`;
 };
 
-exports.ordena = (msg, callback) => {
+const ordena = (msg) => {
 	let options = msg.content.split("ordena")[1];
 	options = options.split(";");
 	const randomized = [];
@@ -107,32 +100,30 @@ exports.ordena = (msg, callback) => {
 		options.splice(num, 1);
 	}
 
-	return callback(randomized.join(" > "));
+	return randomized.join(" > ");
 };
 
-exports.converte = (msg, callback) => {
+const converte = async (msg) => {
 	const numberToConvert = msg.content.split(" ")[2];
 	const currencyToConvert = msg.content.split(" ")[3].toUpperCase();
 	const currencyConverted = msg.content.split(" ")[5].toUpperCase();
 	const url = "https://api.exchangeratesapi.io/latest";
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await get(url);
+	const json = JSON.parse(res);
 
-		let converted = 0;
+	let converted = 0;
 
-		if (currencyToConvert === "EUR") {
-			converted = (numberToConvert * json.rates[currencyConverted]).toFixed(2);
-		} else {
-			converted = (numberToConvert / json.rates[currencyToConvert]).toFixed(2);
-		}
+	if (currencyToConvert === "EUR") {
+		converted = (numberToConvert * json.rates[currencyConverted]).toFixed(2);
+	} else {
+		converted = (numberToConvert / json.rates[currencyToConvert]).toFixed(2);
+	}
 
-		return callback(converted);
-	});
+	return converted;
 };
 
-exports.vote = (msg, callback) => {
+const vote = (msg) => {
 	const message = msg.content.split("vote ")[1];
 	const options = message.split(";");
 	const title = options[0];
@@ -143,82 +134,67 @@ exports.vote = (msg, callback) => {
 		options
 	};
 
-	return callback(embed.createPollEmbed(msg, res));
+	return embed.createPollEmbed(msg, res);
 };
 
-exports.getvote = (msg, callback) => {
+const getvote = (msg) => {
 	const poll = msg.content.split("getvote ")[1];
 
 	msg.channel.fetchMessage(poll)
 		.then((message) => {
 			message.reactions.forEach((reaction) => {
 				reaction.fetchUsers().then((users) => {
-					let userRes = "";
+					const userRes = users.map(user => user.username).join(" | ");
 
-					users.forEach(user => {
-						userRes += `${user.username} | `;
-					});
-
-					return callback(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
+					return `${reaction._emoji.name}: ${reaction.count} votos (${userRes})`;
 				});
 			});
 		})
 		.catch(console.error);
 };
 
-exports.crypto = (msg, callback) => {
-	const coin = msg.content.split("crypto ")[1];
-
-	Crypto.getPrice(coin, (res) => {
-		if (res.error) return callback(res.error);
-
-		return callback(embed.createCryptoEmbed(res));
-	});
-};
-
-exports.amazon = (msg, callback) => {
+//FIXME: Not working
+const amazon = async (msg) => {
 	let thing = msg.content.split("price ")[1];
 	thing = thing.replace(/ /g, "%20");
 	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
 
-	request(url, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const $ = cheerio.load(html);
-		const res = [];
-		thing = thing.replace(/%20/g, " ");
+	const res = await get(url);
+	const $ = cheerio.load(res);
+	const response = [];
+	thing = thing.replace(/%20/g, " ");
 
-		$("html").find(".a-link-normal.s-access-detail-page.s-color-twister-title-link.a-text-normal")
-			.each((index) => {
-				if (index !== 0 && index !== 1 && index < 7) {
-					const productUrl = $(this)[0].attribs.href;
-					const product = `${$(this)[0].attribs.title.substring(0, 50)}...`;
-					res.push({ search: thing, url, productUrl, product });
-				}
-			});
+	$("html").find(".a-link-normal.s-access-detail-page.s-color-twister-title-link.a-text-normal")
+		.each((index) => {
+			if (index !== 0 && index !== 1 && index < 7) {
+				const productUrl = $(this)[0].attribs.href;
+				const product = `${$(this)[0].attribs.title.substring(0, 50)}...`;
+				response.push({ search: thing, url, productUrl, product });
+			}
+		});
 
-		$("html").find(".a-size-base.a-color-price.a-text-bold")
-			.each((index) => {
-				if (index < 5) {
-					const price = $(this)[0].children[0].data;
-					if (res[index]) res[index].price = price;
-				}
-			});
+	$("html").find(".a-size-base.a-color-price.a-text-bold")
+		.each((index) => {
+			if (index < 5) {
+				const price = $(this)[0].children[0].data;
+				if (response[index]) response[index].price = price;
+			}
+		});
 
-		if (res.length > 0) {
-			return callback(embed.createPriceEmbed(res));
-		}
+	if (response.length > 0) {
+		return embed.createPriceEmbed(response);
+	}
 
-		return callback("Não existe esse produto do xixo");
-	});
+	return "Não existe esse produto do xixo";
 };
 
-exports.clever = (msg, callback) => {
+const clever = (msg) => {
 	cleverbot.getReply({
 		input: msg.content
 	}, (error, response) => {
-		if (error) return log.error(error.stack);
+		if (error) console.log(error);
 
-		return callback(response.output);
+		return response.output;
 	});
 };
 
@@ -244,7 +220,7 @@ const checkIfInVoiceChannel = (msg, params) => {
 	return dispatcher;
 };
 
-exports.music = (msg) => {
+const music = (msg) => {
 	const params = msg.content.split("music ")[1];
 	let dispatcher = null;
 
@@ -257,4 +233,18 @@ exports.music = (msg) => {
 	} else {
 		dispatcher = checkIfInVoiceChannel(msg, params, dispatcher);
 	}
+};
+
+module.exports = {
+	amazon,
+	clever,
+	converte,
+	define,
+	getvote,
+	math,
+	music,
+	ordena,
+	procura,
+	responde,
+	vote
 };

@@ -1,7 +1,6 @@
-const request = require("request");
-
+const { get } = require("./request");
 const secrets = require("./secrets");
-const log = require("./log");
+const embed = require("./embed");
 
 const checkCoinName = (searchCoin, coin) => {
 	if (searchCoin.charAt(0).toUpperCase() + searchCoin.slice(1) === coin.name
@@ -12,53 +11,48 @@ const checkCoinName = (searchCoin, coin) => {
 
 };
 
-exports.getPrice = (data, callback) => {
+exports.getPrice = async (msg) => {
+	const data = msg.content.split("crypto ")[1];
+	let response = null;
+
 	let url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/map";
 	const headers = { "X-CMC_PRO_API_KEY": secrets.coinmarketcapKey };
 
-	request({ headers }, (error, _response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await get(url, headers);
+	const json = JSON.parse(res);
 
-		if (json.error) return { error: "Este Market Cap tá na xixada (down)" };
-
-		let coinId = null;
-		for (let i = 0; i < json.data.length; i++) {
-			const coin = json.data[i];
-			if (checkCoinName(data, coin)) {
-				coinId = coin.id;
-				break;
-			}
+	let coinId = null;
+	for (const coin of json.data) {
+		if (checkCoinName(data, coin)) {
+			coinId = coin.id;
+			break;
 		}
+	}
 
-		if (coinId) {
-			url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${coinId}&&convert=EUR`;
+	if (coinId) {
+		url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${coinId}&&convert=EUR`;
 
-			request({ headers, url }, (error, _response, html) => {
-				if (error) return log.error(error.stack);
-				const json = JSON.parse(html);
+		const res = await get(url, headers);
+		const json = JSON.parse(res);
 
-				if (json.error) return callback({ error: "Este Market Cap tá na xixada (down)" });
+		if (json.error) return "Este Market Cap tá na xixada (down)";
 
+		response = {
+			availableSupply: json.data[coinId].total_supply,
+			change1h: json.data[coinId].quote.EUR.percent_change_1h,
+			change24h: json.data[coinId].quote.EUR.percent_change_24h,
+			change7d: json.data[coinId].quote.EUR.percent_change_7d,
+			marketcapEur: json.data[coinId].quote.EUR.market_cap,
+			name: json.data[coinId].name,
+			priceEur: json.data[coinId].quote.EUR.price,
+			rank: json.data[coinId].cmc_rank,
+			symbol: json.data[coinId].symbol,
+			totalSupply: json.data[coinId].max_supply,
+			volumeEur: json.data[coinId].quote.EUR.volume_24h
+		};
 
-				const res = {
-					availableSupply: json.data[coinId].total_supply,
-					change1h: json.data[coinId].quote.EUR.percent_change_1h,
-					change24h: json.data[coinId].quote.EUR.percent_change_24h,
-					change7d: json.data[coinId].quote.EUR.percent_change_7d,
-					marketcapEur: json.data[coinId].quote.EUR.market_cap,
-					name: json.data[coinId].name,
-					priceEur: json.data[coinId].quote.EUR.price,
-					rank: json.data[coinId].cmc_rank,
-					symbol: json.data[coinId].symbol,
-					totalSupply: json.data[coinId].max_supply,
-					volumeEur: json.data[coinId].quote.EUR.volume_24h
-				};
+		return embed.createCryptoEmbed(response);
+	}
 
-				return callback(res);
-			});
-		}
-
-		return callback({ error: "Essa moeda deve estar no xixo porque não a encontro" });
-	});
+	return "Essa moeda deve estar no xixo porque não a encontro";
 };

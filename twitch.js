@@ -1,10 +1,8 @@
-const request = require("request");
-
+const { get } = require("./request");
 const secrets = require("./secrets");
 const database = require("./database");
-const log = require("./log");
 
-const checkIfChannelExists = (channel, callback) => {
+const checkIfChannelExists = async (channel) => {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;
 
 	const headers = {
@@ -12,25 +10,19 @@ const checkIfChannelExists = (channel, callback) => {
 		"Client-ID": secrets.twitchClientId
 	};
 
-	request({ headers, url }, (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = await get(url, headers);
+	const json = JSON.parse(res);
 
-		if (json.data.length > 0) {
-			return callback(true, json);
-		}
-
-		return callback(false, json);
-	});
+	return json.data.length > 0 ? { "exists": true, "item": json } : { "exists": false };
 };
 
-const getStream = (msg, callback, client) => {
+const getStream = (msg, client) => {
 	const channel = msg.content.split("twitch ")[1];
 	const url = `https://www.twitch.tv/${channel}`;
 
 	client.user.setActivity(channel, { url, type: "WATCHING" });
 
-	return callback(url);
+	return url;
 };
 
 const checkIfChannelInDatabase = async (query) => {
@@ -45,51 +37,50 @@ const checkIfNotificationExists = async (query) => {
 	return notifications.length > 0;
 };
 
-const addChannel = (msg, callback) => {
+const addChannel = async (msg) => {
 	const channel = msg.content.split("twitch add ")[1];
 
-	checkIfChannelExists(channel, async (exists, json) => {
-		if (exists) {
-			const { exists } = await checkIfChannelInDatabase({ "channel": json.data[0].login, "platform": "twitch" });
-			if (exists) return callback("Esse canal já existe seu lixo");
+	const { exists, item } = await checkIfChannelExists(channel);
+	if (exists) {
+		const { exists } = await checkIfChannelInDatabase({ "channel": item.data[0].login, "platform": "twitch" });
+		if (exists) return "Esse canal já existe seu lixo";
 
-			const channel = {
-				"name": json.data[0].login,
-				"channel": json.data[0].login,
-				"platform": "twitch"
-			};
+		const channel = {
+			"name": item.data[0].login,
+			"channel": item.data[0].login,
+			"platform": "twitch"
+		};
 
-			database.postChannel(channel);
+		database.postChannel(channel);
 
-			return callback("Canal adicionado com sucesso my dude");
-		}
+		return "Canal adicionado com sucesso my dude";
+	}
 
-		return callback("Esse canal deve estar no xixo porque não o encontro");
-	});
+	return "Esse canal deve estar no xixo porque não o encontro";
 };
 
-const removeChannel = async (msg, callback) => {
+const removeChannel = async (msg) => {
 	const channel = msg.content.split("twitch remove ")[1];
 
 	const { exists, id } = await checkIfChannelInDatabase({ "name": channel, "platform": "twitch" });
 
 	if (exists) {
 		database.deleteChannel(id);
-		return callback("Canal removido com sucesso my dude");
+		return "Canal removido com sucesso my dude";
 	}
 
-	return callback("Esse canal deve estar no xixo porque não o encontro");
+	return "Esse canal deve estar no xixo porque não o encontro";
 };
 
-const getChannels = async (msg, callback) => {
+const getChannels = async () => {
 	let channels = await database.getChannels({ platform: "twitch" });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
-	return callback(channels);
+	return channels;
 };
 
-const getNotifications = async (callback) => {
+const getNotifications = async () => {
 	const channels = await database.getChannels({ platform: "twitch" });
 
 	let channelsString = channels.map(channel => channel.name).join(",");
@@ -107,25 +98,23 @@ const getNotifications = async (callback) => {
 		"Client-ID": secrets.twitchClientId
 	};
 
-	request({ headers, url }, async (error, response, html) => {
-		if (error) return log.error(error.stack);
-		const json = JSON.parse(html);
+	const res = get(url, headers);
+	const json = JSON.parse(res);
 
-		for (let i = 0; i < json.data.length; i++) {
-			const ONE_HOUR = 60 * 60 * 1000;
-			if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
-				const exists = await checkIfNotificationExists({ video: json.data[i].user_name, started: json.data[i].started_at });
-				if (!exists) {
-					database.addNotification({ "video": json.items[0].snippet.resourceId.videoId });
+	for (let i = 0; i < json.data.length; i++) {
+		const ONE_HOUR = 60 * 60 * 1000;
+		if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
+			const exists = await checkIfNotificationExists({ video: json.data[i].user_name, started: json.data[i].started_at });
+			if (!exists) {
+				database.addNotification({ "video": json.items[0].snippet.resourceId.videoId });
 
-					return callback(`**${json.data[i].user_name}** está live! | https://twitch.tv/${json.data[i].user_name}`);
-				}
+				return `**${json.data[i].user_name}** está live! | https://twitch.tv/${json.data[i].user_name}`;
 			}
 		}
-	});
+	}
 };
 
-const checkForCommand = (msg, callback, client) => {
+const checkForCommand = async (msg, client) => {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
@@ -135,15 +124,14 @@ const checkForCommand = (msg, callback, client) => {
 	const command = msg.content.split(" ")[2];
 	const feature = features.find(feature => feature.command === command);
 
+	let res = null;
 	if (feature) {
-		feature.func(msg, (res) => {
-			return callback(res);
-		});
+		res = await feature.func(msg);
 	} else {
-		getStream(msg, (res) => {
-			return callback(res);
-		}, client);
+		res = await getStream(msg, client);
 	}
+
+	return res;
 };
 
 module.exports = {

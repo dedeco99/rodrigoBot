@@ -1,6 +1,7 @@
 const utils = require("./utils");
 const memes = require("./memes");
 const media = require("./media");
+const crypto = require("./crypto");
 const reddit = require("./reddit");
 const youtube = require("./youtube");
 const twitch = require("./twitch");
@@ -16,7 +17,6 @@ const features = [
 	{ command: "converte", func: utils.converte },
 	{ command: "vote", func: utils.vote },
 	{ command: "getvote", func: utils.getvote },
-	{ command: "crypto", func: utils.crypto },
 	{ command: "price", func: utils.amazon },
 	{ command: "clever", func: utils.clever },
 	{ command: "music", func: utils.music },
@@ -26,6 +26,8 @@ const features = [
 	{ command: "play", func: media.play },
 	{ command: "watch", func: media.watch },
 	{ command: "listen", func: media.listen },
+
+	{ command: "crypto", func: crypto.getPrice },
 
 	{ command: "insta", func: instagram.getPost },
 
@@ -40,23 +42,25 @@ const checkCommand = (msg) => {
 	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
 };
 
-exports.checkForCommand = (msg, callback, client) => {
+exports.checkForCommand = async (msg, client) => {
 	const command = checkCommand(msg);
 	console.log(command);
 
 	const feature = features.find(feat => feat.command === command);
 
+	let response = null;
 	if (feature) {
-		feature.func(msg, (res) => {
-			return callback({ isCommand: true, msg: res });
-		}, client);
+		const res = await feature.func(msg, client);
+		response = { isCommand: true, response: res };
 	} else {
-		insideJokes.checkForInsideJokes(msg, (checkForInsideJokes) => {
-			if (checkForInsideJokes.isInsideJoke) {
-				return callback({ isCommand: true, msg: checkForInsideJokes.msg });
-			}
+		const { isInsideJoke, res } = insideJokes.checkForInsideJokes(msg);
 
-			return callback({ isCommand: false });
-		});
+		if (isInsideJoke) {
+			response = { isCommand: true, response: res };
+		} else {
+			response = { isCommand: false };
+		}
 	}
+
+	return response;
 };

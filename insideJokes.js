@@ -45,23 +45,23 @@ const checkIfFile = (insideJoke) => {
 	return insideJoke.message;
 };
 
-exports.checkForInsideJokes = (msg, callback) => {
+exports.checkForInsideJokes = (msg) => {
 	let isInsideJoke = false;
-	let insideJoke = null, message = null;
+	let res = null;
 
 	for (let i = 0; i < insideJokes.length; i++) {
 		if (msg.content.includes(insideJokes[i].word)) {
 			isInsideJoke = true;
-			insideJoke = insideJokes[i];
+			res = insideJokes[i];
 			break;
 		}
 	}
 
-	if (insideJoke) {
-		message = checkIfFile(insideJoke);
+	if (res) {
+		res = checkIfFile(res);
 	} else {
 		isInsideJoke = false;
 	}
 
-	return callback({ isInsideJoke, msg: message });
+	return { isInsideJoke, res };
 };

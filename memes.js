@@ -1,45 +1,35 @@
 const Jimp = require("jimp");
 
-const makeMeme = (msg, meme, callback) => {
+const makeMeme = async (msg, meme) => {
 	let message = msg.content.split(meme.name)[1];
 	message = message.split(";");
 
 	const fileName = `./assets/img/memes/templates/${meme.name}.jpg`;
-	let loadedImage = null;
+	const image = await Jimp.read(fileName);
+	const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
 
-	Jimp.read(fileName)
-		.then((image) => {
-			loadedImage = image;
-			return Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-		})
-		.then((font) => {
-			let currentMsg = null;
-			let i = 0;
-			if (meme.name === "pikachu") {
-				let sum = 0;
-				for (i = 0; i < message.length; i++) {
-					currentMsg = message[i];
-					loadedImage.print(font, meme.position0.x, meme.position0.y + sum, currentMsg, meme.position0.max)
-						.write(`./assets/img/memes/${meme.name}.jpg`);
-					sum += 50;
-				}
-			} else {
-				for (i = 0; i < message.length; i++) {
-					currentMsg = message[i];
-					loadedImage.print(font, meme[`position${i}`].x, meme[`position${i}`].y, currentMsg, meme[`position${i}`].max)
-						.write(`./assets/img/memes/${meme.name}.jpg`);
-				}
-			}
-		})
-		.then(() => {
-			return callback({ "file": `./assets/img/memes/${meme.name}.jpg` });
-		})
-		.catch((err) => {
-			console.error(err);
-		});
+	let currentMsg = null;
+	let i = 0;
+	if (meme.name === "pikachu") {
+		let sum = 0;
+		for (i = 0; i < message.length; i++) {
+			currentMsg = message[i];
+			image.print(font, meme.position0.x, meme.position0.y + sum, currentMsg, meme.position0.max)
+				.write(`./assets/img/memes/${meme.name}.jpg`);
+			sum += 50;
+		}
+	} else {
+		for (i = 0; i < message.length; i++) {
+			currentMsg = message[i];
+			image.print(font, meme[`position${i}`].x, meme[`position${i}`].y, currentMsg, meme[`position${i}`].max)
+				.write(`./assets/img/memes/${meme.name}.jpg`);
+		}
+	}
+
+	return { "file": `./assets/img/memes/${meme.name}.jpg` };
 };
 
-exports.checkForMemes = (msg, callback) => {
+exports.checkForMemes = async (msg) => {
 	const memes = [
 		{ name: "truth", position0: { x: 250, y: 750, max: 200 } },
 		{ name: "safe", position0: { x: 350, y: 100, max: 200 } },
@@ -59,7 +49,7 @@ exports.checkForMemes = (msg, callback) => {
 	const searchedMeme = msg.content.split(" ")[2];
 	const meme = memes.find(meme => meme.name === searchedMeme);
 
-	makeMeme(msg, meme, (res) => {
-		return callback(res);
-	});
+	const res = await makeMeme(msg, meme);
+
+	return res;
 };
