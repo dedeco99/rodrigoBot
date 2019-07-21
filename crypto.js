@@ -1,6 +1,7 @@
 const request = require("request");
 
 const secrets = require("./secrets");
+const log = require("./log");
 
 const checkCoinName = (searchCoin, coin) => {
 	if (searchCoin.charAt(0).toUpperCase() + searchCoin.slice(1) === coin.name
@@ -15,8 +16,8 @@ exports.getPrice = (data, callback) => {
 	let url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/map";
 	const headers = { "X-CMC_PRO_API_KEY": secrets.coinmarketcapKey };
 
-	request({ headers, url }, (error, _response, html) => {
-		if (error) console.log(error);
+	request({ headers }, (error, _response, html) => {
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		if (json.error) return { error: "Este Market Cap tá na xixada (down)" };
@@ -34,7 +35,7 @@ exports.getPrice = (data, callback) => {
 			url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${coinId}&&convert=EUR`;
 
 			request({ headers, url }, (error, _response, html) => {
-				if (error) console.log(error);
+				if (error) return log.error(error.stack);
 				const json = JSON.parse(html);
 
 				if (json.error) return callback({ error: "Este Market Cap tá na xixada (down)" });

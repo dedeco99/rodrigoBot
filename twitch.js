@@ -1,6 +1,7 @@
 const request = require("request");
 
 const secrets = require("./secrets");
+const log = require("./log");
 
 const checkIfChannelExists = (channel, callback) => {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;
@@ -11,7 +12,7 @@ const checkIfChannelExists = (channel, callback) => {
 	};
 
 	request({ headers, url }, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		if (json.data.length > 0) {
@@ -27,7 +28,7 @@ const checkIfChannelInDatabase = (data, callback) => {
 		?q={${data.field}:'${data.channel}','platform':'${data.platform}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		if (json.length > 0) {
@@ -43,7 +44,7 @@ const checkIfNotificationExists = (data, callback) => {
 		?q={'video':'${data.video}','started':'${data.started}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		if (json.length > 0) {
@@ -58,7 +59,8 @@ const addNotification = (data) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?apiKey=${secrets.databaseKey}`;
 
 	request.post({ url, body: data, json: true }, error => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
+		return null;
 	});
 };
 
@@ -83,7 +85,7 @@ const addChannel = (msg, callback) => {
 					const res = { "name": json.data[0].login, "channel": json.data[0].login, "platform": "twitch" };
 
 					request.post({ url, body: res, json: true }, error => {
-						if (error) console.log(error);
+						if (error) return log.error(error.stack);
 
 						return callback("Canal adicionado com sucesso my dude");
 					});
@@ -103,7 +105,7 @@ const removeChannel = (msg, callback) => {
 			const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels/${id}?apiKey=${secrets.databaseKey}`;
 
 			request.delete(url, error => {
-				if (error) console.log(error);
+				if (error) return log.error(error.stack);
 
 				return callback("Canal removido com sucesso my dude");
 			});
@@ -118,7 +120,7 @@ const getChannels = (msg, callback) => {
 		?q={'platform':'twitch'}&s={'name':1}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		let res = "";
@@ -135,7 +137,7 @@ exports.getNotifications = (callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels?q={'platform':'twitch'}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		let channels = "";
@@ -154,7 +156,7 @@ exports.getNotifications = (callback) => {
 		};
 
 		request({ headers, url }, (error, response, html) => {
-			if (error) console.log(error);
+			if (error) return log.error(error.stack);
 			const json = JSON.parse(html);
 
 			for (let i = 0; i < json.data.length; i++) {

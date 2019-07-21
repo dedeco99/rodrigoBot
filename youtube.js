@@ -1,12 +1,13 @@
 const request = require("request");
 
 const secrets = require("./secrets");
+const log = require("./log");
 
 const checkIfChannelExists = (channel, callback) => {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		if (json.pageInfo.totalResults > 0) {
@@ -22,7 +23,7 @@ const checkIfChannelInDatabase = (data, callback) => {
 		?q={${ data.field}:'${data.channel}'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		if (json.length > 0) {
@@ -37,7 +38,7 @@ const checkIfNotificationExists = (data, callback) => {
 	const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/notifications?q={'video':'${data.video}'}&apiKey=${secrets.databaseKey}`;
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		if (json.length > 0) {
@@ -54,7 +55,8 @@ const addNotification = (videoId) => {
 	const res = { "video": videoId };
 
 	request.post({ url, body: res, json: true }, error => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
+		return null;
 	});
 };
 
@@ -62,7 +64,7 @@ const getChannelsPlaylist = (data, callback) => {
 	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${data}&maxResults=50&key=${secrets.youtubeKey}`;
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		return callback(json.items);
@@ -80,7 +82,7 @@ const getVideo = (msg, callback) => {
 					&maxResults=5&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 				request(url, (error, response, html) => {
-					if (error) console.log(error);
+					if (error) return log.error(error.stack);
 					const json = JSON.parse(html);
 
 					return callback(`https://youtu.be/${json.items[0].snippet.resourceId.videoId}`);
@@ -105,7 +107,7 @@ const addChannel = (msg, callback) => {
 				const res = { "name": json.items[0].snippet.title, "channel": json.items[0].id.channelId, "platform": "youtube" };
 
 				request.post({ url, body: res, json: true }, error => {
-					if (error) console.log(error);
+					if (error) return log.error(error.stack);
 
 					return callback("Canal adicionado com sucesso my dude");
 				});
@@ -128,7 +130,7 @@ const removeChannel = (msg, callback) => {
 					const url = `https://api.mlab.com/api/1/databases/rodrigo/collections/channels/${id}?apiKey=${secrets.databaseKey}`;
 
 					request.delete(url, error => {
-						if (error) console.log(error);
+						if (error) return log.error(error.stack);
 
 						return callback("Canal removido com sucesso my dude");
 					});
@@ -147,7 +149,7 @@ const getChannels = (msg, callback) => {
 		?q={'platform':'youtube'}&s={'name':1}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		let res = "";
@@ -165,7 +167,7 @@ exports.getNotifications = (callback) => {
 		?q={'platform':'youtube'}&apiKey=${secrets.databaseKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		let channelsString = "";
@@ -181,7 +183,7 @@ exports.getNotifications = (callback) => {
 					&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 				request(url, (error, response, html) => {
-					if (error) console.log(error);
+					if (error) return log.error(error.stack);
 					const json = JSON.parse(html);
 
 					const ONE_HOUR = 60 * 60 * 1000;
@@ -197,9 +199,13 @@ exports.getNotifications = (callback) => {
 							return null;
 						});
 					}
+
+					return null;
 				});
 			}
 		});
+
+		return null;
 	});
 };
 

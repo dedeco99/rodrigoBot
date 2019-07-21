@@ -4,6 +4,7 @@ const ytdl = require("ytdl-core");
 const Cleverbot = require("cleverbot-api");
 
 const secrets = require("./secrets");
+const log = require("./log");
 const Crypto = require("./crypto");
 const embed = require("./embed");
 
@@ -14,7 +15,7 @@ exports.define = (msg, callback) => {
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		let res = null;
@@ -51,7 +52,7 @@ exports.procura = (msg, callback) => {
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		for (let i = 0; i < 3; i++) {
@@ -116,7 +117,7 @@ exports.converte = (msg, callback) => {
 	const url = "https://api.exchangeratesapi.io/latest";
 
 	request(url, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 
 		let converted = 0;
@@ -167,10 +168,9 @@ exports.getvote = (msg, callback) => {
 
 exports.crypto = (msg, callback) => {
 	const coin = msg.content.split("crypto ")[1];
+
 	Crypto.getPrice(coin, (res) => {
-		if (res.error) {
-			return callback(res.error);
-		}
+		if (res.error) return callback(res.error);
 
 		return callback(embed.createCryptoEmbed(res));
 	});
@@ -182,6 +182,7 @@ exports.amazon = (msg, callback) => {
 	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
 
 	request(url, (error, response, html) => {
+		if (error) return log.error(error.stack);
 		const $ = cheerio.load(html);
 		const res = [];
 		thing = thing.replace(/%20/g, " ");
@@ -215,7 +216,7 @@ exports.clever = (msg, callback) => {
 	cleverbot.getReply({
 		input: msg.content
 	}, (error, response) => {
-		if (error) throw error;
+		if (error) return log.error(error.stack);
 
 		return callback(response.output);
 	});

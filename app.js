@@ -14,7 +14,7 @@ const handleMessage = async (msg, lastMsg, client, callback) => {
 		command.checkForCommand(msg, (checkForCommand) => {
 			if (checkForCommand.isCommand) {
 				msg.channel.send(checkForCommand.msg);
-			} else if (msg.content.includes("delete") && lastMsg !== null) {
+			} else if (msg.content.includes("delete") && lastMsg) {
 				lastMsg.delete();
 				msg.delete();
 			}
@@ -66,7 +66,7 @@ const run = async () => {
 	});
 
 	client.on("message", msg => handleMessage(msg, lastMsg, client, (res) => {
-		lastMsg = res.lasMsg;
+		lastMsg = res.lastMsg;
 	}));
 };
 

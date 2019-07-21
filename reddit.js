@@ -1,6 +1,7 @@
 const request = require("request");
 
 const secrets = require("./secrets");
+const log = require("./log");
 const embed = require("./embed");
 
 const isFile = (pathname) => {
@@ -67,7 +68,8 @@ const getRedditPosts = (data, accessToken, callback) => {
 	};
 
 	request({ url, headers }, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
+
 		try {
 			const json = JSON.parse(html);
 			const res = formatResponse(json);
@@ -90,10 +92,11 @@ const getAccessToken = (data, callback) => {
 		"User-Agent": "RodrigoBot",
 		"Authorization": auth
 	};
-	console.log(url);
+
 	request.post({ url, headers }, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
+
 		getRedditPosts(data, json.access_token, (res) => {
 			return callback(res);
 		});
@@ -113,7 +116,7 @@ const getRefreshToken = () => { /* eslint-disable-line no-unused-vars */
 	};
 
 	request.post({ url, headers }, (error, response, html) => {
-		if (error) console.log(error);
+		if (error) return log.error(error.stack);
 		const json = JSON.parse(html);
 		console.log(json);
 	});

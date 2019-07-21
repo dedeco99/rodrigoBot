@@ -47,7 +47,6 @@ const formatResponse = (url, num, profilePage) => {
 	return res;
 };
 
-/* eslint-disable max-lines-per-function */
 exports.getPost = (msg, callback) => {
 	const person = msg.content.split(" ")[2];
 	const num = msg.content.split(" ").pop();
