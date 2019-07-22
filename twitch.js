@@ -1,6 +1,12 @@
 const { get } = require("./request");
 const secrets = require("./secrets");
-const database = require("./database");
+const {
+	getChannels,
+	postChannel,
+	deleteChannel,
+	getNotifications,
+	addNotification
+} = require("./database");
 
 const checkIfChannelExists = async (channel) => {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;
@@ -26,13 +32,13 @@ const getStream = (msg, client) => {
 };
 
 const checkIfChannelInDatabase = async (query) => {
-	const channels = await database.getChannels(query);
+	const channels = await getChannels(query);
 
 	return channels.length > 0 ? { exists: true, id: channels[0]._id } : false;
 };
 
 const checkIfNotificationExists = async (query) => {
-	const notifications = await database.getNotifications(query);
+	const notifications = await getNotifications(query);
 
 	return notifications.length > 0;
 };
@@ -51,7 +57,7 @@ const addChannel = async (msg) => {
 			"platform": "twitch"
 		};
 
-		database.postChannel(channel);
+		postChannel(channel);
 
 		return "Canal adicionado com sucesso my dude";
 	}
@@ -65,23 +71,23 @@ const removeChannel = async (msg) => {
 	const { exists, id } = await checkIfChannelInDatabase({ "name": channel, "platform": "twitch" });
 
 	if (exists) {
-		database.deleteChannel(id);
+		deleteChannel(id);
 		return "Canal removido com sucesso my dude";
 	}
 
 	return "Esse canal deve estar no xixo porque não o encontro";
 };
 
-const getChannels = async () => {
-	let channels = await database.getChannels({ platform: "twitch" });
+const fetchChannels = async () => {
+	let channels = await getChannels({ platform: "twitch" });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
 	return channels;
 };
 
-const getNotifications = async () => {
-	const channels = await database.getChannels({ platform: "twitch" });
+const fetchNotifications = async () => {
+	const channels = await getChannels({ platform: "twitch" });
 
 	let channelsString = channels.map(channel => channel.name).join(",");
 
@@ -106,7 +112,7 @@ const getNotifications = async () => {
 		if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
 			const exists = await checkIfNotificationExists({ video: json.data[i].user_name, started: json.data[i].started_at });
 			if (!exists) {
-				database.addNotification({ "video": json.items[0].snippet.resourceId.videoId });
+				addNotification({ "video": json.items[0].snippet.resourceId.videoId });
 
 				return `**${json.data[i].user_name}** está live! | https://twitch.tv/${json.data[i].user_name}`;
 			}
@@ -118,7 +124,7 @@ const checkForCommand = async (msg, client) => {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
-		{ command: "get", func: getChannels }
+		{ command: "get", func: fetchChannels }
 	];
 
 	const command = msg.content.split(" ")[2];
@@ -135,6 +141,6 @@ const checkForCommand = async (msg, client) => {
 };
 
 module.exports = {
-	getNotifications,
+	fetchNotifications,
 	checkForCommand
 };

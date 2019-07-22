@@ -1,6 +1,12 @@
 const { get } = require("./request");
 const secrets = require("./secrets");
-const database = require("./database");
+const {
+	getChannels,
+	postChannel,
+	deleteChannel,
+	getNotifications,
+	addNotification
+} = require("./database");
 
 const checkIfChannelExists = async (channel) => {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
@@ -41,13 +47,13 @@ const getVideo = async (msg) => {
 };
 
 const checkIfChannelInDatabase = async (query) => {
-	const channels = await database.getChannels(query);
+	const channels = await getChannels(query);
 
 	return channels.length > 0 ? { "exists": true, "id": channels[0]._id } : false;
 };
 
 const checkIfNotificationExists = async (query) => {
-	const notifications = await database.getNotifications(query);
+	const notifications = await getNotifications(query);
 
 	return notifications.length > 0;
 };
@@ -66,7 +72,7 @@ const addChannel = async (msg) => {
 			"platform": "youtube"
 		};
 
-		database.postChannel(channel);
+		postChannel(channel);
 
 		return "Canal adicionado com sucesso my dude";
 	}
@@ -82,7 +88,7 @@ const removeChannel = async (msg) => {
 		const { exists, id } = await checkIfChannelInDatabase({ "channel": item.id.channelId, "platform": "youtube" });
 
 		if (exists) {
-			database.deleteChannel(id);
+			deleteChannel(id);
 			return "Canal removido com sucesso my dude";
 		}
 	}
@@ -90,18 +96,18 @@ const removeChannel = async (msg) => {
 	return "Esse canal deve estar no xixo porque não o encontro";
 };
 
-const getChannels = async () => {
-	let channels = await database.getChannels({ platform: "youtube" });
+const fetchChannels = async () => {
+	let channels = await getChannels({ platform: "youtube" });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
 	return channels;
 };
 
-const getNotifications = async () => {
-	let channels = await database.getChannels({ platform: "youtube" });
+const fetchNotifications = async () => {
+	let channels = await getChannels({ platform: "youtube" });
 
-	channels = channels.map(channel => channel.name).join(",");
+	channels = channels.map(channel => channel.channel).join(",");
 
 	const playlists = await getChannelsPlaylist(channels);
 
@@ -110,7 +116,7 @@ const getNotifications = async () => {
 			?part=snippet&playlistId=${playlist.contentDetails.relatedPlaylists.uploads}
 			&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
-		const res = get(url);
+		const res = await get(url);
 		const json = JSON.parse(res);
 
 		const item = json.items[0];
@@ -119,7 +125,7 @@ const getNotifications = async () => {
 		if (new Date() - new Date(item.snippet.publishedAt) < ONE_HOUR) {
 			const exists = await checkIfNotificationExists({ video: item.snippet.resourceId.videoId });
 			if (!exists) {
-				database.addNotification({ "video": item.snippet.resourceId.videoId });
+				addNotification({ "video": item.snippet.resourceId.videoId });
 
 				return `**${item.snippet.channelTitle}** postou um novo video! | 
 					https://youtu.be/${item.snippet.resourceId.videoId}`.replace(/\t/g, "").replace(/\n/g, "");
@@ -132,7 +138,7 @@ const checkForCommand = async (msg) => {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
-		{ command: "get", func: getChannels }
+		{ command: "get", func: fetchChannels }
 	];
 
 	const command = msg.content.split(" ")[2];
@@ -149,6 +155,6 @@ const checkForCommand = async (msg) => {
 };
 
 module.exports = {
-	getNotifications,
+	fetchNotifications,
 	checkForCommand
 };

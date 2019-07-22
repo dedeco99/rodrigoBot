@@ -1,41 +1,40 @@
-const insideJokes = [
-	{
-		"word": "carne",
-		"message": "./assets/img/cuttingmeat.jpg"
-	},
-	{
-		"word": "portatil",
-		"message": "*appears to have extreme PTSD and starts convulsing on the floor*"
-	},
-	{
-		"word": "guilherme",
-		"message": "O guilherme é o melhor admin deste regime fascista ao qual chamamos discord"
-	},
-	{
-		"word": "autista",
-		"message": "*touches face until it starts to bleed*"
-	},
-	{
-		"word": "retardado",
-		"message": "*face twitches and begins to form a crooked smile*"
-	},
-	{
-		"word": "remember pedro",
-		"message": "./assets/img/memoria.png"
-	},
-	{
-		"word": "amigos",
-		"message": "Eu tenho bastantes amigos a quem eu dou a mão"
-	},
-	{
-		"word": "hack",
-		"message": "Não compreendo. As pessoas que hackeiam chamam-se hackers?"
-	},
-	{
-		"word": "teclado",
-		"message": "*starts screaming and hitting his head on the wall*"
+const { getInsideJokes, postInsideJoke, putInsideJoke, deleteInsideJoke } = require("./database");
+
+const checkIfJokeInDatabase = async (query) => {
+	const insideJokes = await getInsideJokes(query);
+	console.log(insideJokes)
+
+	return insideJokes.length > 0 ? { "exists": true, "id": insideJokes[0]._id } : false;
+};
+
+const addInsideJoke = async (msg) => {
+	const params = msg.content.split("insideJoke add ")[1];
+	const word = params.split(";")[0];
+	const message = params.split(";")[1];
+	console.log(word, message);
+
+	const { exists, id } = await checkIfJokeInDatabase({ word });
+	if (exists) {
+		putInsideJoke(id, { message });
+	} else {
+		postInsideJoke({ word, message });
 	}
-];
+
+	return "Piada adicionada com sucesso my dude";
+};
+
+const removeInsideJoke = async (msg) => {
+	const word = msg.content.split("insideJoke remove ")[1];
+
+	const { exists, id } = await checkIfJokeInDatabase({ word });
+
+	if (exists) {
+		deleteInsideJoke(id);
+		return "Piada removido com sucesso my dude";
+	}
+
+	return "Essa piada deve estar no xixo porque não o encontro";
+};
 
 const checkIfFile = (insideJoke) => {
 	if (insideJoke.message.includes("./assets/")) {
@@ -45,23 +44,31 @@ const checkIfFile = (insideJoke) => {
 	return insideJoke.message;
 };
 
-exports.checkForInsideJokes = (msg) => {
-	let isInsideJoke = false;
-	let res = null;
+const checkForInsideJokes = async (msg) => {
+	const insideJokes = await getInsideJokes();
 
-	for (let i = 0; i < insideJokes.length; i++) {
-		if (msg.content.includes(insideJokes[i].word)) {
-			isInsideJoke = true;
-			res = insideJokes[i];
-			break;
+	for (const insideJoke of insideJokes) {
+		if (msg.content.includes(insideJoke.word)) {
+			return checkIfFile(insideJoke);
 		}
 	}
+};
 
-	if (res) {
-		res = checkIfFile(res);
+exports.checkForCommand = async (msg) => {
+	const features = [
+		{ command: "add", func: addInsideJoke },
+		{ command: "remove", func: removeInsideJoke }
+	];
+
+	const command = msg.content.split(" ")[2];
+	const feature = features.find(feature => feature.command === command);
+
+	let res = null;
+	if (feature) {
+		res = await feature.func(msg);
 	} else {
-		isInsideJoke = false;
+		res = await checkForInsideJokes(msg);
 	}
 
-	return { isInsideJoke, res };
+	return res;
 };

@@ -49,7 +49,9 @@ exports.checkForMemes = async (msg) => {
 	const searchedMeme = msg.content.split(" ")[2];
 	const meme = memes.find(meme => meme.name === searchedMeme);
 
-	const res = await makeMeme(msg, meme);
+	if (meme) {
+		return await makeMeme(msg, meme);
+	}
 
-	return res;
+	return "Esse meme não existe";
 };

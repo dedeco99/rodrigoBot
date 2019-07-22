@@ -1,70 +1,52 @@
 const discord = require("discord.js");
 
 const secrets = require("./secrets");
-const database = require("./database");
+const { getMeta } = require("./database");
 const command = require("./command");
 const youtube = require("./youtube");
 const twitch = require("./twitch");
 
-const handleMessage = async (msg, lastMsg, client) => {
-	const firstWord = msg.content.split(" ")[0].toLowerCase();
-	const res = {};
+const handleMessage = async (msg, lastMsg, client, callback) => {
+	let retLastMsg = lastMsg;
 
-	if (firstWord === "rodrigo") {
-		const { isCommand, response } = await command.checkForCommand(msg, client);
+	const res = await command.checkForCommand(msg, client);
 
-		if (isCommand) msg.channel.send(response);
+	if (res) {
+		msg.channel.send(res);
 	} else if (msg.content.includes("delete") && lastMsg) {
 		lastMsg.delete();
 		msg.delete();
 	} else if (msg.author.username === "RodrigoBot") {
-		res.lastMsg = msg;
-	} else if (msg.content.includes(":rodrigo:")) {
-		msg.channel.send("Que carinha laroca!");
-	} else if (msg.content.includes("rodrigo")) {
-		const compliments = ["good", "nice", "best", "bom", "bem", "grande"];
-		const insults = ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"];
-
-		if (compliments.find(compliment => msg.content.includes(compliment))) {
-			const metaInfo = await database.updateMeta({ likes: true });
-
-			msg.channel.send(`Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes.
-							I can't handle it!!! *touches face violently*`.replace(/\t/g, "").replace(/\n/g, ""));
-		} else if (insults.find(insult => msg.content.includes(insult))) {
-			const metaInfo = await database.updateMeta({ dislikes: true });
-
-			msg.channel.send(`Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes.
-							Vou chamar os meus pais. *cries while getting hit with a laptop*`.replace(/\t/g, "").replace(/\n/g, ""));
-		}
+		retLastMsg = msg;
 	}
 
-	return res;
+	callback(retLastMsg);
 };
 
 const run = async () => {
 	const client = new discord.Client();
 	client.login(secrets.discordKey);
 
-	const metaInfo = await database.getMeta();
+	const metaInfo = await getMeta();
 	let lastMsg = null;
 
 	client.on("ready", () => {
 		console.log(`Logged in as ${client.user.tag}!`);
 		client.user.setActivity(metaInfo.action, { type: "PLAYING" });
 
-		setInterval(() => {
-			youtube.getYoutubeNotifications((res) => {
-				client.channels.get("525343734746054657").send(`${res.notification} | ${res.video}`);
-			});
-			twitch.getTwitchNotifications((res) => {
-				client.channels.get("525343734746054657").send(`${res.notification} | ${res.video}`);
-			});
+		setInterval(async () => {
+			let res = await youtube.fetchNotifications();
+			if (res) client.channels.get("525343734746054657").send(`${res.notification} | ${res.video}`);
+
+			res = await twitch.fetchNotifications();
+			if (res) client.channels.get("525343734746054657").send(`${res.notification} | ${res.video}`);
+
 			console.log("Checked");
 		}, 60000 * 10); //check every 10 minutes
 	});
 
-	client.on("message", msg => handleMessage(msg, lastMsg, client, (res) => {
-		lastMsg = res.lastMsg;
+	client.on("message", msg => handleMessage(msg, lastMsg, client, res => {
+		lastMsg = res;
 	}));
 };
 

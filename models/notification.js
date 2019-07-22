@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-exports.Model = new Schema({
+const NotificationSchema = new Schema({
 	video: { type: String, default: "" }
 });
+
+const Notification = mongoose.model("Notification", NotificationSchema);
+
+module.exports = Notification;

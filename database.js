@@ -5,12 +5,12 @@ const secrets = require("./secrets");
 mongoose.set("useFindAndModify", false);
 mongoose.connect(secrets.databaseConnectionString, { useNewUrlParser: true });
 
-const MetaSchema = require("./models/meta").Model;
-const Meta = mongoose.model("Meta", MetaSchema);
-const ChannelSchema = require("./models/channel").Model;
-const Channel = mongoose.model("Channel", ChannelSchema);
-const NotificationSchema = require("./models/notification").Model;
-const Notification = mongoose.model("Notification", NotificationSchema);
+const Meta = require("./models/meta");
+const Channel = require("./models/channel");
+const Notification = require("./models/notification");
+const InsideJoke = require("./models/insideJoke");
+
+/* Meta */
 
 const getMeta = async () => {
 	return await Meta.findOne();
@@ -27,6 +27,8 @@ const updateMeta = async (obj) => {
 	return await Meta.findOneAndUpdate({}, body, { new: true });
 };
 
+/* Channel */
+
 const getChannels = async (query) => {
 	return await Channel.find(query).collation({ "locale": "en" }).sort({ name: 1 });
 };
@@ -41,10 +43,32 @@ const deleteChannel = async (channel) => {
 	await Channel.deleteOne({ _id: channel });
 };
 
+/* Notification */
+
 const postNotification = async (notification) => {
 	const newNotification = new Notification(notification);
 
 	await newNotification.save();
+};
+
+/* InsideJoke */
+
+const getInsideJokes = async (query) => {
+	return await InsideJoke.find(query);
+};
+
+const postInsideJoke = async (insideJoke) => {
+	const newInsideJoke = new InsideJoke(insideJoke);
+
+	await newInsideJoke.save();
+};
+
+const putInsideJoke = async (id, insideJoke) => {
+	await InsideJoke.updateOne({ _id: id }, insideJoke);
+};
+
+const deleteInsideJoke = async (insideJoke) => {
+	await InsideJoke.deleteOne({ _id: insideJoke });
 };
 
 /* eslint-disable sort-keys */
@@ -54,5 +78,9 @@ module.exports = {
 	getChannels,
 	postChannel,
 	deleteChannel,
-	postNotification
+	postNotification,
+	getInsideJokes,
+	postInsideJoke,
+	putInsideJoke,
+	deleteInsideJoke
 };

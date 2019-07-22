@@ -7,6 +7,7 @@ const youtube = require("./youtube");
 const twitch = require("./twitch");
 const instagram = require("./instagram");
 const insideJokes = require("./insideJokes");
+const { updateMeta } = require("./database");
 
 const features = [
 	{ command: "define", func: utils.define },
@@ -35,32 +36,53 @@ const features = [
 
 	{ command: "youtube", func: youtube.checkForCommand },
 
-	{ command: "twitch", func: twitch.checkForCommand }
+	{ command: "twitch", func: twitch.checkForCommand },
+
+	{ command: "insideJoke", func: insideJokes.checkForCommand }
 ];
 
 const checkCommand = (msg) => {
 	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
 };
 
-exports.checkForCommand = async (msg, client) => {
-	const command = checkCommand(msg);
-	console.log(command);
+const checkForWord = async (msg) => {
+	const insideJoke = await insideJokes.checkForCommand(msg);
+	if (insideJoke) return insideJoke;
 
-	const feature = features.find(feat => feat.command === command);
-
-	let response = null;
-	if (feature) {
-		const res = await feature.func(msg, client);
-		response = { isCommand: true, response: res };
-	} else {
-		const { isInsideJoke, res } = insideJokes.checkForInsideJokes(msg);
-
-		if (isInsideJoke) {
-			response = { isCommand: true, response: res };
-		} else {
-			response = { isCommand: false };
-		}
+	if (msg.content.includes(":rodrigo:")) {
+		return "Que carinha laroca!";
 	}
 
-	return response;
+	const compliments = ["good", "nice", "best", "bom", "bem", "grande"];
+	const insults = ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"];
+	if (compliments.find(compliment => msg.content.includes(compliment))) {
+		const metaInfo = await updateMeta({ likes: true });
+
+		return `Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes.
+						I can't handle it!!! *touches face violently*`.replace(/\t/g, "").replace(/\n/g, "");
+	} else if (insults.find(insult => msg.content.includes(insult))) {
+		const metaInfo = await updateMeta({ dislikes: true });
+
+		return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes.
+						Vou chamar os meus pais. *cries while getting hit with a laptop*`.replace(/\t/g, "").replace(/\n/g, "");
+	}
+};
+
+exports.checkForCommand = async (msg, client) => {
+	const firstWord = msg.content.split(" ")[0].toLowerCase();
+
+	if (msg.content.includes("rodrigo")) {
+		if (firstWord === "rodrigo") {
+			const command = checkCommand(msg);
+			console.log(command);
+
+			const feature = features.find(feat => feat.command === command);
+
+			if (feature) {
+				return await feature.func(msg, client);
+			}
+		}
+
+		return await checkForWord(msg);
+	}
 };
