@@ -6,7 +6,6 @@ const { getMeta, getBirthdays } = require("./database");
 const command = require("./command");
 const youtube = require("./youtube");
 const twitch = require("./twitch");
-const utils = require("./utils");
 
 let lastMsg = null;
 

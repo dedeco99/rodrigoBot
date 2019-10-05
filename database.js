@@ -9,6 +9,7 @@ const Meta = require("./models/meta");
 const Channel = require("./models/channel");
 const Notification = require("./models/notification");
 const InsideJoke = require("./models/insideJoke");
+const Birthday = require("./models/birthday");
 
 /* Meta */
 
@@ -71,6 +72,12 @@ const deleteInsideJoke = async (insideJoke) => {
 	await InsideJoke.deleteOne({ _id: insideJoke });
 };
 
+/* Birthdays */
+
+const getBirthdays = async (query) => {
+	return await Birthday.find(query);
+};
+
 /* eslint-disable sort-keys */
 module.exports = {
 	getMeta,
@@ -82,5 +89,6 @@ module.exports = {
 	getInsideJokes,
 	postInsideJoke,
 	putInsideJoke,
-	deleteInsideJoke
+	deleteInsideJoke,
+	getBirthdays
 };
