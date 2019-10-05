@@ -104,7 +104,7 @@ const fetchNotifications = async () => {
 		"Client-ID": secrets.twitchClientId
 	};
 
-	const res = get(url, headers);
+	const res = await get(url, headers);
 	const json = JSON.parse(res);
 
 	for (let i = 0; i < json.data.length; i++) {

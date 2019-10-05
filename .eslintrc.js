@@ -17,10 +17,6 @@ module.exports = {
 			"error",
 			"tab"
 		],
-		"linebreak-style": [
-			"error",
-			"windows"
-		],
 		"quotes": [
 			"error",
 			"double"
@@ -117,7 +113,6 @@ module.exports = {
 		"prefer-object-spread": "error",
 		"semi-spacing": "error",
 		"semi-style": "error",
-		"sort-keys": ["error", "asc", { "minKeys": 5 }],
 		"sort-vars": "warn",
 		"space-before-blocks": "error",
 		"space-before-function-paren": "error",

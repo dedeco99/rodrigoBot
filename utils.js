@@ -2,12 +2,29 @@ const { get } = require("./request");
 
 const cheerio = require("cheerio");
 const ytdl = require("ytdl-core");
-const Cleverbot = require("cleverbot-api");
 
 const secrets = require("./secrets");
 const embed = require("./embed");
 
-const cleverbot = new Cleverbot(secrets.cleverBotKey);
+const answer = (msg) => {
+	let num = Math.floor(Math.random() >= 0.5);
+	if (msg.content.includes(" ou ")) {
+		const option1 = msg.content.split(" ou ")[0].slice(8);
+		const option2 = msg.content.split(" ou ")[1].slice(0, -1);
+
+		return num ? option1 : option2;
+	} else if (msg.content.includes(" probabilidade ")) {
+		num = Math.floor(Math.random() * 100);
+
+		return `Cerca de ${num}%`;
+	} else if (msg.content.includes(" nota ")) {
+		num = Math.floor(Math.random() * 20);
+
+		return num;
+	}
+
+	return num ? "Sim" : "Não";
+};
 
 const define = async (msg) => {
 	const word = msg.content.split("define ")[1];
@@ -41,7 +58,7 @@ const define = async (msg) => {
 	return embed.createDefineEmbed(response);
 };
 
-const procura = async (msg) => {
+const search = async (msg) => {
 	const topic = msg.content.split("procura ")[1];
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
@@ -61,34 +78,7 @@ const procura = async (msg) => {
 	return embed.createSearchEmbed(response);
 };
 
-const responde = (msg) => {
-	let num = Math.floor(Math.random() >= 0.5);
-	if (msg.content.includes(" ou ")) {
-		const option1 = msg.content.split(" ou ")[0].slice(8);
-		const option2 = msg.content.split(" ou ")[1].slice(0, -1);
-
-		return num ? option1 : option2;
-	} else if (msg.content.includes(" probabilidade ")) {
-		num = Math.floor(Math.random() * 100);
-
-		return `Cerca de ${num}%`;
-	} else if (msg.content.includes(" nota ")) {
-		num = Math.floor(Math.random() * 20);
-
-		return num;
-	}
-
-	return num ? "Sim" : "Não";
-};
-
-const math = (msg) => {
-	const expression = msg.content.split("math ")[1];
-	const result = eval(expression);
-
-	return `Resultado: ${result}`;
-};
-
-const ordena = (msg) => {
+const sort = (msg) => {
 	let options = msg.content.split("ordena")[1];
 	options = options.split(";");
 	const randomized = [];
@@ -103,7 +93,7 @@ const ordena = (msg) => {
 	return randomized.join(" > ");
 };
 
-const converte = async (msg) => {
+const convert = async (msg) => {
 	const numberToConvert = msg.content.split(" ")[2];
 	const currencyToConvert = msg.content.split(" ")[3].toUpperCase();
 	const currencyConverted = msg.content.split(" ")[5].toUpperCase();
@@ -123,38 +113,43 @@ const converte = async (msg) => {
 	return converted;
 };
 
-const vote = (msg) => {
-	const message = msg.content.split("vote ")[1];
-	const options = message.split(";");
-	const title = options[0];
-	options.splice(0, 1);
+const math = (msg) => {
+	const expression = msg.content.split("math ")[1];
+	const result = eval(expression);
 
-	const res = {
-		title,
-		options
-	};
-
-	return embed.createPollEmbed(msg, res);
+	return `Resultado: ${result}`;
 };
 
-const getvote = (msg) => {
-	const poll = msg.content.split("getvote ")[1];
+const vote = async (msg) => {
+	const message = msg.content.split(" ");
 
-	msg.channel.fetchMessage(poll)
-		.then((message) => {
-			message.reactions.forEach((reaction) => {
-				reaction.fetchUsers().then((users) => {
-					const userRes = users.map(user => user.username).join(" | ");
+	if (message[2] === "results") {
+		const poll = message[3];
 
-					return `${reaction._emoji.name}: ${reaction.count} votos (${userRes})`;
-				});
-			});
-		})
-		.catch(console.error);
+		const vote = await msg.channel.fetchMessage(poll);
+
+		vote.reactions.forEach(async reaction => {
+			const users = await reaction.fetchUsers();
+			const userRes = users.map(user => user.username).join(" | ");
+
+			msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
+		});
+	} else {
+		const options = message[2].split(";");
+		const title = options[0];
+		options.splice(0, 1);
+
+		const res = {
+			title,
+			options
+		};
+
+		return embed.createPollEmbed(msg, res);
+	}
 };
 
 //FIXME: Not working
-const amazon = async (msg) => {
+const price = async (msg) => {
 	let thing = msg.content.split("price ")[1];
 	thing = thing.replace(/ /g, "%20");
 	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
@@ -188,39 +183,29 @@ const amazon = async (msg) => {
 	return "Não existe esse produto do xixo";
 };
 
-const clever = (msg) => {
-	cleverbot.getReply({
-		input: msg.content
-	}, (error, response) => {
-		if (error) console.log(error);
-
-		return response.output;
-	});
-};
-
-const checkIfInVoiceChannel = (msg, params) => {
-	let dispatcher = null;
-
-	if (msg.member.voiceChannel) {
-		msg.member.voiceChannel.join()
-			.then((connection) => {
-				const stream = ytdl(params, { filter: "audioonly" });
-				const streamOptions = { seek: 0, volume: 0.5 };
-				dispatcher = connection.playStream(stream, streamOptions);
-
-				dispatcher.on("end", () => {
-					msg.member.voiceChannel.leave();
-				});
-			})
-			.catch(console.log);
-	} else {
-		msg.reply("Vai para um canal de voz primeiro sua xixada!");
-	}
-
-	return dispatcher;
-};
-
 const music = (msg) => {
+	const checkIfInVoiceChannel = (msg, params) => {
+		let dispatcher = null;
+
+		if (msg.member.voiceChannel) {
+			msg.member.voiceChannel.join()
+				.then((connection) => {
+					const stream = ytdl(params, { filter: "audioonly" });
+					const streamOptions = { seek: 0, volume: 0.5 };
+					dispatcher = connection.playStream(stream, streamOptions);
+
+					dispatcher.on("end", () => {
+						msg.member.voiceChannel.leave();
+					});
+				})
+				.catch(console.log);
+		} else {
+			msg.reply("Vai para um canal de voz primeiro sua xixada!");
+		}
+
+		return dispatcher;
+	};
+
 	const params = msg.content.split("music ")[1];
 	let dispatcher = null;
 
@@ -236,15 +221,13 @@ const music = (msg) => {
 };
 
 module.exports = {
-	amazon,
-	clever,
-	converte,
+	answer,
 	define,
-	getvote,
+	search,
+	sort,
+	convert,
 	math,
-	music,
-	ordena,
-	procura,
-	responde,
-	vote
+	vote,
+	price,
+	music
 };

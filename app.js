@@ -1,26 +1,26 @@
 const discord = require("discord.js");
+const moment = require("moment");
 
 const secrets = require("./secrets");
-const { getMeta } = require("./database");
+const { getMeta, getBirthdays } = require("./database");
 const command = require("./command");
 const youtube = require("./youtube");
 const twitch = require("./twitch");
+const utils = require("./utils");
 
-const handleMessage = async (msg, lastMsg, client, callback) => {
-	let retLastMsg = lastMsg;
+let lastMsg = null;
 
-	const res = await command.checkForCommand(msg, client);
+const handleMessage = async (msg, client) => {
+	const message = await command.checkForCommand(msg, client);
 
-	if (res) {
-		msg.channel.send(res);
+	if (message) {
+		msg.channel.send(message);
 	} else if (msg.content.includes("delete") && lastMsg) {
 		lastMsg.delete();
 		msg.delete();
 	} else if (msg.author.username === "RodrigoBot") {
-		retLastMsg = msg;
+		lastMsg = msg;
 	}
-
-	callback(retLastMsg);
 };
 
 const run = async () => {
@@ -28,26 +28,32 @@ const run = async () => {
 	client.login(secrets.discordKey);
 
 	const metaInfo = await getMeta();
-	let lastMsg = null;
 
 	client.on("ready", () => {
 		console.log(`Logged in as ${client.user.tag}!`);
 		client.user.setActivity(metaInfo.action, { type: "PLAYING" });
 
 		setInterval(async () => {
-			let res = await youtube.fetchNotifications();
-			if (res) client.channels.get("525343734746054657").send(`${res.notification} | ${res.video}`);
+			let notification = await youtube.fetchNotifications();
+			if (notification) client.channels.get("525343734746054657").send(`${notification.notification} | ${notification.video}`);
 
-			res = await twitch.fetchNotifications();
-			if (res) client.channels.get("525343734746054657").send(`${res.notification} | ${res.video}`);
+			notification = await twitch.fetchNotifications();
+			if (notification) client.channels.get("525343734746054657").send(`${notification.notification} | ${notification.video}`);
+
+			if (moment().format("HH:mm") === "08:00") {
+				const birthdays = await getBirthdays({ $expr: { $eq: [{ $dayOfYear: "$date" }, { $dayOfYear: new Date() }] } });
+				for (const birthday of birthdays) {
+					client.channels.get("231537439926124545").send(`Parabéns ${birthday.person}`);
+				}
+			}
 
 			console.log("Checked");
 		}, 60000 * 10); //check every 10 minutes
 	});
 
-	client.on("message", msg => handleMessage(msg, lastMsg, client, res => {
-		lastMsg = res;
-	}));
+	client.on("message", async (msg) => {
+		await handleMessage(msg, client);
+	});
 };
 
 run();

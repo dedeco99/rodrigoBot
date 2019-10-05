@@ -2,13 +2,12 @@ const { getInsideJokes, postInsideJoke, putInsideJoke, deleteInsideJoke } = requ
 
 const checkIfJokeInDatabase = async (query) => {
 	const insideJokes = await getInsideJokes(query);
-	console.log(insideJokes)
 
 	return insideJokes.length > 0 ? { "exists": true, "id": insideJokes[0]._id } : false;
 };
 
 const addInsideJoke = async (msg) => {
-	const params = msg.content.split("insideJoke add ")[1];
+	const params = msg.content.split("add ")[1];
 	const word = params.split(";")[0];
 	const message = params.split(";")[1];
 	console.log(word, message);
@@ -24,7 +23,7 @@ const addInsideJoke = async (msg) => {
 };
 
 const removeInsideJoke = async (msg) => {
-	const word = msg.content.split("insideJoke remove ")[1];
+	const word = msg.content.split("remove ")[1];
 
 	const { exists, id } = await checkIfJokeInDatabase({ word });
 

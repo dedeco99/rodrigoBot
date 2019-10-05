@@ -17,7 +17,6 @@ const features = [
 	{ command: "ordena", func: utils.ordena },
 	{ command: "converte", func: utils.converte },
 	{ command: "vote", func: utils.vote },
-	{ command: "getvote", func: utils.getvote },
 	{ command: "price", func: utils.amazon },
 	{ command: "clever", func: utils.clever },
 	{ command: "music", func: utils.music },
@@ -38,7 +37,7 @@ const features = [
 
 	{ command: "twitch", func: twitch.checkForCommand },
 
-	{ command: "insideJoke", func: insideJokes.checkForCommand }
+	{ command: "joke", func: insideJokes.checkForCommand }
 ];
 
 const checkCommand = (msg) => {
@@ -48,10 +47,6 @@ const checkCommand = (msg) => {
 const checkForWord = async (msg) => {
 	const insideJoke = await insideJokes.checkForCommand(msg);
 	if (insideJoke) return insideJoke;
-
-	if (msg.content.includes(":rodrigo:")) {
-		return "Que carinha laroca!";
-	}
 
 	const compliments = ["good", "nice", "best", "bom", "bem", "grande"];
 	const insults = ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"];
@@ -69,10 +64,11 @@ const checkForWord = async (msg) => {
 };
 
 exports.checkForCommand = async (msg, client) => {
+	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 
-	if (msg.content.includes("rodrigo")) {
-		if (firstWord === "rodrigo") {
+	if (msg.content.toLowerCase().includes(triggerWord)) {
+		if (firstWord === triggerWord) {
 			const command = checkCommand(msg);
 			console.log(command);
 
