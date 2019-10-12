@@ -11,14 +11,13 @@ const { updateMeta } = require("./database");
 
 const features = [
 	{ command: "define", func: utils.define },
-	{ command: "procura", func: utils.procura },
-	{ command: "responde", func: utils.responde },
+	{ command: "procura", func: utils.search },
+	{ command: "responde", func: utils.answer },
 	{ command: "math", func: utils.math },
-	{ command: "ordena", func: utils.ordena },
-	{ command: "converte", func: utils.converte },
+	{ command: "ordena", func: utils.sort },
+	{ command: "converte", func: utils.convert },
 	{ command: "vote", func: utils.vote },
-	{ command: "price", func: utils.amazon },
-	{ command: "clever", func: utils.clever },
+	{ command: "price", func: utils.price },
 	{ command: "music", func: utils.music },
 
 	{ command: "meme", func: memes.checkForMemes },
