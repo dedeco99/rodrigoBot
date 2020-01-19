@@ -16,13 +16,13 @@
 		"nodemon": "^2.0.2"
 	},
 	"dependencies": {
+		"axios": "^0.19.1",
 		"cheerio": "^1.0.0-rc.2",
 		"discord.js": "^11.5.1",
 		"jimp": "^0.9.3",
 		"moment": "^2.24.0",
 		"mongoose": "^5.7.5",
 		"opusscript": "0.0.7",
-		"request": "^2.83.0",
 		"ytdl-core": "^1.0.6"
 	}
 }

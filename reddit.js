@@ -67,7 +67,7 @@ async function getRedditPosts(data, accessToken) {
 
 	try {
 		const res = await get(url, headers);
-		const json = JSON.parse(res);
+		const json = res.data;
 		const response = formatResponse(json);
 
 		return embed.createRedditEmbed(response);
@@ -88,8 +88,8 @@ async function getAccessToken(data) {
 		"Authorization": auth,
 	};
 
-	const res = await post(url, headers);
-	const json = JSON.parse(res);
+	const res = await post(url, null, headers);
+	const json = res.data;
 
 	const response = await getRedditPosts(data, json.access_token);
 
@@ -98,7 +98,7 @@ async function getAccessToken(data) {
 
 async function getRefreshToken() { /* eslint-disable-line no-unused-vars */
 	const url = `https://www.reddit.com/api/v1/access_token
-		?code=9UqtPpsQzrYeP_LNDiTKe4JVwvc&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul`.replace(/\t/g, "").replace(/\n/g, "");
+		?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul`.replace(/\t/g, "").replace(/\n/g, "");
 
 	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
@@ -108,9 +108,8 @@ async function getRefreshToken() { /* eslint-disable-line no-unused-vars */
 		"Authorization": auth,
 	};
 
-	const res = await post(url, headers);
-
-	const json = JSON.parse(res);
+	const res = await post(url, null, headers);
+	const json = res.data;
 
 	console.log(json);
 }

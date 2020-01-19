@@ -52,7 +52,7 @@ async function getPost(msg) {
 	const url = `https://www.instagram.com/${person}/`;
 
 	const res = await get(url);
-	let foto = res.substring(
+	let foto = res.data.substring(
 		res.lastIndexOf("window._sharedData = ") + 21,
 		res.lastIndexOf("</script>"),
 	);

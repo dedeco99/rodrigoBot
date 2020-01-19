@@ -21,7 +21,7 @@ async function getPrice(msg) {
 	const headers = { "X-CMC_PRO_API_KEY": secrets.coinmarketcapKey };
 
 	const res = await get(url, headers);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	let coinId = null;
 	for (const coin of json.data) {
@@ -35,7 +35,7 @@ async function getPrice(msg) {
 		url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${coinId}&&convert=EUR`;
 
 		const res = await get(url, headers);
-		const json = JSON.parse(res);
+		const json = res.data;
 
 		if (json.error) return "Este Market Cap tá na xixada (down)";
 

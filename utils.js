@@ -31,7 +31,7 @@ async function define(msg) {
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
 	const res = await get(url);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	let response = null;
 	if (json.list.length === 0) {
@@ -63,7 +63,7 @@ async function search(msg) {
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	const response = [];
 	for (let i = 0; i < 3; i++) {
@@ -100,7 +100,7 @@ async function convert(msg) {
 	const url = "https://api.exchangeratesapi.io/latest";
 
 	const res = await get(url);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	let converted = 0;
 
@@ -158,7 +158,7 @@ async function price(msg) {
 	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
 
 	const res = await get(url);
-	const $ = cheerio.load(res);
+	const $ = cheerio.load(res.data);
 	const response = [];
 	thing = thing.replace(/%20/g, " ");
 

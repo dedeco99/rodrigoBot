@@ -2,11 +2,11 @@ const { get } = require("./request");
 const secrets = require("./secrets");
 const {
 	getChannels,
-	postChannel,
-	deleteChannel,
 	getNotifications,
 	addNotification,
 } = require("./database");
+
+const Channel = require("./models/channel");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;
@@ -17,7 +17,7 @@ async function checkIfChannelExists(channel) {
 	};
 
 	const res = await get(url, headers);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	return json.data.length > 0 ? { "exists": true, "item": json } : { "exists": false };
 }
@@ -57,7 +57,9 @@ async function addChannel(msg) {
 			"platform": "twitch",
 		};
 
-		postChannel(channel);
+		const newChannel = new Channel(channel);
+
+		await newChannel.save();
 
 		return "Canal adicionado com sucesso my dude";
 	}
@@ -71,7 +73,7 @@ async function removeChannel(msg) {
 	const { exists, id } = await checkIfChannelInDatabase({ "name": channel, "platform": "twitch" });
 
 	if (exists) {
-		deleteChannel(id);
+		await Channel.deleteOne({ _id: id });
 		return "Canal removido com sucesso my dude";
 	}
 
@@ -105,10 +107,10 @@ async function fetchNotifications() {
 	};
 
 	const res = await get(url, headers);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	for (let i = 0; i < json.data.length; i++) {
-		const ONE_HOUR = 60 * 60 * 1000;
+		const ONE_HOUR = 60000 * 60;
 		if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
 			const exists = await checkIfNotificationExists({
 				video: json.data[i].user_name,

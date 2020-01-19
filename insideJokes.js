@@ -1,7 +1,7 @@
-const { getInsideJokes, postInsideJoke, putInsideJoke, deleteInsideJoke } = require("./database");
+const InsideJoke = require("./models/insideJoke");
 
 async function checkIfJokeInDatabase(query) {
-	const insideJokes = await getInsideJokes(query);
+	const insideJokes = await InsideJoke.find(query);
 
 	return insideJokes.length > 0 ? { "exists": true, "id": insideJokes[0]._id } : false;
 }
@@ -10,13 +10,14 @@ async function addInsideJoke(msg) {
 	const params = msg.content.split("add ")[1];
 	const word = params.split(";")[0];
 	const message = params.split(";")[1];
-	console.log(word, message);
 
 	const { exists, id } = await checkIfJokeInDatabase({ word });
 	if (exists) {
-		putInsideJoke(id, { message });
+		await InsideJoke.updateOne({ _id: id }, { message });
 	} else {
-		postInsideJoke({ word, message });
+		const newInsideJoke = new InsideJoke({ word, message });
+
+		await newInsideJoke.save();
 	}
 
 	return "Piada adicionada com sucesso my dude";
@@ -28,7 +29,7 @@ async function removeInsideJoke(msg) {
 	const { exists, id } = await checkIfJokeInDatabase({ word });
 
 	if (exists) {
-		deleteInsideJoke(id);
+		await InsideJoke.deleteOne({ _id: id });
 		return "Piada removido com sucesso my dude";
 	}
 
@@ -44,7 +45,7 @@ function checkIfFile(insideJoke) {
 }
 
 async function checkForInsideJokes(msg) {
-	const insideJokes = await getInsideJokes();
+	const insideJokes = await InsideJoke.find();
 
 	for (const insideJoke of insideJokes) {
 		if (msg.content.includes(insideJoke.word)) {

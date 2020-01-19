@@ -2,17 +2,17 @@ const { get } = require("./request");
 const secrets = require("./secrets");
 const {
 	getChannels,
-	postChannel,
-	deleteChannel,
 	getNotifications,
 	addNotification,
 } = require("./database");
+
+const Channel = require("./models/channel");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	return json.pageInfo.totalResults > 0 ? { "exists": true, "item": json.items[0] } : { "exists": false };
 }
@@ -21,7 +21,7 @@ async function getChannelsPlaylist(channel) {
 	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channel}&maxResults=50&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
-	const json = JSON.parse(res);
+	const json = res.data;
 
 	return json.items;
 }
@@ -38,7 +38,7 @@ async function getVideo(msg) {
 				&maxResults=5&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 		const res = await get(url);
-		const json = JSON.parse(res);
+		const json = res.data;
 
 		return `https://youtu.be/${json.items[0].snippet.resourceId.videoId}`;
 	}
@@ -72,7 +72,9 @@ async function addChannel(msg) {
 			"platform": "youtube",
 		};
 
-		postChannel(channel);
+		const newChannel = new Channel(channel);
+
+		await newChannel.save();
 
 		return "Canal adicionado com sucesso my dude";
 	}
@@ -88,7 +90,7 @@ async function removeChannel(msg) {
 		const { exists, id } = await checkIfChannelInDatabase({ "channel": item.id.channelId, "platform": "youtube" });
 
 		if (exists) {
-			deleteChannel(id);
+			await Channel.deleteOne({ _id: id });
 			return "Canal removido com sucesso my dude";
 		}
 	}
@@ -117,11 +119,11 @@ async function fetchNotifications() {
 			&maxResults=1&key=${secrets.youtubeKey}`.replace(/\t/g, "").replace(/\n/g, "");
 
 		const res = await get(url);
-		const json = JSON.parse(res);
+		const json = res.data;
 
 		const item = json.items[0];
 
-		const ONE_HOUR = 60 * 60 * 1000;
+		const ONE_HOUR = 60000 * 60;
 		if (new Date() - new Date(item.snippet.publishedAt) < ONE_HOUR) {
 			const exists = await checkIfNotificationExists({
 				video: item.snippet.resourceId.videoId,
@@ -129,8 +131,7 @@ async function fetchNotifications() {
 			if (!exists) {
 				addNotification({ "video": item.snippet.resourceId.videoId });
 
-				return `**${item.snippet.channelTitle}** postou um novo video! | 
-					https://youtu.be/${item.snippet.resourceId.videoId}`.replace(/\t/g, "").replace(/\n/g, "");
+				return `**${item.snippet.channelTitle}** postou um novo video! | https://youtu.be/${item.snippet.resourceId.videoId}`;
 			}
 		}
 	}

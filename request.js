@@ -1,34 +1,45 @@
-const request = require("request");
+const axios = require("axios");
 
 const log = require("./log");
 
-function get(url, headers) {
-	return new Promise((res) => {
-		const send = { url };
+async function get(url, headers = {}) {
+	const config = { headers };
 
-		if (headers) send.headers = headers;
+	try {
+		const response = await axios.get(url, config);
 
-		request(send, (error, response, html) => {
-			if (error) return log.error(error.stack);
+		return {
+			status: response.status,
+			data: response.data,
+		};
+	} catch (error) {
+		log.error(error.stack);
 
-			return res(html);
-		});
-	});
+		return {
+			status: error.response.status,
+			data: error.response.data,
+		};
+	}
 }
 
-function post(url, headers, body) {
-	return new Promise((res) => {
-		const send = { url };
+async function post(url, body, headers = {}) {
+	const config = { headers };
 
-		if (headers) send.headers = headers;
-		if (body) send.body = body;
+	try {
+		const response = await axios.post(url, body, config);
 
-		request.post(send, (error, response, html) => {
-			if (error) return log.error(error.stack);
+		return {
+			status: response.status,
+			data: response.data,
+		};
+	} catch (error) {
+		log.error(error.stack);
 
-			return res(html);
-		});
-	});
+		return {
+			status: error.response.status,
+			data: error.response.data,
+		};
+	}
 }
 
 module.exports = {
