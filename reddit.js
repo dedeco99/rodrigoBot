@@ -78,7 +78,7 @@ async function getRedditPosts(data, accessToken) {
 
 async function getAccessToken(data) {
 	const url = `https://www.reddit.com/api/v1/access_token
-		?refresh_token=${secrets.redditRefreshToken}a&grant_type=refresh_token`.replace(/\t/g, "").replace(/\n/g, "");
+		?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`.replace(/\t/g, "").replace(/\n/g, "");
 
 	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
