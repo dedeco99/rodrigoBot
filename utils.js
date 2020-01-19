@@ -6,7 +6,7 @@ const ytdl = require("ytdl-core");
 const secrets = require("./secrets");
 const embed = require("./embed");
 
-const answer = (msg) => {
+function answer(msg) {
 	let num = Math.floor(Math.random() >= 0.5);
 	if (msg.content.includes(" ou ")) {
 		const option1 = msg.content.split(" ou ")[0].slice(8);
@@ -24,9 +24,9 @@ const answer = (msg) => {
 	}
 
 	return num ? "Sim" : "Não";
-};
+}
 
-const define = async (msg) => {
+async function define(msg) {
 	const word = msg.content.split("define ")[1];
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
@@ -38,7 +38,7 @@ const define = async (msg) => {
 		response = {
 			word,
 			"definition": "Não há definição para esta palavra",
-			"example": "Não há exemplo"
+			"example": "Não há exemplo",
 		};
 	} else {
 		const cleanString = (string) => {
@@ -51,14 +51,14 @@ const define = async (msg) => {
 		response = {
 			word,
 			definition: cleanString(json.list[0].definition),
-			example
+			example,
 		};
 	}
 
 	return embed.createDefineEmbed(response);
-};
+}
 
-const search = async (msg) => {
+async function search(msg) {
 	const topic = msg.content.split("procura ")[1];
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
@@ -71,14 +71,14 @@ const search = async (msg) => {
 			topic,
 			title: json.items[i].title,
 			link: json.items[i].link,
-			description: json.items[i].snippet
+			description: json.items[i].snippet,
 		});
 	}
 
 	return embed.createSearchEmbed(response);
-};
+}
 
-const sort = (msg) => {
+function sort(msg) {
 	let options = msg.content.split("ordena")[1];
 	options = options.split(";");
 	const randomized = [];
@@ -91,9 +91,9 @@ const sort = (msg) => {
 	}
 
 	return randomized.join(" > ");
-};
+}
 
-const convert = async (msg) => {
+async function convert(msg) {
 	const numberToConvert = msg.content.split(" ")[2];
 	const currencyToConvert = msg.content.split(" ")[3].toUpperCase();
 	const currencyConverted = msg.content.split(" ")[5].toUpperCase();
@@ -111,16 +111,17 @@ const convert = async (msg) => {
 	}
 
 	return converted;
-};
+}
 
-const math = (msg) => {
+function math(msg) {
+	// eslint-disable-next-line no-unused-vars
 	const expression = msg.content.split("math ")[1];
-	const result = eval(expression);
+	// const result = eval(expression);
 
-	return `Resultado: ${result}`;
-};
+	return "Esta função foi tão violada no rabinho que foi descontinuada";
+}
 
-const vote = async (msg) => {
+async function vote(msg) {
 	const message = msg.content.split(" ");
 
 	if (message[2] === "results") {
@@ -128,7 +129,7 @@ const vote = async (msg) => {
 
 		const vote = await msg.channel.fetchMessage(poll);
 
-		vote.reactions.forEach(async reaction => {
+		vote.reactions.forEach(async (reaction) => {
 			const users = await reaction.fetchUsers();
 			const userRes = users.map(user => user.username).join(" | ");
 
@@ -141,15 +142,17 @@ const vote = async (msg) => {
 
 		const res = {
 			title,
-			options
+			options,
 		};
 
 		return embed.createPollEmbed(msg, res);
 	}
-};
 
-//FIXME: Not working
-const price = async (msg) => {
+	return null;
+}
+
+// FIXME: Not working
+async function price(msg) {
 	let thing = msg.content.split("price ")[1];
 	thing = thing.replace(/ /g, "%20");
 	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
@@ -181,9 +184,9 @@ const price = async (msg) => {
 	}
 
 	return "Não existe esse produto do xixo";
-};
+}
 
-const music = (msg) => {
+function music(msg) {
 	const checkIfInVoiceChannel = (msg, params) => {
 		let dispatcher = null;
 
@@ -218,7 +221,7 @@ const music = (msg) => {
 	} else {
 		dispatcher = checkIfInVoiceChannel(msg, params, dispatcher);
 	}
-};
+}
 
 module.exports = {
 	answer,
@@ -229,5 +232,5 @@ module.exports = {
 	math,
 	vote,
 	price,
-	music
+	music,
 };

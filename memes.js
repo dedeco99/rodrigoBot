@@ -1,6 +1,6 @@
 const Jimp = require("jimp");
 
-const makeMeme = async (msg, meme) => {
+async function makeMeme(msg, meme) {
 	let message = msg.content.split(meme.name)[1];
 	message = message.split(";");
 
@@ -14,8 +14,13 @@ const makeMeme = async (msg, meme) => {
 		let sum = 0;
 		for (i = 0; i < message.length; i++) {
 			currentMsg = message[i];
-			image.print(font, meme.position0.x, meme.position0.y + sum, currentMsg, meme.position0.max)
-				.write(`./assets/img/memes/${meme.name}.jpg`);
+			image.print(
+				font,
+				meme.position0.x,
+				meme.position0.y + sum,
+				currentMsg,
+				meme.position0.max,
+			).write(`./assets/img/memes/${meme.name}.jpg`);
 			sum += 50;
 		}
 	} else {
@@ -27,9 +32,9 @@ const makeMeme = async (msg, meme) => {
 	}
 
 	return { "file": `./assets/img/memes/${meme.name}.jpg` };
-};
+}
 
-exports.checkForMemes = async (msg) => {
+function checkForMemes(msg) {
 	const memes = [
 		{ name: "truth", position0: { x: 250, y: 750, max: 200 } },
 		{ name: "safe", position0: { x: 350, y: 100, max: 200 } },
@@ -41,17 +46,21 @@ exports.checkForMemes = async (msg) => {
 			name: "marioluigi",
 			position0: { x: 375, y: 100, max: 100 },
 			position1: { x: 175, y: 375, max: 200 },
-			position2: { x: 400, y: 375, max: 200 }
+			position2: { x: 400, y: 375, max: 200 },
 		},
-		{ name: "pikachu", position0: { x: 10, y: 10, max: 700 } }
+		{ name: "pikachu", position0: { x: 10, y: 10, max: 700 } },
 	];
 
 	const searchedMeme = msg.content.split(" ")[2];
 	const meme = memes.find(meme => meme.name === searchedMeme);
 
 	if (meme) {
-		return await makeMeme(msg, meme);
+		return makeMeme(msg, meme);
 	}
 
 	return "Esse meme não existe";
+}
+
+module.exports = {
+	checkForMemes,
 };

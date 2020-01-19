@@ -8,6 +8,7 @@ const twitch = require("./twitch");
 const instagram = require("./instagram");
 const insideJokes = require("./insideJokes");
 const { updateMeta } = require("./database");
+const log = require("./log");
 
 const features = [
 	{ command: "define", func: utils.define },
@@ -36,14 +37,14 @@ const features = [
 
 	{ command: "twitch", func: twitch.checkForCommand },
 
-	{ command: "joke", func: insideJokes.checkForCommand }
+	{ command: "joke", func: insideJokes.checkForCommand },
 ];
 
-const checkCommand = (msg) => {
+function checkCommand(msg) {
 	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
-};
+}
 
-const checkForWord = async (msg) => {
+async function checkForWord(msg) {
 	const insideJoke = await insideJokes.checkForCommand(msg);
 	if (insideJoke) return insideJoke;
 
@@ -60,9 +61,11 @@ const checkForWord = async (msg) => {
 		return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes.
 						Vou chamar os meus pais. *cries while getting hit with a laptop*`.replace(/\t/g, "").replace(/\n/g, "");
 	}
-};
 
-exports.checkForCommand = async (msg, client) => {
+	return null;
+}
+
+async function checkForCommand(msg, client) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 
@@ -74,10 +77,20 @@ exports.checkForCommand = async (msg, client) => {
 			const feature = features.find(feat => feat.command === command);
 
 			if (feature) {
-				return await feature.func(msg, client);
+				try {
+					return await feature.func(msg, client);
+				} catch (err) {
+					log.error(err.stack);
+				}
 			}
 		}
 
-		return await checkForWord(msg);
+		return checkForWord(msg);
 	}
+
+	return null;
+}
+
+module.exports = {
+	checkForCommand,
 };

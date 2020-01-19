@@ -1,7 +1,7 @@
 const { get } = require("./request");
 const embed = require("./embed");
 
-const formatResponse = (url, num, profilePage) => {
+function formatResponse(url, num, profilePage) {
 	const profilePic = profilePage.graphql.user.profile_pic_url_hd;
 	let bio = profilePage.graphql.user.biography;
 	const name = profilePage.graphql.user.full_name;
@@ -20,7 +20,7 @@ const formatResponse = (url, num, profilePage) => {
 		name,
 		posts,
 		profilePic,
-		url
+		url,
 	};
 
 	if (profilePage.graphql.user.is_private) {
@@ -44,9 +44,9 @@ const formatResponse = (url, num, profilePage) => {
 	}
 
 	return res;
-};
+}
 
-exports.getPost = async (msg) => {
+async function getPost(msg) {
 	const person = msg.content.split(" ")[2];
 	const num = msg.content.split(" ").pop();
 	const url = `https://www.instagram.com/${person}/`;
@@ -54,7 +54,7 @@ exports.getPost = async (msg) => {
 	const res = await get(url);
 	let foto = res.substring(
 		res.lastIndexOf("window._sharedData = ") + 21,
-		res.lastIndexOf("</script>")
+		res.lastIndexOf("</script>"),
 	);
 
 	foto = foto.substring(0, foto.indexOf("</script>") - 1);
@@ -68,4 +68,8 @@ exports.getPost = async (msg) => {
 	}
 
 	return "Claramente esse xixo não existe";
+}
+
+module.exports = {
+	getPost,
 };

@@ -13,11 +13,11 @@ const Birthday = require("./models/birthday");
 
 /* Meta */
 
-const getMeta = async () => {
-	return await Meta.findOne();
-};
+function getMeta() {
+	return Meta.findOne();
+}
 
-const updateMeta = async (obj) => {
+function updateMeta(obj) {
 	let body = obj;
 	if (obj.likes) {
 		body = { $inc: { likes: 1 } };
@@ -25,60 +25,59 @@ const updateMeta = async (obj) => {
 		body = { $inc: { dislikes: 1 } };
 	}
 
-	return await Meta.findOneAndUpdate({}, body, { new: true });
-};
+	return Meta.findOneAndUpdate({}, body, { new: true });
+}
 
 /* Channel */
 
-const getChannels = async (query) => {
-	return await Channel.find(query).collation({ "locale": "en" }).sort({ name: 1 });
-};
+function getChannels(query) {
+	return Channel.find(query).collation({ "locale": "en" }).sort({ name: 1 });
+}
 
-const postChannel = async (channel) => {
+async function postChannel(channel) {
 	const newChannel = new Channel(channel);
 
 	await newChannel.save();
-};
+}
 
-const deleteChannel = async (channel) => {
+async function deleteChannel(channel) {
 	await Channel.deleteOne({ _id: channel });
-};
+}
 
 /* Notification */
 
-const postNotification = async (notification) => {
+async function postNotification(notification) {
 	const newNotification = new Notification(notification);
 
 	await newNotification.save();
-};
+}
 
 /* InsideJoke */
 
-const getInsideJokes = async (query) => {
-	return await InsideJoke.find(query);
-};
+function getInsideJokes(query) {
+	return InsideJoke.find(query);
+}
 
-const postInsideJoke = async (insideJoke) => {
+async function postInsideJoke(insideJoke) {
 	const newInsideJoke = new InsideJoke(insideJoke);
 
 	await newInsideJoke.save();
-};
+}
 
-const putInsideJoke = async (id, insideJoke) => {
+async function putInsideJoke(id, insideJoke) {
 	await InsideJoke.updateOne({ _id: id }, insideJoke);
-};
+}
 
-const deleteInsideJoke = async (insideJoke) => {
+async function deleteInsideJoke(insideJoke) {
 	await InsideJoke.deleteOne({ _id: insideJoke });
-};
+}
 
 /* Birthdays */
 
-const getBirthdays = async (query) => {
-	return await Birthday.find(query);
-};
+function getBirthdays(query) {
+	return Birthday.find(query);
+}
 
-/* eslint-disable sort-keys */
 module.exports = {
 	getMeta,
 	updateMeta,
@@ -90,5 +89,5 @@ module.exports = {
 	postInsideJoke,
 	putInsideJoke,
 	deleteInsideJoke,
-	getBirthdays
+	getBirthdays,
 };

@@ -5,45 +5,45 @@ const {
 	postChannel,
 	deleteChannel,
 	getNotifications,
-	addNotification
+	addNotification,
 } = require("./database");
 
-const checkIfChannelExists = async (channel) => {
+async function checkIfChannelExists(channel) {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;
 
 	const headers = {
 		"Accept": "application/vnd.twitchtv.v5+json",
-		"Client-ID": secrets.twitchClientId
+		"Client-ID": secrets.twitchClientId,
 	};
 
 	const res = await get(url, headers);
 	const json = JSON.parse(res);
 
 	return json.data.length > 0 ? { "exists": true, "item": json } : { "exists": false };
-};
+}
 
-const getStream = (msg, client) => {
+function getStream(msg, client) {
 	const channel = msg.content.split("twitch ")[1];
 	const url = `https://www.twitch.tv/${channel}`;
 
 	client.user.setActivity(channel, { url, type: "WATCHING" });
 
 	return url;
-};
+}
 
-const checkIfChannelInDatabase = async (query) => {
+async function checkIfChannelInDatabase(query) {
 	const channels = await getChannels(query);
 
 	return channels.length > 0 ? { exists: true, id: channels[0]._id } : false;
-};
+}
 
-const checkIfNotificationExists = async (query) => {
+async function checkIfNotificationExists(query) {
 	const notifications = await getNotifications(query);
 
 	return notifications.length > 0;
-};
+}
 
-const addChannel = async (msg) => {
+async function addChannel(msg) {
 	const channel = msg.content.split("twitch add ")[1];
 
 	const { exists, item } = await checkIfChannelExists(channel);
@@ -54,7 +54,7 @@ const addChannel = async (msg) => {
 		const channel = {
 			"name": item.data[0].login,
 			"channel": item.data[0].login,
-			"platform": "twitch"
+			"platform": "twitch",
 		};
 
 		postChannel(channel);
@@ -63,9 +63,9 @@ const addChannel = async (msg) => {
 	}
 
 	return "Esse canal deve estar no xixo porque não o encontro";
-};
+}
 
-const removeChannel = async (msg) => {
+async function removeChannel(msg) {
 	const channel = msg.content.split("twitch remove ")[1];
 
 	const { exists, id } = await checkIfChannelInDatabase({ "name": channel, "platform": "twitch" });
@@ -76,17 +76,17 @@ const removeChannel = async (msg) => {
 	}
 
 	return "Esse canal deve estar no xixo porque não o encontro";
-};
+}
 
-const fetchChannels = async () => {
+async function fetchChannels() {
 	let channels = await getChannels({ platform: "twitch" });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
 	return channels;
-};
+}
 
-const fetchNotifications = async () => {
+async function fetchNotifications() {
 	const channels = await getChannels({ platform: "twitch" });
 
 	let channelsString = channels.map(channel => channel.name).join(",");
@@ -101,7 +101,7 @@ const fetchNotifications = async () => {
 
 	const headers = {
 		"Accept": "application/vnd.twitchtv.v5+json",
-		"Client-ID": secrets.twitchClientId
+		"Client-ID": secrets.twitchClientId,
 	};
 
 	const res = await get(url, headers);
@@ -110,7 +110,10 @@ const fetchNotifications = async () => {
 	for (let i = 0; i < json.data.length; i++) {
 		const ONE_HOUR = 60 * 60 * 1000;
 		if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
-			const exists = await checkIfNotificationExists({ video: json.data[i].user_name, started: json.data[i].started_at });
+			const exists = await checkIfNotificationExists({
+				video: json.data[i].user_name,
+				started: json.data[i].started_at,
+			});
 			if (!exists) {
 				addNotification({ "video": json.items[0].snippet.resourceId.videoId });
 
@@ -118,13 +121,15 @@ const fetchNotifications = async () => {
 			}
 		}
 	}
-};
 
-const checkForCommand = async (msg, client) => {
+	return null;
+}
+
+async function checkForCommand(msg, client) {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
-		{ command: "get", func: fetchChannels }
+		{ command: "get", func: fetchChannels },
 	];
 
 	const command = msg.content.split(" ")[2];
@@ -138,9 +143,9 @@ const checkForCommand = async (msg, client) => {
 	}
 
 	return res;
-};
+}
 
 module.exports = {
 	fetchNotifications,
-	checkForCommand
+	checkForCommand,
 };

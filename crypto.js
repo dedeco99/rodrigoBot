@@ -2,16 +2,18 @@ const { get } = require("./request");
 const secrets = require("./secrets");
 const embed = require("./embed");
 
-const checkCoinName = (searchCoin, coin) => {
-	if (searchCoin.charAt(0).toUpperCase() + searchCoin.slice(1) === coin.name
-		|| searchCoin.toUpperCase() === coin.symbol) {
+function checkCoinName(searchCoin, coin) {
+	if (
+		searchCoin.charAt(0).toUpperCase() + searchCoin.slice(1) === coin.name ||
+		searchCoin.toUpperCase() === coin.symbol
+	) {
 		return true;
 	}
 	return false;
 
-};
+}
 
-exports.getPrice = async (msg) => {
+async function getPrice(msg) {
 	const data = msg.content.split("crypto ")[1];
 	let response = null;
 
@@ -48,11 +50,15 @@ exports.getPrice = async (msg) => {
 			rank: json.data[coinId].cmc_rank,
 			symbol: json.data[coinId].symbol,
 			totalSupply: json.data[coinId].max_supply,
-			volumeEur: json.data[coinId].quote.EUR.volume_24h
+			volumeEur: json.data[coinId].quote.EUR.volume_24h,
 		};
 
 		return embed.createCryptoEmbed(response);
 	}
 
 	return "Essa moeda deve estar no xixo porque não a encontro";
+}
+
+module.exports = {
+	getPrice,
 };

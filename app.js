@@ -9,7 +9,7 @@ const twitch = require("./twitch");
 
 let lastMsg = null;
 
-const handleMessage = async (msg, client) => {
+async function handleMessage(msg, client) {
 	const message = await command.checkForCommand(msg, client);
 
 	if (message) {
@@ -20,9 +20,9 @@ const handleMessage = async (msg, client) => {
 	} else if (msg.author.username === "RodrigoBot") {
 		lastMsg = msg;
 	}
-};
+}
 
-const run = async () => {
+async function run() {
 	const client = new discord.Client();
 	client.login(secrets.discordKey);
 
@@ -39,7 +39,7 @@ const run = async () => {
 			notification = await twitch.fetchNotifications();
 			if (notification) client.channels.get("525343734746054657").send(`${notification.notification} | ${notification.video}`);
 
-			if (moment().format("HH:mm") === "08:00") {
+			if (moment().format("H") === "8") {
 				const birthdays = await getBirthdays({ $expr: { $eq: [{ $dayOfYear: "$date" }, { $dayOfYear: new Date() }] } });
 				for (const birthday of birthdays) {
 					client.channels.get("231537439926124545").send(`Parabéns ${birthday.person}`);
@@ -47,12 +47,12 @@ const run = async () => {
 			}
 
 			console.log("Checked");
-		}, 60000 * 10); //check every 10 minutes
+		}, 60000 * 10); // check every 10 minutes
 	});
 
 	client.on("message", async (msg) => {
 		await handleMessage(msg, client);
 	});
-};
+}
 
 run();

@@ -1,6 +1,6 @@
 const discord = require("discord.js");
 
-exports.createRedditEmbed = (res) => {
+function createRedditEmbed(res) {
 	const embed = new discord.RichEmbed();
 
 	if (res.contentVideo !== "") return res.contentVideo;
@@ -20,13 +20,13 @@ exports.createRedditEmbed = (res) => {
 
 	return embed;
 
-};
+}
 
-const prettyNumber = (number) => {
+function prettyNumber(number) {
 	return String(parseFloat(number).toFixed(2)).replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, " ");
-};
+}
 
-exports.createCryptoEmbed = (res) => {
+function createCryptoEmbed(res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setTitle(`${res.rank}. ${res.name} (${res.symbol})`);
@@ -46,9 +46,9 @@ exports.createCryptoEmbed = (res) => {
 	embed.setFooter(`1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(2)}%`);
 
 	return embed;
-};
+}
 
-exports.createSearchEmbed = (res) => {
+function createSearchEmbed(res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setTitle(res[0].topic);
@@ -60,9 +60,9 @@ exports.createSearchEmbed = (res) => {
 	}
 
 	return embed;
-};
+}
 
-exports.createDefineEmbed = (res) => {
+function createDefineEmbed(res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setTitle(res.word);
@@ -70,27 +70,27 @@ exports.createDefineEmbed = (res) => {
 	embed.addField(res.definition, res.example);
 
 	return embed;
-};
+}
 
-exports.createImageEmbed = (msg, res) => {
+function createImageEmbed(msg, res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setColor("0x00AE86");
 	embed.setImage(res);
 
 	msg.channel.send(embed);
-};
+}
 
-exports.createTextEmbed = (msg, res) => {
+function createTextEmbed(msg, res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setColor("0x00AE86");
 	embed.addField("Commands", res.example);
 
 	msg.channel.send(embed);
-};
+}
 
-exports.createPollEmbed = (msg, res) => {
+function createPollEmbed(msg, res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setColor("0x00AE86");
@@ -105,12 +105,13 @@ exports.createPollEmbed = (msg, res) => {
 	msg.channel.send(embed)
 		.then(async (message) => {
 			for (let i = 0; i < res.options.length; i++) {
+				// TODO: Promise.all
 				await message.react(reacts[i]);
 			}
 		});
-};
+}
 
-exports.createInstaEmbed = (res) => {
+function createInstaEmbed(res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setColor("0xbc2a8d");
@@ -128,9 +129,9 @@ exports.createInstaEmbed = (res) => {
 	embed.setFooter(`Posts: ${res.posts} | Followers: ${res.followers} | Follows: ${res.follows}`);
 
 	return embed;
-};
+}
 
-exports.createPriceEmbed = (res) => {
+function createPriceEmbed(res) {
 	const embed = new discord.RichEmbed();
 
 	embed.setColor("0xff9900");
@@ -142,4 +143,16 @@ exports.createPriceEmbed = (res) => {
 	}
 
 	return embed;
+}
+
+module.exports = {
+	createRedditEmbed,
+	createCryptoEmbed,
+	createSearchEmbed,
+	createDefineEmbed,
+	createImageEmbed,
+	createTextEmbed,
+	createPollEmbed,
+	createInstaEmbed,
+	createPriceEmbed,
 };

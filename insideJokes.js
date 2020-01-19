@@ -1,12 +1,12 @@
 const { getInsideJokes, postInsideJoke, putInsideJoke, deleteInsideJoke } = require("./database");
 
-const checkIfJokeInDatabase = async (query) => {
+async function checkIfJokeInDatabase(query) {
 	const insideJokes = await getInsideJokes(query);
 
 	return insideJokes.length > 0 ? { "exists": true, "id": insideJokes[0]._id } : false;
-};
+}
 
-const addInsideJoke = async (msg) => {
+async function addInsideJoke(msg) {
 	const params = msg.content.split("add ")[1];
 	const word = params.split(";")[0];
 	const message = params.split(";")[1];
@@ -20,9 +20,9 @@ const addInsideJoke = async (msg) => {
 	}
 
 	return "Piada adicionada com sucesso my dude";
-};
+}
 
-const removeInsideJoke = async (msg) => {
+async function removeInsideJoke(msg) {
 	const word = msg.content.split("remove ")[1];
 
 	const { exists, id } = await checkIfJokeInDatabase({ word });
@@ -33,17 +33,17 @@ const removeInsideJoke = async (msg) => {
 	}
 
 	return "Essa piada deve estar no xixo porque não o encontro";
-};
+}
 
-const checkIfFile = (insideJoke) => {
+function checkIfFile(insideJoke) {
 	if (insideJoke.message.includes("./assets/")) {
 		return { "file": insideJoke.message };
 	}
 
 	return insideJoke.message;
-};
+}
 
-const checkForInsideJokes = async (msg) => {
+async function checkForInsideJokes(msg) {
 	const insideJokes = await getInsideJokes();
 
 	for (const insideJoke of insideJokes) {
@@ -51,12 +51,14 @@ const checkForInsideJokes = async (msg) => {
 			return checkIfFile(insideJoke);
 		}
 	}
-};
 
-exports.checkForCommand = async (msg) => {
+	return null;
+}
+
+async function checkForCommand(msg) {
 	const features = [
 		{ command: "add", func: addInsideJoke },
-		{ command: "remove", func: removeInsideJoke }
+		{ command: "remove", func: removeInsideJoke },
 	];
 
 	const command = msg.content.split(" ")[2];
@@ -70,4 +72,8 @@ exports.checkForCommand = async (msg) => {
 	}
 
 	return res;
+}
+
+module.exports = {
+	checkForCommand,
 };

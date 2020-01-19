@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const NotificationSchema = new Schema({
-	video: { type: String, default: "" }
+	video: { type: String, default: "" },
 });
 
 const Notification = mongoose.model("Notification", NotificationSchema);

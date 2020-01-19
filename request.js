@@ -2,8 +2,8 @@ const request = require("request");
 
 const log = require("./log");
 
-const get = (url, headers) => {
-	return new Promise(res => {
+function get(url, headers) {
+	return new Promise((res) => {
 		const send = { url };
 
 		if (headers) send.headers = headers;
@@ -14,10 +14,10 @@ const get = (url, headers) => {
 			return res(html);
 		});
 	});
-};
+}
 
-const post = (url, headers, body) => {
-	return new Promise(res => {
+function post(url, headers, body) {
+	return new Promise((res) => {
 		const send = { url };
 
 		if (headers) send.headers = headers;
@@ -29,9 +29,9 @@ const post = (url, headers, body) => {
 			return res(html);
 		});
 	});
-};
+}
 
 module.exports = {
 	get,
-	post
+	post,
 };

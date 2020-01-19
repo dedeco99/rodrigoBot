@@ -5,28 +5,28 @@ const {
 	postChannel,
 	deleteChannel,
 	getNotifications,
-	addNotification
+	addNotification,
 } = require("./database");
 
-const checkIfChannelExists = async (channel) => {
+async function checkIfChannelExists(channel) {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
 	const json = JSON.parse(res);
 
 	return json.pageInfo.totalResults > 0 ? { "exists": true, "item": json.items[0] } : { "exists": false };
-};
+}
 
-const getChannelsPlaylist = async (channel) => {
+async function getChannelsPlaylist(channel) {
 	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channel}&maxResults=50&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
 	const json = JSON.parse(res);
 
 	return json.items;
-};
+}
 
-const getVideo = async (msg) => {
+async function getVideo(msg) {
 	const channel = msg.content.split("youtube ")[1];
 
 	const { exists, item } = await checkIfChannelExists(channel);
@@ -44,21 +44,21 @@ const getVideo = async (msg) => {
 	}
 
 	return "Esse canal deve estar no xixo porque não o encontro";
-};
+}
 
-const checkIfChannelInDatabase = async (query) => {
+async function checkIfChannelInDatabase(query) {
 	const channels = await getChannels(query);
 
 	return channels.length > 0 ? { "exists": true, "id": channels[0]._id } : false;
-};
+}
 
-const checkIfNotificationExists = async (query) => {
+async function checkIfNotificationExists(query) {
 	const notifications = await getNotifications(query);
 
 	return notifications.length > 0;
-};
+}
 
-const addChannel = async (msg) => {
+async function addChannel(msg) {
 	const channel = msg.content.split("youtube add ")[1];
 
 	const { exists, item } = await checkIfChannelExists(channel);
@@ -69,7 +69,7 @@ const addChannel = async (msg) => {
 		const channel = {
 			"name": item.snippet.title,
 			"channel": item.id.channelId,
-			"platform": "youtube"
+			"platform": "youtube",
 		};
 
 		postChannel(channel);
@@ -78,9 +78,9 @@ const addChannel = async (msg) => {
 	}
 
 	return "Esse canal deve estar no xixo porque não o encontro";
-};
+}
 
-const removeChannel = async (msg) => {
+async function removeChannel(msg) {
 	const channel = msg.content.split("youtube remove ")[1];
 
 	const { exists, item } = await checkIfChannelExists(channel);
@@ -94,17 +94,17 @@ const removeChannel = async (msg) => {
 	}
 
 	return "Esse canal deve estar no xixo porque não o encontro";
-};
+}
 
-const fetchChannels = async () => {
+async function fetchChannels() {
 	let channels = await getChannels({ platform: "youtube" });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
 	return channels;
-};
+}
 
-const fetchNotifications = async () => {
+async function fetchNotifications() {
 	let channels = await getChannels({ platform: "youtube" });
 
 	channels = channels.map(channel => channel.channel).join(",");
@@ -123,7 +123,9 @@ const fetchNotifications = async () => {
 
 		const ONE_HOUR = 60 * 60 * 1000;
 		if (new Date() - new Date(item.snippet.publishedAt) < ONE_HOUR) {
-			const exists = await checkIfNotificationExists({ video: item.snippet.resourceId.videoId });
+			const exists = await checkIfNotificationExists({
+				video: item.snippet.resourceId.videoId,
+			});
 			if (!exists) {
 				addNotification({ "video": item.snippet.resourceId.videoId });
 
@@ -132,13 +134,15 @@ const fetchNotifications = async () => {
 			}
 		}
 	}
-};
 
-const checkForCommand = async (msg) => {
+	return null;
+}
+
+async function checkForCommand(msg) {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
-		{ command: "get", func: fetchChannels }
+		{ command: "get", func: fetchChannels },
 	];
 
 	const command = msg.content.split(" ")[2];
@@ -152,9 +156,9 @@ const checkForCommand = async (msg) => {
 	}
 
 	return res;
-};
+}
 
 module.exports = {
 	fetchNotifications,
-	checkForCommand
+	checkForCommand,
 };
