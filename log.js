@@ -1,5 +1,9 @@
-const fs = require("fs");
+const Log = require("./models/log");
 
 exports.error = (err) => {
-	fs.appendFile("logs.txt", `${err}\n`, () => console.log("Error has been logged"));
+	const log = new Log(err);
+
+	log.save();
+
+	console.log("Error has been logged");
 };

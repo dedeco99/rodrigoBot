@@ -72,24 +72,6 @@ function createDefineEmbed(res) {
 	return embed;
 }
 
-function createImageEmbed(msg, res) {
-	const embed = new discord.RichEmbed();
-
-	embed.setColor("0x00AE86");
-	embed.setImage(res);
-
-	msg.channel.send(embed);
-}
-
-function createTextEmbed(msg, res) {
-	const embed = new discord.RichEmbed();
-
-	embed.setColor("0x00AE86");
-	embed.addField("Commands", res.example);
-
-	msg.channel.send(embed);
-}
-
 function createPollEmbed(msg, res) {
 	const embed = new discord.RichEmbed();
 
@@ -150,8 +132,6 @@ module.exports = {
 	createCryptoEmbed,
 	createSearchEmbed,
 	createDefineEmbed,
-	createImageEmbed,
-	createTextEmbed,
 	createPollEmbed,
 	createInstaEmbed,
 	createPriceEmbed,

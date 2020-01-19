@@ -80,7 +80,7 @@ async function checkForCommand(msg, client) {
 				try {
 					return await feature.func(msg, client);
 				} catch (err) {
-					log.error(err.stack);
+					log.error({ status: "command", data: err.stack });
 				}
 			}
 		}
