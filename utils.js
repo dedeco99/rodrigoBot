@@ -6,6 +6,8 @@ const ytdl = require("ytdl-core");
 const secrets = require("./secrets");
 const embed = require("./embed");
 
+let dispatcher = null;
+
 function answer(msg) {
 	let num = Math.floor(Math.random() >= 0.5);
 	if (msg.content.includes(" ou ")) {
@@ -188,8 +190,6 @@ async function price(msg) {
 
 function music(msg) {
 	const checkIfInVoiceChannel = (msg, params) => {
-		let dispatcher = null;
-
 		if (msg.member.voiceChannel) {
 			msg.member.voiceChannel.join()
 				.then((connection) => {
@@ -210,7 +210,6 @@ function music(msg) {
 	};
 
 	const params = msg.content.split("music ")[1];
-	let dispatcher = null;
 
 	if (params.includes("pause")) {
 		dispatcher.pause();

@@ -13,6 +13,8 @@ let lastMsg = null;
 async function handleMessage(msg, client) {
 	const message = await checkForCommand(msg, client);
 
+	console.log(msg.guild.id, new Date(msg.guild.joinedTimestamp));
+
 	if (message) {
 		msg.channel.send(message);
 	} else if (msg.content.includes("delete") && lastMsg) {

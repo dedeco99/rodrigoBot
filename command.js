@@ -6,7 +6,7 @@ const reddit = require("./reddit");
 const youtube = require("./youtube");
 const twitch = require("./twitch");
 const instagram = require("./instagram");
-const insideJokes = require("./insideJokes");
+const custom = require("./custom");
 const { updateMeta } = require("./database");
 const log = require("./log");
 
@@ -37,16 +37,12 @@ const features = [
 
 	{ command: "twitch", func: twitch.checkForCommand },
 
-	{ command: "joke", func: insideJokes.checkForCommand },
+	{ command: "custom", func: custom.checkForCommand },
 ];
 
-function checkCommand(msg) {
-	return msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
-}
-
 async function checkForWord(msg) {
-	const insideJoke = await insideJokes.checkForCommand(msg);
-	if (insideJoke) return insideJoke;
+	const customCommand = await custom.checkForCommand(msg);
+	if (customCommand) return customCommand;
 
 	const compliments = ["good", "nice", "best", "bom", "bem", "grande"];
 	const insults = ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"];
@@ -65,28 +61,26 @@ async function checkForWord(msg) {
 	return null;
 }
 
-async function checkForCommand(msg, client) {
+function checkForCommand(msg, client) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 
-	if (msg.content.toLowerCase().includes(triggerWord)) {
-		if (firstWord === triggerWord) {
-			const command = checkCommand(msg);
-			console.log(command);
+	if (firstWord === triggerWord) {
+		const command = msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
+		console.log(command);
 
-			const feature = features.find(feat => feat.command === command);
+		const feature = features.find(feat => feat.command === command);
 
-			if (feature) {
-				try {
-					return await feature.func(msg, client);
-				} catch (err) {
-					log.error({ status: "command", data: err.stack });
-				}
+		if (feature) {
+			try {
+				return feature.func(msg, client);
+			} catch (err) {
+				log.error({ status: "command", data: err.stack });
 			}
 		}
-
-		return checkForWord(msg);
 	}
+
+	if (msg.content.toLowerCase().includes(triggerWord)) return checkForWord(msg);
 
 	return null;
 }

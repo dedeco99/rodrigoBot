@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const InsideJokeSchema = new Schema({
+const CustomCommandSchema = new Schema({
 	word: { type: String, default: "" },
 	message: { type: String, default: "" },
 });
 
-const InsideJoke = mongoose.model("InsideJoke", InsideJokeSchema);
+const CustomCommand = mongoose.model("CustomCommand", CustomCommandSchema);
 
-module.exports = InsideJoke;
+module.exports = CustomCommand;
