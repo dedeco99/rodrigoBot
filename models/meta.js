@@ -9,7 +9,7 @@ const MetaSchema = new Schema({
 	},
 	likes: { type: Number, default: 0 },
 	dislikes: { type: Number, default: 0 },
-});
+}, { timestamps: { createdAt: "_created", updatedAt: "_modified" } });
 
 const Meta = mongoose.model("Meta", MetaSchema);
 
