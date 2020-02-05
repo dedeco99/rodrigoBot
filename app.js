@@ -39,9 +39,7 @@ async function run() {
 		client.user.setActivity(meta.action.message, { type: meta.action.type });
 	});
 
-	client.on("message", async (msg) => {
-		await handleMessage(msg, client);
-	});
+	client.on("message", msg => handleMessage(msg, client));
 
 	setInterval(async () => {
 		let notification = await youtube.fetchNotifications();
@@ -62,7 +60,7 @@ async function run() {
 		*/
 
 		console.log("Checked");
-	}, 60000 * 10); // check every 10 minutes
+	}, 60000 * 60); // check every hour
 }
 
 run();

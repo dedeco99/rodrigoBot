@@ -13,11 +13,6 @@ async function get(url, headers = {}) {
 			data: response.data,
 		};
 	} catch (error) {
-		log.error({
-			status: error.response.status,
-			data: error.response.data,
-		});
-
 		return {
 			status: error.response.status,
 			data: error.response.data,
@@ -36,11 +31,6 @@ async function post(url, body, headers = {}) {
 			data: response.data,
 		};
 	} catch (error) {
-		log.error({
-			status: error.response.status,
-			data: error.response.data,
-		});
-
 		return {
 			status: error.response.status,
 			data: error.response.data,

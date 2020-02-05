@@ -1,3 +1,4 @@
+const errors = require("./errors");
 const { get, post } = require("./request");
 const secrets = require("./secrets");
 const embed = require("./embed");
@@ -65,20 +66,18 @@ async function getRedditPosts(data, accessToken) {
 		"Authorization": `bearer ${accessToken}`,
 	};
 
-	try {
-		const res = await get(url, headers);
-		const json = res.data;
-		const response = formatResponse(json);
+	const res = await get(url, headers);
 
-		return embed.createRedditEmbed(response);
-	} catch (err) {
-		return "Esse subreddit deve estar no xixo porque não o encontro";
-	}
+	if (res.status === 404) throw errors.redditNotFound;
+
+	const json = res.data;
+	const response = formatResponse(json);
+
+	return embed.createRedditEmbed(response);
 }
 
 async function getAccessToken(data) {
-	const url = `https://www.reddit.com/api/v1/access_token
-		?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`.replace(/\t/g, "").replace(/\n/g, "");
+	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${secrets.redditRefreshToken}a&grant_type=refresh_token`;
 
 	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
@@ -89,6 +88,9 @@ async function getAccessToken(data) {
 	};
 
 	const res = await post(url, null, headers);
+
+	if (res.status === 400) throw errors.redditRefreshToken;
+
 	const json = res.data;
 
 	const response = await getRedditPosts(data, json.access_token);
@@ -97,8 +99,7 @@ async function getAccessToken(data) {
 }
 
 async function getRefreshToken() { /* eslint-disable-line no-unused-vars */
-	const url = `https://www.reddit.com/api/v1/access_token
-		?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul`.replace(/\t/g, "").replace(/\n/g, "");
+	const url = "https://www.reddit.com/api/v1/access_token?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul";
 
 	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
@@ -131,11 +132,13 @@ async function checkForReddit(msg) {
 	];
 
 	const searchedSub = msg.content.split(" ")[2];
-	const sub = subs.find(sub => sub.name === searchedSub);
+	const sub = subs.find(s => s.name === searchedSub);
 
-	const res = await getAccessToken({ subreddit: sub ? sub.subreddit : searchedSub });
-
-	return res;
+	try {
+		return await getAccessToken({ subreddit: sub ? sub.subreddit : searchedSub });
+	} catch (err) {
+		return err.message;
+	}
 }
 
 module.exports = {

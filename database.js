@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const secrets = require("./secrets");
 
 const Meta = require("./models/meta");
-const Channel = require("./models/channel");
 
 function initialize() {
 	mongoose.set("useFindAndModify", false);
@@ -29,16 +28,7 @@ async function updateMeta(obj) {
 	return meta;
 }
 
-/* Channel */
-
-async function getChannels(query) {
-	const channels = await Channel.find(query).collation({ "locale": "en" }).sort({ name: 1 });
-
-	return channels;
-}
-
 module.exports = {
 	initialize,
 	updateMeta,
-	getChannels,
 };

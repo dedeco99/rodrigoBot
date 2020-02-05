@@ -1,12 +1,8 @@
 const { get } = require("./request");
 const secrets = require("./secrets");
-const {
-	getChannels,
-	getNotifications,
-	addNotification,
-} = require("./database");
 
 const Channel = require("./models/channel");
+const Notification = require("./models/notification");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;
@@ -19,7 +15,7 @@ async function checkIfChannelExists(channel) {
 	const res = await get(url, headers);
 	const json = res.data;
 
-	return json.data.length > 0 ? { "exists": true, "item": json } : { "exists": false };
+	return json.data.length > 0 ? { exists: true, item: json } : { exists: false };
 }
 
 function getStream(msg, client) {
@@ -31,33 +27,23 @@ function getStream(msg, client) {
 	return url;
 }
 
-async function checkIfChannelInDatabase(query) {
-	const channels = await getChannels(query);
-
-	return channels.length > 0 ? { exists: true, id: channels[0]._id } : false;
-}
-
-async function checkIfNotificationExists(query) {
-	const notifications = await getNotifications(query);
-
-	return notifications.length > 0;
-}
-
 async function addChannel(msg) {
 	const channel = msg.content.split("twitch add ")[1];
 
 	const { exists, item } = await checkIfChannelExists(channel);
 	if (exists) {
-		const { exists } = await checkIfChannelInDatabase({ "channel": item.data[0].login, "platform": "twitch" });
-		if (exists) return "Esse canal já existe seu lixo";
+		const channel = await Channel.findOne({
+			channel: item.data[0].login,
+			platform: "twitch",
+		});
 
-		const channel = {
-			"name": item.data[0].login,
-			"channel": item.data[0].login,
-			"platform": "twitch",
-		};
+		if (channel) return "Esse canal já existe seu lixo";
 
-		const newChannel = new Channel(channel);
+		const newChannel = new Channel({
+			name: item.data[0].login,
+			channel: item.data[0].login,
+			platform: "twitch",
+		});
 
 		await newChannel.save();
 
@@ -68,12 +54,16 @@ async function addChannel(msg) {
 }
 
 async function removeChannel(msg) {
-	const channel = msg.content.split("twitch remove ")[1];
+	let channel = msg.content.split("twitch remove ")[1];
 
-	const { exists, id } = await checkIfChannelInDatabase({ "name": channel, "platform": "twitch" });
+	channel = await Channel.findOne({
+		name: channel,
+		platform: "twitch",
+	});
 
-	if (exists) {
-		await Channel.deleteOne({ _id: id });
+	if (channel) {
+		await Channel.deleteOne({ _id: channel._id });
+
 		return "Canal removido com sucesso my dude";
 	}
 
@@ -81,7 +71,9 @@ async function removeChannel(msg) {
 }
 
 async function fetchChannels() {
-	let channels = await getChannels({ platform: "twitch" });
+	let channels = await Channel.find({
+		platform: "twitch",
+	}).collation({ "locale": "en" }).sort({ name: 1 });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
@@ -89,15 +81,13 @@ async function fetchChannels() {
 }
 
 async function fetchNotifications() {
-	const channels = await getChannels({ platform: "twitch" });
+	const channels = await Channel.find({
+		platform: "twitch",
+	}).collation({ "locale": "en" }).sort({ name: 1 });
 
 	let channelsString = channels.map(channel => channel.name).join(",");
 
-	for (const channel of channels) {
-		channelsString += `user_login=${channel.channel}&`;
-	}
-
-	channelsString = channelsString.slice(0, -1);
+	channelsString += `user_login=${channelsString}`;
 
 	const url = `https://api.twitch.tv/helix/streams?${channelsString}`;
 
@@ -112,12 +102,18 @@ async function fetchNotifications() {
 	for (let i = 0; i < json.data.length; i++) {
 		const ONE_HOUR = 60000 * 60;
 		if (new Date() - new Date(json.data[i].started_at) < ONE_HOUR) {
-			const exists = await checkIfNotificationExists({
+			const exists = await Notification.findOne({
 				video: json.data[i].user_name,
-				started: json.data[i].started_at,
+				startedAt: json.data[i].started_at,
 			});
+
 			if (!exists) {
-				addNotification({ "video": json.items[0].snippet.resourceId.videoId });
+				const notification = new Notification({
+					video: json.data[i].user_name,
+					startedAt: json.data[i].started_at,
+				});
+
+				notification.save();
 
 				return `**${json.data[i].user_name}** está live! | https://twitch.tv/${json.data[i].user_name}`;
 			}
@@ -135,16 +131,15 @@ async function checkForCommand(msg, client) {
 	];
 
 	const command = msg.content.split(" ")[2];
-	const feature = features.find(feature => feature.command === command);
+	const feature = features.find(f => f.command === command);
 
-	let res = null;
-	if (feature) {
-		res = await feature.func(msg);
-	} else {
-		res = await getStream(msg, client);
+	try {
+		if (feature) return await feature.func(msg);
+
+		return await getStream(msg, client);
+	} catch (err) {
+		return err.message;
 	}
-
-	return res;
 }
 
 module.exports = {

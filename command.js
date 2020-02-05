@@ -49,13 +49,11 @@ async function checkForWord(msg) {
 	if (compliments.find(compliment => msg.content.includes(compliment))) {
 		const metaInfo = await updateMeta({ likes: true });
 
-		return `Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes.
-						I can't handle it!!! *touches face violently*`.replace(/\t/g, "").replace(/\n/g, "");
+		return `Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes. I can't handle it!!! *touches face violently*`;
 	} else if (insults.find(insult => msg.content.includes(insult))) {
 		const metaInfo = await updateMeta({ dislikes: true });
 
-		return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes.
-						Vou chamar os meus pais. *cries while getting hit with a laptop*`.replace(/\t/g, "").replace(/\n/g, "");
+		return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*`;
 	}
 
 	return null;
