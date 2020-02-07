@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const CustomCommandSchema = new Schema({
+	guild: { type: String, require: true },
 	word: { type: String, default: "" },
 	message: { type: String, default: "" },
 }, { timestamps: { createdAt: "_created", updatedAt: "_modified" } });

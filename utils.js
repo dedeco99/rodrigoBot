@@ -138,7 +138,8 @@ async function vote(msg) {
 			msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
 		});
 	} else {
-		const options = message[2].split(";");
+		const message = msg.content.split("vote ")[1];
+		const options = message.split(";");
 		const title = options[0];
 		options.splice(0, 1);
 

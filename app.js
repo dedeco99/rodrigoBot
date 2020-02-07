@@ -42,11 +42,13 @@ async function run() {
 	client.on("message", msg => handleMessage(msg, client));
 
 	setInterval(async () => {
-		let notification = await youtube.fetchNotifications();
+		const notification = await youtube.fetchNotifications();
 		if (notification) client.channels.get("525343734746054657").send(notification);
 
+		/*
 		notification = await twitch.fetchNotifications();
 		if (notification) client.channels.get("525343734746054657").send(notification);
+		*/
 
 		/*
 		if (moment().format("H") === "8") {

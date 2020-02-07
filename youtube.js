@@ -14,7 +14,7 @@ async function checkIfChannelExists(channel) {
 
 	const json = res.data;
 
-	return json.pageInfo.totalResults > 0 ? { exists: true, item: json.items[0] } : { exists: false };
+	return json.pageInfo.totalResults > 0 ? json.items[0] : null;
 }
 
 async function getChannelsPlaylist(channel) {
@@ -30,12 +30,12 @@ async function getChannelsPlaylist(channel) {
 }
 
 async function getVideo(msg) {
-	const channel = msg.content.split("youtube ")[1];
+	const channelName = msg.content.split("youtube ")[1];
 
-	const { exists, item } = await checkIfChannelExists(channel);
+	const channelFound = await checkIfChannelExists(channelName);
 
-	if (exists) {
-		const playlist = await getChannelsPlaylist(item.id.channelId);
+	if (channelFound) {
+		const playlist = await getChannelsPlaylist(channelFound.id.channelId);
 
 		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist[0].contentDetails.relatedPlaylists.uploads}&maxResults=5&key=${secrets.youtubeKey}`;
 
@@ -52,20 +52,22 @@ async function getVideo(msg) {
 }
 
 async function addChannel(msg) {
-	const channel = msg.content.split("youtube add ")[1];
+	const channelName = msg.content.split("youtube add ")[1];
 
-	const { exists, item } = await checkIfChannelExists(channel);
-	if (exists) {
+	const channelFound = await checkIfChannelExists(channelName);
+	if (channelFound) {
 		const channel = await Channel.findOne({
-			channel: item.id.channelId,
+			guild: msg.guild.id,
+			channel: channelFound.id.channelId,
 			platform: "youtube",
 		});
 
 		if (channel) return "Esse canal já existe seu lixo";
 
 		const newChannel = new Channel({
-			name: item.snippet.title,
-			channel: item.id.channelId,
+			guild: msg.guild.id,
+			name: channelFound.snippet.title,
+			channel: channelFound.id.channelId,
 			platform: "youtube",
 		});
 
@@ -78,13 +80,14 @@ async function addChannel(msg) {
 }
 
 async function removeChannel(msg) {
-	const channel = msg.content.split("youtube remove ")[1];
+	const channelName = msg.content.split("youtube remove ")[1];
 
-	const { exists, item } = await checkIfChannelExists(channel);
+	const channelFound = await checkIfChannelExists(channelName);
 
-	if (exists) {
+	if (channelFound) {
 		const channel = await Channel.findOne({
-			channel: item.id.channelId,
+			guild: msg.guild.id,
+			channel: channelFound.id.channelId,
 			platform: "youtube",
 		});
 
@@ -98,8 +101,9 @@ async function removeChannel(msg) {
 	return "Esse canal deve estar no xixo porque não o encontro";
 }
 
-async function fetchChannels() {
+async function fetchChannels(msg) {
 	let channels = await Channel.find({
+		guild: msg.guild.id,
 		platform: "youtube",
 	}).collation({ "locale": "en" }).sort({ name: 1 });
 
@@ -109,9 +113,7 @@ async function fetchChannels() {
 }
 
 async function fetchNotifications() {
-	let channels = await Channel.find({
-		platform: "youtube",
-	}).collation({ "locale": "en" }).sort({ name: 1 });
+	let channels = await Channel.find({ platform: "youtube" });
 
 	channels = channels.map(channel => channel.channel).join(",");
 

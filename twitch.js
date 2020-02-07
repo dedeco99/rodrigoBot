@@ -15,7 +15,7 @@ async function checkIfChannelExists(channel) {
 	const res = await get(url, headers);
 	const json = res.data;
 
-	return json.data.length > 0 ? { exists: true, item: json } : { exists: false };
+	return json.data.length > 0 ? json : null;
 }
 
 function getStream(msg, client) {
@@ -28,20 +28,22 @@ function getStream(msg, client) {
 }
 
 async function addChannel(msg) {
-	const channel = msg.content.split("twitch add ")[1];
+	const channelName = msg.content.split("twitch add ")[1];
 
-	const { exists, item } = await checkIfChannelExists(channel);
-	if (exists) {
+	const channelFound = await checkIfChannelExists(channelName);
+	if (channelFound) {
 		const channel = await Channel.findOne({
-			channel: item.data[0].login,
+			guild: msg.guild.id,
+			channel: channelFound.data[0].login,
 			platform: "twitch",
 		});
 
 		if (channel) return "Esse canal já existe seu lixo";
 
 		const newChannel = new Channel({
-			name: item.data[0].login,
-			channel: item.data[0].login,
+			guild: msg.guild.id,
+			name: channelFound.data[0].login,
+			channel: channelFound.data[0].login,
 			platform: "twitch",
 		});
 
@@ -54,10 +56,11 @@ async function addChannel(msg) {
 }
 
 async function removeChannel(msg) {
-	let channel = msg.content.split("twitch remove ")[1];
+	const channelName = msg.content.split("twitch remove ")[1];
 
-	channel = await Channel.findOne({
-		name: channel,
+	const channel = await Channel.findOne({
+		guild: msg.guild.id,
+		name: channelName,
 		platform: "twitch",
 	});
 
@@ -70,8 +73,9 @@ async function removeChannel(msg) {
 	return "Esse canal deve estar no xixo porque não o encontro";
 }
 
-async function fetchChannels() {
+async function fetchChannels(msg) {
 	let channels = await Channel.find({
+		guild: msg.guild.id,
 		platform: "twitch",
 	}).collation({ "locale": "en" }).sort({ name: 1 });
 
@@ -81,9 +85,7 @@ async function fetchChannels() {
 }
 
 async function fetchNotifications() {
-	const channels = await Channel.find({
-		platform: "twitch",
-	}).collation({ "locale": "en" }).sort({ name: 1 });
+	const channels = await Channel.find({ platform: "twitch" });
 
 	let channelsString = channels.map(channel => channel.name).join(",");
 

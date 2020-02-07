@@ -1,22 +1,16 @@
 const CustomCommand = require("./models/customCommand");
 
-async function checkIfCommandInDatabase(query) {
-	const customCommands = await CustomCommand.find(query);
-
-	return customCommands.length > 0 ? { "exists": true, "id": customCommands[0]._id } : false;
-}
-
 async function addCustomCommand(msg) {
 	const params = msg.content.split("add ")[1];
 	const word = params.split(";")[0].trim();
 	const message = params.split(";")[1].trim();
 
-	const { exists, id } = await checkIfCommandInDatabase({ word });
+	const customCommand = await CustomCommand.findOne({ guild: msg.guild.id, word });
 
-	if (exists) {
-		await CustomCommand.updateOne({ _id: id }, { message });
+	if (customCommand) {
+		await CustomCommand.updateOne({ _id: customCommand._id }, { message });
 	} else {
-		const newCustomCommand = new CustomCommand({ word, message });
+		const newCustomCommand = new CustomCommand({ guild: msg.guild.id, word, message });
 
 		await newCustomCommand.save();
 	}
@@ -27,10 +21,10 @@ async function addCustomCommand(msg) {
 async function removeCustomCommand(msg) {
 	const word = msg.content.split("remove ")[1];
 
-	const { exists, id } = await checkIfCommandInDatabase({ word });
+	const customCommand = await CustomCommand.findOne({ guild: msg.guild.id, word });
 
-	if (exists) {
-		await CustomCommand.deleteOne({ _id: id });
+	if (customCommand) {
+		await CustomCommand.deleteOne({ _id: customCommand._id });
 		return "Comando removido com sucesso my dude";
 	}
 
@@ -46,7 +40,7 @@ function checkIfFile(command) {
 }
 
 async function checkForCustomCommands(msg) {
-	const customCommands = await CustomCommand.find();
+	const customCommands = await CustomCommand.find({ guild: msg.guild.id });
 
 	for (const customCommand of customCommands) {
 		if (msg.content.includes(customCommand.word)) {
@@ -65,7 +59,7 @@ function checkForCommand(msg) {
 
 	const command = msg.content.split(" ")[2];
 
-	const feature = features.find(feature => feature.command === command);
+	const feature = features.find(f => f.command === command);
 
 	if (feature) return feature.func(msg);
 
