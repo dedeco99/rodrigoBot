@@ -1,3 +1,5 @@
+/* global musicPlayers */
+
 const { get } = require("./request");
 
 const cheerio = require("cheerio");
@@ -5,8 +7,6 @@ const ytdl = require("ytdl-core");
 
 const secrets = require("./secrets");
 const embed = require("./embed");
-
-let dispatcher = null;
 
 function answer(msg) {
 	let num = Math.floor(Math.random() >= 0.5);
@@ -190,36 +190,48 @@ async function price(msg) {
 }
 
 async function music(msg) {
-	const checkIfInVoiceChannel = async (msg, params) => {
-		if (msg.member.voiceChannel) {
-			const connection = await msg.member.voiceChannel.join();
+	const play = (musicPlayer, connection) => {
+		const stream = ytdl(musicPlayer.queue[0], { filter: "audioonly" });
+		const streamOptions = { seek: 0, volume: 0.5 };
+		musicPlayer.dispatcher = connection.playStream(stream, streamOptions);
 
-			const stream = ytdl(params, { filter: "audioonly" });
-			const streamOptions = { seek: 0, volume: 0.5 };
-			dispatcher = connection.playStream(stream, streamOptions);
-
-			dispatcher.on("end", () => msg.member.voiceChannel.leave());
-		} else {
-			return "Vai para um canal de voz primeiro sua xixada!";
-		}
-
-		return dispatcher;
+		musicPlayer.dispatcher.on("end", () => {
+			musicPlayer.queue.shift();
+			if (musicPlayer.queue.length) {
+				play(musicPlayer, connection);
+			} else {
+				connection.disconnect();
+			}
+		});
 	};
 
-	const params = msg.content.split("music ")[1];
+	const params = msg.content.split(" ");
+	const command = params[2].toLowerCase();
 
-	if (params.includes("pause")) {
-		dispatcher.pause();
-	} else if (params.includes("resume")) {
-		dispatcher.resume();
-	} else if (params.includes("end")) {
-		dispatcher.end();
-	} else {
-		dispatcher = await checkIfInVoiceChannel(msg, params, dispatcher);
+	if (!musicPlayers[msg.member.guild.id]) musicPlayers[msg.member.guild.id] = { queue: [] };
 
-		if (typeof dispatcher === "string") return dispatcher;
+	const musicPlayer = musicPlayers[msg.member.guild.id];
 
-		return true;
+	if (command === "play") {
+		if (!msg.member.voiceChannel) return "Vai para um canal de voz primeiro sua xixada!";
+
+		musicPlayer.queue.push(params[3]);
+
+		if (!msg.member.guild.voiceConnection) {
+			const connection = await msg.member.voiceChannel.join();
+
+			play(musicPlayer, connection);
+		}
+	} else if (musicPlayer && command === "skip") {
+		musicPlayer.dispatcher.end();
+	} else if (musicPlayer && command === "pause") {
+		musicPlayer.dispatcher.pause();
+	} else if (musicPlayer && command === "resume") {
+		musicPlayer.dispatcher.resume();
+	} else if (musicPlayer && command === "end") {
+		musicPlayer.dispatcher.end();
+
+		delete musicPlayers[msg.member.guild.id];
 	}
 
 	return null;

@@ -10,6 +10,8 @@ const Meta = require("./models/meta");
 
 let lastMsg = null;
 
+global.musicPlayers = {};
+
 async function handleMessage(msg, client) {
 	const message = await checkForCommand(msg, client);
 

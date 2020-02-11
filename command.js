@@ -50,11 +50,10 @@ async function checkForCustomCommands(msg, client) {
 	if (customCommand) {
 		// eslint-disable-next-line no-use-before-define
 		const message = await checkForCommand({ ...msg, content: customCommand.message }, client);
-		console.log("message", message);
 
 		if (message) return message;
 
-		return customCommand.message;
+		if (message !== null) return customCommand.message;
 	}
 
 	return null;
