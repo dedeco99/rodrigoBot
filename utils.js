@@ -189,22 +189,18 @@ async function price(msg) {
 	return "Não existe esse produto do xixo";
 }
 
-function music(msg) {
-	const checkIfInVoiceChannel = (msg, params) => {
+async function music(msg) {
+	const checkIfInVoiceChannel = async (msg, params) => {
 		if (msg.member.voiceChannel) {
-			msg.member.voiceChannel.join()
-				.then((connection) => {
-					const stream = ytdl(params, { filter: "audioonly" });
-					const streamOptions = { seek: 0, volume: 0.5 };
-					dispatcher = connection.playStream(stream, streamOptions);
+			const connection = await msg.member.voiceChannel.join();
 
-					dispatcher.on("end", () => {
-						msg.member.voiceChannel.leave();
-					});
-				})
-				.catch(console.log);
+			const stream = ytdl(params, { filter: "audioonly" });
+			const streamOptions = { seek: 0, volume: 0.5 };
+			dispatcher = connection.playStream(stream, streamOptions);
+
+			dispatcher.on("end", () => msg.member.voiceChannel.leave());
 		} else {
-			msg.reply("Vai para um canal de voz primeiro sua xixada!");
+			return "Vai para um canal de voz primeiro sua xixada!";
 		}
 
 		return dispatcher;
@@ -219,8 +215,14 @@ function music(msg) {
 	} else if (params.includes("end")) {
 		dispatcher.end();
 	} else {
-		dispatcher = checkIfInVoiceChannel(msg, params, dispatcher);
+		dispatcher = await checkIfInVoiceChannel(msg, params, dispatcher);
+
+		if (typeof dispatcher === "string") return dispatcher;
+
+		return true;
 	}
+
+	return null;
 }
 
 module.exports = {

@@ -31,39 +31,19 @@ async function removeCustomCommand(msg) {
 	return "Esse comando deve estar no xixo porque não o encontro";
 }
 
-function checkIfFile(command) {
-	if (command.message.includes("./assets/")) {
-		return { "file": command.message };
-	}
-
-	return command.message;
-}
-
-async function checkForCustomCommands(msg) {
-	const customCommands = await CustomCommand.find({ guild: msg.guild.id });
-
-	for (const customCommand of customCommands) {
-		if (msg.content.includes(customCommand.word)) {
-			return checkIfFile(customCommand);
-		}
-	}
-
-	return null;
-}
-
 function checkForCommand(msg) {
 	const features = [
 		{ command: "add", func: addCustomCommand },
 		{ command: "remove", func: removeCustomCommand },
 	];
 
-	const command = msg.content.split(" ")[2];
+	const customCommand = msg.content.split(" ")[2];
 
-	const feature = features.find(f => f.command === command);
+	const feature = features.find(f => f.command === customCommand);
 
 	if (feature) return feature.func(msg);
 
-	return checkForCustomCommands(msg);
+	return null;
 }
 
 module.exports = {

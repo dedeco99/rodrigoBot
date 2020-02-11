@@ -10,6 +10,8 @@ const custom = require("./custom");
 const { updateMeta } = require("./database");
 const log = require("./log");
 
+const CustomCommand = require("./models/customCommand");
+
 const features = [
 	{ command: "define", func: utils.define },
 	{ command: "procura", func: utils.search },
@@ -40,8 +42,26 @@ const features = [
 	{ command: "custom", func: custom.checkForCommand },
 ];
 
-async function checkForWord(msg) {
-	const customCommand = await custom.checkForCommand(msg);
+async function checkForCustomCommands(msg, client) {
+	const customCommands = await CustomCommand.find({ guild: msg.guild.id });
+
+	const customCommand = customCommands.find(c => msg.content.includes(c.word));
+
+	if (customCommand) {
+		// eslint-disable-next-line no-use-before-define
+		const message = await checkForCommand({ ...msg, content: customCommand.message }, client);
+		console.log("message", message);
+
+		if (message) return message;
+
+		return customCommand.message;
+	}
+
+	return null;
+}
+
+async function checkForWord(msg, client) {
+	const customCommand = await checkForCustomCommands(msg, client);
 	if (customCommand) return customCommand;
 
 	const compliments = ["good", "nice", "best", "bom", "bem", "grande"];
@@ -68,17 +88,20 @@ function checkForCommand(msg, client) {
 		console.log(command);
 
 		const feature = features.find(feat => feat.command === command);
+		console.log("feature", feature);
 
 		if (feature) {
 			try {
 				return feature.func(msg, client);
 			} catch (err) {
 				log.error({ status: "command", data: err.stack });
+
+				return null;
 			}
 		}
 	}
 
-	if (msg.content.toLowerCase().includes(triggerWord)) return checkForWord(msg);
+	if (msg.content.toLowerCase().includes(triggerWord)) return checkForWord(msg, client);
 
 	return null;
 }
