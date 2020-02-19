@@ -8,6 +8,6 @@ const SubredditSchema = new Schema({
 	subreddits: { type: String, default: "" },
 }, { timestamps: { createdAt: "_created", updatedAt: "_modified" } });
 
-const Subreddit = mongoose.model("Channel", SubredditSchema);
+const Subreddit = mongoose.model("Subreddit", SubredditSchema);
 
 module.exports = Subreddit;
