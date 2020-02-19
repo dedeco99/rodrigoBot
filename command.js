@@ -53,7 +53,7 @@ async function checkForCustomCommands(msg, client) {
 
 		if (message) return message;
 
-		if (message !== null) return customCommand.message;
+		if (!customCommand.message.toLowerCase().includes("rodrigo")) return customCommand.message;
 	}
 
 	return null;
@@ -87,7 +87,6 @@ function checkForCommand(msg, client) {
 		console.log(command);
 
 		const feature = features.find(feat => feat.command === command);
-		console.log("feature", feature);
 
 		if (feature) {
 			try {
