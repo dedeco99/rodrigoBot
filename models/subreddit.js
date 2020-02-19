@@ -2,13 +2,12 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const ChannelSchema = new Schema({
+const SubredditSchema = new Schema({
 	guild: { type: String, required: true },
 	name: { type: String, default: "" },
-	channel: { type: String, default: "" },
-	platform: { type: String, default: "" },
+	subreddits: { type: String, default: "" },
 }, { timestamps: { createdAt: "_created", updatedAt: "_modified" } });
 
-const Channel = mongoose.model("Channel", ChannelSchema);
+const Subreddit = mongoose.model("Channel", SubredditSchema);
 
-module.exports = Channel;
+module.exports = Subreddit;

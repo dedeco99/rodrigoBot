@@ -3,6 +3,8 @@ const { get, post } = require("./request");
 const secrets = require("./secrets");
 const embed = require("./embed");
 
+const Subreddit = require("./models/subreddit");
+
 function isFile(pathname) {
 	return pathname.split("/").pop()
 		.lastIndexOf(".") > -1;
@@ -118,18 +120,7 @@ async function getRefreshToken() { /* eslint-disable-line no-unused-vars */
 async function checkForReddit(msg) {
 	// await getRefreshToken();
 
-	// TODO: get subreddits from database
-	const subs = [
-		{ name: "piada", subreddit: "jokes" },
-		{ name: "gif", subreddit: "gif" },
-		{ name: "video", subreddit: "videos" },
-		{ name: "meme", subreddit: "2meirl4meirl+boottoobig+dankmemes+greentext+insanepeoplefacebook+oldpeoplefacebook+memes+meme+imgoingtohellforthis+prequelmemes" },
-		{ name: "pornstar", subreddit: "AvaAddams+Ava_Addams+RileyReid+Riley_Reid+RemyLaCroix+Remy_Lacroix+JadaStevens+BrandiLove+Melissamoore" },
-		{ name: "porn", subreddit: "pornvids+porninfifteenseconds+nsfwhardcore+lesbians+grool+quiver+porn_gifs" },
-		{ name: "tits", subreddit: "tessafowler+SexyFlowerWater+gonewild+NSFW_GIF+nsfw+BustyPetite+milf+OnOff+TittyDrop+LegalTeens+suicidegirls+boobbounce" },
-		{ name: "pussy", subreddit: "ass+pawg+gettingherselfoff+asstastic+thick+GodPussy+BonerAlert+StraightGirlsPlaying+workgonewild+rearpussy+gwcumsluts+pussy+facedownassup+cumonclothes+jilling" },
-		{ name: "soft", subreddit: "collegesluts+girlsinyogapants+FestivalSluts+tightdresses+randomsexiness+burstingout" },
-	];
+	const subs = await Subreddit.find({}).lean();
 
 	const searchedSub = msg.content.split(" ")[2];
 	const sub = subs.find(s => s.name === searchedSub);
