@@ -70,6 +70,7 @@ async function getRedditPosts(data, accessToken) {
 
 	const res = await get(url, headers);
 
+	if (res.status === 403) throw errors.redditForbidden;
 	if (res.status === 404) throw errors.redditNotFound;
 
 	const json = res.data;
