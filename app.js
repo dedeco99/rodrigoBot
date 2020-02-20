@@ -1,4 +1,5 @@
 const discord = require("discord.js");
+const schedule = require('node-schedule');
 
 const secrets = require("./secrets");
 const { initialize } = require("./database");
@@ -43,7 +44,25 @@ async function run() {
 
 	client.on("message", msg => handleMessage(msg, client));
 
-	setInterval(async () => {
+	schedule.scheduleJob('0 8 * * *', async () => {
+		const birthdays = await Birthday.find({
+			$expr: { $eq: [{ $dayOfYear: "$date" }, { $dayOfYear: new Date() }] },
+		});
+
+		for (const birthday of birthdays) {
+			client.channels.get("231537439926124545").send(`Parabéns ${birthday.person}`);
+		}
+	});
+
+	schedule.scheduleJob('15 17 * * *', () => {
+		client.channels.get("666686273343193139").send('would you look at the time @Zelxy#8694')
+	});
+
+	schedule.scheduleJob('0 18 * * *', () => {
+		client.channels.get("666686273343193139").send('would you look at the time @everyone')
+	});
+
+	schedule.scheduleJob('0/20 * * * *', async () => {
 		const notification = await youtube.fetchNotifications();
 		if (notification) client.channels.get("525343734746054657").send(notification);
 
@@ -51,20 +70,7 @@ async function run() {
 		notification = await twitch.fetchNotifications();
 		if (notification) client.channels.get("525343734746054657").send(notification);
 		*/
-
-		/*
-		if (moment().format("H") === "8") {
-			const birthdays = await Birthday.find({
-				$expr: { $eq: [{ $dayOfYear: "$date" }, { $dayOfYear: new Date() }] },
-			});
-			for (const birthday of birthdays) {
-				client.channels.get("231537439926124545").send(`Parabéns ${birthday.person}`);
-			}
-		}
-		*/
-
-		console.log("Checked");
-	}, 60000 * 60); // check every hour
+	});
 }
 
 run();
