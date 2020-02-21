@@ -1,5 +1,5 @@
 const discord = require("discord.js");
-const schedule = require('node-schedule');
+const schedule = require("node-schedule");
 
 const secrets = require("./secrets");
 const { initialize } = require("./database");
@@ -8,6 +8,7 @@ const twitch = require("./twitch");
 const youtube = require("./youtube");
 
 const Meta = require("./models/meta");
+const Birthday = require("./models/birthday");
 
 let lastMsg = null;
 
@@ -44,7 +45,7 @@ async function run() {
 
 	client.on("message", msg => handleMessage(msg, client));
 
-	schedule.scheduleJob('0 8 * * *', async () => {
+	schedule.scheduleJob("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
 			$expr: { $eq: [{ $dayOfYear: "$date" }, { $dayOfYear: new Date() }] },
 		});
@@ -54,15 +55,15 @@ async function run() {
 		}
 	});
 
-	schedule.scheduleJob('15 17 * * *', () => {
-		client.channels.get("666686273343193139").send('would you look at the time @Zelxy#8694')
+	schedule.scheduleJob("15 17 * * 1-5", () => {
+		client.channels.get("666686273343193139").send("would you look at the time @Zelxy#8694");
 	});
 
-	schedule.scheduleJob('0 18 * * *', () => {
-		client.channels.get("666686273343193139").send('would you look at the time @everyone')
+	schedule.scheduleJob("0 18 * * 1-5", () => {
+		client.channels.get("666686273343193139").send("would you look at the time @everyone");
 	});
 
-	schedule.scheduleJob('0/20 * * * *', async () => {
+	schedule.scheduleJob("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
 		if (notification) client.channels.get("525343734746054657").send(notification);
 
