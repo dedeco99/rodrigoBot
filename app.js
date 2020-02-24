@@ -56,7 +56,7 @@ async function run() {
 	});
 
 	schedule.scheduleJob("15 17 * * 1-5", () => {
-		client.channels.get("666686273343193139").send("would you look at the time @Zelxy#8694");
+		client.channels.get("666686273343193139").send("would you look at the time <@176055432010399744>");
 	});
 
 	schedule.scheduleJob("0 18 * * 1-5", () => {
