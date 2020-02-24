@@ -51,12 +51,16 @@ async function run() {
 		});
 
 		for (const birthday of birthdays) {
-			client.channels.get("231537439926124545").send(`Parabéns ${birthday.person}`);
+			client.channels.get(birthday.room).send(`Parabéns ${birthday.person}`);
 		}
 	});
 
 	schedule.scheduleJob("15 17 * * 1-5", () => {
 		client.channels.get("666686273343193139").send("would you look at the time <@176055432010399744>");
+	});
+
+	schedule.scheduleJob("35 17 * * 1-5", () => {
+		client.channels.get("666686273343193139").send("would you look at the time <@200415342093271040>");
 	});
 
 	schedule.scheduleJob("0 18 * * 1-5", () => {
