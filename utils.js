@@ -8,18 +8,20 @@ const ytdl = require("ytdl-core");
 const secrets = require("./secrets");
 const embed = require("./embed");
 
-function answer(msg) {
+function answer(msg, params) {
+	const { phrase } = params;
+
 	let num = Math.floor(Math.random() >= 0.5);
-	if (msg.content.includes(" ou ")) {
-		const option1 = msg.content.split(" ou ")[0].slice(8);
-		const option2 = msg.content.split(" ou ")[1].slice(0, -1);
+	if (phrase && phrase.includes(" ou ")) {
+		const option1 = phrase.split(" ou ")[0].slice(8);
+		const option2 = phrase.split(" ou ")[1].slice(0, -1);
 
 		return num ? option1 : option2;
-	} else if (msg.content.includes(" probabilidade ")) {
+	} else if (phrase && phrase.includes(" probabilidade ")) {
 		num = Math.floor(Math.random() * 100);
 
 		return `Cerca de ${num}%`;
-	} else if (msg.content.includes(" nota ")) {
+	} else if (phrase && phrase.includes(" nota ")) {
 		num = Math.floor(Math.random() * 20);
 
 		return num;
@@ -28,8 +30,9 @@ function answer(msg) {
 	return num ? "Sim" : "Não";
 }
 
-async function define(msg) {
-	const word = msg.content.split("define ")[1];
+async function define(msg, params) {
+	const { word } = params;
+
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
 	const res = await get(url);
@@ -60,8 +63,9 @@ async function define(msg) {
 	return embed.createDefineEmbed(response);
 }
 
-async function search(msg) {
-	const topic = msg.content.split("procura ")[1];
+async function search(msg, params) {
+	const { topic } = params;
+
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
@@ -80,9 +84,8 @@ async function search(msg) {
 	return embed.createSearchEmbed(response);
 }
 
-function sort(msg) {
-	let options = msg.content.split("ordena")[1];
-	options = options.split(";");
+function sort(msg, params) {
+	const options = params.options.split(";");
 	const randomized = [];
 	const times = options.length;
 
@@ -95,10 +98,12 @@ function sort(msg) {
 	return randomized.join(" > ");
 }
 
-async function convert(msg) {
-	const numberToConvert = msg.content.split(" ")[2];
-	const currencyToConvert = msg.content.split(" ")[3].toUpperCase();
-	const currencyConverted = msg.content.split(" ")[5].toUpperCase();
+async function convert(msg, params) {
+	const { number, from, to } = params;
+
+	const numberToConvert = number;
+	const currencyToConvert = from.toUpperCase();
+	const currencyConverted = to.toUpperCase();
 	const url = "https://api.exchangeratesapi.io/latest";
 
 	const res = await get(url);
@@ -123,35 +128,30 @@ function math(msg) {
 	return "Esta função foi tão violada no rabinho que foi descontinuada";
 }
 
-async function vote(msg) {
-	const message = msg.content.split(" ");
+async function vote(msg, params) {
+	const options = params.options.split(";");
+	const title = options[0];
+	options.splice(0, 1);
 
-	if (message[2] === "results") {
-		const poll = message[3];
+	const res = {
+		title,
+		options,
+	};
 
-		const vote = await msg.channel.fetchMessage(poll);
+	return embed.createPollEmbed(msg, res);
+}
 
-		vote.reactions.forEach(async (reaction) => {
-			const users = await reaction.fetchUsers();
-			const userRes = users.map(user => user.username).join(" | ");
+async function voteResults(msg, params) {
+	const poll = message[3];
 
-			msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
-		});
-	} else {
-		const message = msg.content.split("vote ")[1];
-		const options = message.split(";");
-		const title = options[0];
-		options.splice(0, 1);
+	const vote = await msg.channel.fetchMessage(poll);
 
-		const res = {
-			title,
-			options,
-		};
+	vote.reactions.forEach(async (reaction) => {
+		const users = await reaction.fetchUsers();
+		const userRes = users.map(user => user.username).join(" | ");
 
-		return embed.createPollEmbed(msg, res);
-	}
-
-	return null;
+		msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
+	});
 }
 
 // FIXME: Not working
@@ -189,7 +189,7 @@ async function price(msg) {
 	return "Não existe esse produto do xixo";
 }
 
-async function music(msg) {
+async function music(msg, params) {
 	const play = (musicPlayer, connection) => {
 		const stream = ytdl(musicPlayer.queue[0], { filter: "audioonly" });
 		const streamOptions = { seek: 0, volume: 0.5 };
@@ -205,8 +205,7 @@ async function music(msg) {
 		});
 	};
 
-	const params = msg.content.split(" ");
-	const command = params[2].toLowerCase();
+	const { command, link } = params;
 
 	if (!musicPlayers[msg.member.guild.id]) musicPlayers[msg.member.guild.id] = { queue: [] };
 
@@ -215,7 +214,7 @@ async function music(msg) {
 	if (command === "play") {
 		if (!msg.member.voiceChannel) return "Vai para um canal de voz primeiro sua xixada!";
 
-		musicPlayer.queue.push(params[3]);
+		musicPlayer.queue.push(link);
 
 		if (!msg.member.guild.voiceConnection) {
 			const connection = await msg.member.voiceChannel.join();

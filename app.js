@@ -11,14 +11,19 @@ const Meta = require("./models/meta");
 const Birthday = require("./models/birthday");
 const Cronjob = require("./models/cronjob");
 
-let lastMsg = null;
-
+global.lastMsg = null;
+global.client = new discord.Client();
 global.musicPlayers = {};
+
+async function setActivity() {
+	const meta = await Meta.findOne({}).lean();
+
+	console.log(`Logged in as ${client.user.tag}!`);
+	client.user.setActivity(meta.action.message, { type: meta.action.type });
+}
 
 async function handleMessage(msg, client) {
 	const message = await checkForCommand(msg, client);
-
-	console.log(msg.guild.id, new Date(msg.guild.joinedTimestamp));
 
 	if (message) {
 		msg.channel.send(message);
@@ -31,21 +36,16 @@ async function handleMessage(msg, client) {
 }
 
 async function run() {
-	const client = new discord.Client();
 	client.login(secrets.discordKey);
 
 	// Initialize DB
 	initialize();
 
-	const meta = await Meta.findOne();
+	client.on("ready", () => setActivity());
 
-	client.on("ready", () => {
-		console.log(`Logged in as ${client.user.tag}!`);
-		client.user.setActivity(meta.action.message, { type: meta.action.type });
-	});
+	client.on("message", msg => handleMessage(msg));
 
-	client.on("message", msg => handleMessage(msg, client));
-
+	// Cronjobs
 	schedule.scheduleJob("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
 			$expr: { $eq: [{ $dayOfYear: "$date" }, { $dayOfYear: new Date() }] },

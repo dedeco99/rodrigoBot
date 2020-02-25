@@ -1,3 +1,5 @@
+const { match } = require("path-to-regexp");
+
 const utils = require("./utils");
 const memes = require("./memes");
 const media = require("./media");
@@ -13,15 +15,15 @@ const log = require("./log");
 const CustomCommand = require("./models/customCommand");
 
 const features = [
-	{ command: "define", func: utils.define },
-	{ command: "procura", func: utils.search },
-	{ command: "responde", func: utils.answer },
-	{ command: "math", func: utils.math },
-	{ command: "ordena", func: utils.sort },
-	{ command: "converte", func: utils.convert },
-	{ command: "vote", func: utils.vote },
+	{ command: ":phrase?\\?", func: utils.answer },
+	{ command: "define :word", func: utils.define },
+	{ command: "search :topic", func: utils.search },
+	{ command: "sort :options", func: utils.sort },
+	{ command: "convert :number :from to :to", func: utils.convert },
+	{ command: "math :operation", func: utils.math },
+	{ command: "vote :options", func: utils.vote },
 	{ command: "price", func: utils.price },
-	{ command: "music", func: utils.music },
+	{ command: "music :command :link?", func: utils.music },
 
 	{ command: "meme", func: memes.checkForMemes },
 
@@ -78,19 +80,29 @@ async function checkForWord(msg, client) {
 	return null;
 }
 
-function checkForCommand(msg, client) {
+function checkForCommand(msg) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 
 	if (firstWord === triggerWord) {
-		const command = msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
-		console.log(command);
+		let params = null;
+		const cleanMessage = msg.content.replace(/\?/g, "\?");
 
-		const feature = features.find(feat => feat.command === command);
+		const feature = features.find(feat => {
+			const matches = match(`${triggerWord} ${feat.command}`, { delimiter: " " })(cleanMessage);
+
+			if (matches) {
+				params = matches.params;
+				return true;
+			}
+		});
 
 		if (feature) {
+			console.log("params", params);
+			console.log(feature.command);
+
 			try {
-				return feature.func(msg, client);
+				return feature.func(msg, params);
 			} catch (err) {
 				log.error({ status: "command", data: err.stack });
 
@@ -99,7 +111,7 @@ function checkForCommand(msg, client) {
 		}
 	}
 
-	if (msg.content.toLowerCase().includes(triggerWord)) return checkForWord(msg, client);
+	if (msg.content.toLowerCase().includes(triggerWord)) return checkForWord(msg);
 
 	return null;
 }
