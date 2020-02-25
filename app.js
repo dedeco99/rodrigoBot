@@ -9,6 +9,7 @@ const youtube = require("./youtube");
 
 const Meta = require("./models/meta");
 const Birthday = require("./models/birthday");
+const Cronjob = require("./models/cronjob");
 
 let lastMsg = null;
 
@@ -55,18 +56,6 @@ async function run() {
 		}
 	});
 
-	schedule.scheduleJob("15 17 * * 1-5", () => {
-		client.channels.get("666686273343193139").send("would you look at the time <@176055432010399744>");
-	});
-
-	schedule.scheduleJob("35 17 * * 1-5", () => {
-		client.channels.get("666686273343193139").send("would you look at the time <@200415342093271040>");
-	});
-
-	schedule.scheduleJob("0 18 * * 1-5", () => {
-		client.channels.get("666686273343193139").send("would you look at the time @everyone");
-	});
-
 	schedule.scheduleJob("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
 		if (notification) client.channels.get("525343734746054657").send(notification);
@@ -76,6 +65,14 @@ async function run() {
 		if (notification) client.channels.get("525343734746054657").send(notification);
 		*/
 	});
+
+	const cronjobs = await Cronjob.find({}).lean();
+
+	for (const cronjob of cronjobs) {
+		schedule.scheduleJob(cronjob.cron, () => {
+			client.channels.get(cronjob.room).send(cronjob.message);
+		});
+	}
 }
 
 run();
