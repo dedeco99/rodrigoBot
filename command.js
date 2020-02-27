@@ -1,5 +1,3 @@
-const { match } = require("path-to-regexp");
-
 const utils = require("./utils");
 const memes = require("./memes");
 const media = require("./media");
@@ -15,7 +13,7 @@ const log = require("./log");
 const CustomCommand = require("./models/customCommand");
 
 const features = [
-	{ command: ":phrase?\\?", func: utils.answer },
+	{ command: ":phrase?", func: utils.answer },
 	{ command: "define :word", func: utils.define },
 	{ command: "search :topic", func: utils.search },
 	{ command: "sort :options", func: utils.sort },
@@ -23,7 +21,7 @@ const features = [
 	{ command: "math :operation", func: utils.math },
 	{ command: "vote :options", func: utils.vote },
 	{ command: "price", func: utils.price },
-	{ command: "music :command :link?", func: utils.music },
+	{ command: "music :command :link:", func: utils.music },
 
 	{ command: "meme", func: memes.checkForMemes },
 
@@ -80,21 +78,46 @@ async function checkForWord(msg, client) {
 	return null;
 }
 
+function commandTranslator(command) {
+	const params = command.split(" ");
+	let regex = "";
+
+	for (const param of params) {
+		if (param[0] === ":") {
+			if (param[param.length - 1] === ":") {
+				regex += escapeStringRegexp("(?: |\\Z)");
+			} else {
+				regex += " ";
+			}
+
+			regex += `(?<${param.replace(/:/g, "").replace(/\?/g, "")}>.*|$)`;
+
+			if (param[param.length - 1] === ":") regex += "?";
+		} else {
+			regex += param;
+		}
+	}
+
+	console.log("regex", regex);
+
+	return new RegExp(regex, "g");
+}
+
 function checkForCommand(msg) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 
 	if (firstWord === triggerWord) {
 		let params = null;
-		const cleanMessage = msg.content.replace(/\?/g, "\?");
+		const cleanMessage = msg.content.replace(`${triggerWord} `, "");
 
-		const feature = features.find(feat => {
-			const matches = match(`${triggerWord} ${feat.command}`, { delimiter: " " })(cleanMessage);
+		const feature = features.find((feat) => {
+			const regex = commandTranslator(feat.command);
 
-			if (matches) {
-				params = matches.params;
-				return true;
-			}
+			const match = regex.exec(cleanMessage);
+			console.log(match);
+
+			return false;
 		});
 
 		if (feature) {
