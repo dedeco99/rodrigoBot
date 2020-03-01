@@ -69,7 +69,7 @@ async function run() {
 	const cronjobs = await Cronjob.find({}).lean();
 
 	for (const cronjob of cronjobs) {
-		schedule.scheduleJob(cronjob.cron, () => {
+		schedule.scheduleJob(cronjob.cron, async () => {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
 				const message = await checkForCommand({ content: cronjob.message }, client);
 
