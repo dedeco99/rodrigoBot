@@ -29,7 +29,6 @@ function formatResponse(url, num, json) {
 		res.error = "Este xixo é privado :wink:";
 	} else {
 		const images = json.medias;
-		console.log(images.length);
 
 		if (images.length > 0) {
 			let finalNum = num;
@@ -65,32 +64,6 @@ async function getPost(msg) {
 		return "Claramente esse xixo não existe";
 	}
 }
-
-/*
-async function getPost(msg) {
-	const person = msg.content.split(" ")[2];
-	const num = msg.content.split(" ").pop();
-	const url = `https://www.instagram.com/${person}/`;
-
-	const res = await get(url);
-	let foto = res.data.substring(
-		res.lastIndexOf("window._sharedData = ") + 21,
-		res.lastIndexOf("</script>"),
-	);
-
-	foto = foto.substring(0, foto.indexOf("</script>") - 1);
-
-	const json = JSON.parse(foto);
-
-	if (json.entry_data.ProfilePage) {
-		const res = formatResponse(url, num, json.entry_data.ProfilePage[0]);
-
-		return embed.createInstaEmbed(res);
-	}
-
-	return "Claramente esse xixo não existe";
-}
-*/
 
 module.exports = {
 	getPost,

@@ -70,7 +70,13 @@ async function run() {
 
 	for (const cronjob of cronjobs) {
 		schedule.scheduleJob(cronjob.cron, () => {
-			client.channels.get(cronjob.room).send(cronjob.message);
+			if (cronjob.message.toLowerCase().includes("rodrigo")) {
+				const message = await checkForCommand({ content: cronjob.message }, client);
+
+				if (message) client.channels.get(cronjob.room).send(message);
+			} else {
+				client.channels.get(cronjob.room).send(cronjob.message);
+			}
 		});
 	}
 }

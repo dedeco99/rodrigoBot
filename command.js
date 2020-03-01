@@ -48,12 +48,13 @@ async function checkForCustomCommands(msg, client) {
 	const customCommand = customCommands.find(c => msg.content.includes(c.word));
 
 	if (customCommand) {
-		// eslint-disable-next-line no-use-before-define
-		const message = await checkForCommand({ ...msg, content: customCommand.message }, client);
+		if (customCommand.message.toLowerCase().includes("rodrigo")) {
+			const message = await checkForCommand({ ...msg, content: customCommand.message }, client);
 
-		if (message) return message;
-
-		if (!customCommand.message.toLowerCase().includes("rodrigo")) return customCommand.message;
+			if (message) return message;
+		} else {
+			return customCommand.message;
+		}
 	}
 
 	return null;
