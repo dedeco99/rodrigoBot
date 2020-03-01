@@ -19,6 +19,7 @@
 		"axios": "^0.19.2",
 		"cheerio": "^1.0.0-rc.2",
 		"discord.js": "^11.5.1",
+		"instagram-scraping": "^1.0.13",
 		"jimp": "^0.9.3",
 		"moment": "^2.24.0",
 		"mongoose": "^5.9.1",

@@ -1,13 +1,15 @@
+const instagram = require("instagram-scraping");
+
 const { get } = require("./request");
 const embed = require("./embed");
 
-function formatResponse(url, num, profilePage) {
-	const profilePic = profilePage.graphql.user.profile_pic_url_hd;
-	let bio = profilePage.graphql.user.biography;
-	const name = profilePage.graphql.user.full_name;
-	const followers = profilePage.graphql.user.edge_followed_by.count;
-	const follows = profilePage.graphql.user.edge_follow.count;
-	const posts = profilePage.graphql.user.edge_owner_to_timeline_media.count;
+function formatResponse(url, num, json) {
+	const profilePic = json.user.profile_pic_url_hd;
+	let bio = json.user.biography;
+	const name = json.user.full_name;
+	const followers = json.user.edge_followed_by.count;
+	const follows = json.user.edge_follow.count;
+	const posts = json.user.edge_owner_to_timeline_media.count;
 
 	if (bio === "") bio = "No bio";
 
@@ -23,10 +25,11 @@ function formatResponse(url, num, profilePage) {
 		url,
 	};
 
-	if (profilePage.graphql.user.is_private) {
+	if (json.user.is_private) {
 		res.error = "Este xixo é privado :wink:";
 	} else {
-		const images = profilePage.graphql.user.edge_owner_to_timeline_media.edges;
+		const images = json.medias;
+		console.log(images.length);
 
 		if (images.length > 0) {
 			let finalNum = num;
@@ -36,7 +39,7 @@ function formatResponse(url, num, profilePage) {
 				finalNum = 0;
 			}
 
-			const image = images[finalNum].node.display_url;
+			const image = images[finalNum].display_url;
 			res.image = image;
 		} else {
 			res.error = "Este perfil não tem fotos";
@@ -46,6 +49,24 @@ function formatResponse(url, num, profilePage) {
 	return res;
 }
 
+async function getPost(msg) {
+	const person = msg.content.split(" ")[2];
+	const num = msg.content.split(" ").pop();
+	const url = `https://www.instagram.com/${person}/`;
+
+	try {
+		const json = await instagram.scrapeUserPage(person);
+
+		const res = formatResponse(url, num, json);
+
+		return embed.createInstaEmbed(res);
+	} catch (err) {
+		console.log(err);
+		return "Claramente esse xixo não existe";
+	}
+}
+
+/*
 async function getPost(msg) {
 	const person = msg.content.split(" ")[2];
 	const num = msg.content.split(" ").pop();
@@ -69,6 +90,7 @@ async function getPost(msg) {
 
 	return "Claramente esse xixo não existe";
 }
+*/
 
 module.exports = {
 	getPost,
