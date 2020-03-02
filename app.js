@@ -11,23 +11,14 @@ const Meta = require("./models/meta");
 const Birthday = require("./models/birthday");
 const Cronjob = require("./models/cronjob");
 
-let lastMsg = null;
+global.lastMsgs = [];
 
 global.musicPlayers = {};
 
 async function handleMessage(msg, client) {
 	const message = await checkForCommand(msg, client);
 
-	console.log(msg.guild.id, new Date(msg.guild.joinedTimestamp));
-
-	if (message) {
-		msg.channel.send(message);
-	} else if (msg.content.includes("delete") && lastMsg) {
-		lastMsg.delete();
-		msg.delete();
-	} else if (msg.author.username === "RodrigoBot") {
-		lastMsg = msg;
-	}
+	if (message) msg.channel.send(message);
 }
 
 async function run() {

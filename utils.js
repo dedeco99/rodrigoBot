@@ -1,4 +1,4 @@
-/* global musicPlayers */
+/* global lastMsgs */
 
 const { get } = require("./request");
 
@@ -7,6 +7,14 @@ const ytdl = require("ytdl-core");
 
 const secrets = require("./secrets");
 const embed = require("./embed");
+
+function deleteLastMsg(msg) {
+	if (lastMsgs.length) {
+		lastMsgs[lastMsgs.length - 1].delete();
+		lastMsgs.pop();
+		msg.delete();
+	}
+}
 
 function answer(msg) {
 	let num = Math.floor(Math.random() >= 0.5);
@@ -238,6 +246,7 @@ async function music(msg) {
 }
 
 module.exports = {
+	deleteLastMsg,
 	answer,
 	define,
 	search,

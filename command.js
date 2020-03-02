@@ -1,3 +1,5 @@
+/* global lastMsgs */
+
 const utils = require("./utils");
 const memes = require("./memes");
 const media = require("./media");
@@ -13,6 +15,7 @@ const log = require("./log");
 const CustomCommand = require("./models/customCommand");
 
 const features = [
+	{ command: "delete", func: utils.deleteLastMsg },
 	{ command: "define", func: utils.define },
 	{ command: "procura", func: utils.search },
 	{ command: "responde", func: utils.answer },
@@ -82,6 +85,11 @@ async function checkForWord(msg, client) {
 function checkForCommand(msg, client) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
+
+	if (msg.author.username === "RodrigoBot") {
+		lastMsgs.push(msg);
+		if (lastMsgs.length > 10) lastMsgs.shift();
+	}
 
 	if (firstWord === triggerWord) {
 		const command = msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
