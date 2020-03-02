@@ -86,7 +86,7 @@ function checkForCommand(msg, client) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 
-	if (msg.author.username === "RodrigoBot") {
+	if (msg.author && msg.author.username === "RodrigoBot") {
 		lastMsgs.push(msg);
 		if (lastMsgs.length > 10) lastMsgs.shift();
 	}
