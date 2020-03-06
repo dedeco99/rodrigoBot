@@ -76,7 +76,10 @@ async function getRedditPosts(data, accessToken) {
 	const json = res.data;
 	const response = formatResponse(json);
 
-	if (response.title.toLowerCase().includes(/cock|dick|penis/g)) return "Este post tinha ganda penis";
+	if (response.title.toLowerCase().includes(/cock|dick|penis/g)) {
+		getRedditPosts(data, accessToken);
+		return "Este post tinha ganda penis, vou buscar outro";
+	}
 
 	return embed.createRedditEmbed(response);
 }
