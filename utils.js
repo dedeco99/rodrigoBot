@@ -10,9 +10,12 @@ const embed = require("./embed");
 
 function deleteLastMsg(msg) {
 	if (lastMsgs.length) {
-		lastMsgs[lastMsgs.length - 1].delete();
-		lastMsgs.pop();
-		msg.delete();
+		const lastMessage = lastMsgs[lastMsgs.length - 1];
+		if (lastMessage.channel.id === msg.channel.id) {
+			lastMessage.delete();
+			lastMsgs.pop();
+			msg.delete();
+		}
 	}
 }
 
