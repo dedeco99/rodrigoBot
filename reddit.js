@@ -6,8 +6,7 @@ const embed = require("./embed");
 const Subreddit = require("./models/subreddit");
 
 function isFile(pathname) {
-	return pathname.split("/").pop()
-		.lastIndexOf(".") > -1;
+	return pathname.split("/").pop().lastIndexOf(".") > -1;
 }
 
 function formatResponse(json) {
@@ -77,7 +76,8 @@ async function getRedditPosts(data, accessToken) {
 	const response = formatResponse(json);
 
 	if (response.title.toLowerCase().match(/cock|dick|penis/g)) {
-		return await getRedditPosts(data, accessToken);
+		console.log("dick detected");
+		return getRedditPosts(data, accessToken);
 	}
 
 	return embed.createRedditEmbed(response);

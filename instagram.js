@@ -1,6 +1,5 @@
 const instagram = require("instagram-scraping");
 
-const { get } = require("./request");
 const embed = require("./embed");
 
 function formatResponse(url, num, json) {

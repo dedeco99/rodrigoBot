@@ -1,7 +1,5 @@
 const axios = require("axios");
 
-const log = require("./log");
-
 async function get(url, headers = {}) {
 	const config = { headers };
 

@@ -1,3 +1,5 @@
+/* global client */
+
 const { get } = require("./request");
 const secrets = require("./secrets");
 
@@ -18,7 +20,7 @@ async function checkIfChannelExists(channel) {
 	return json.data.length > 0 ? json : null;
 }
 
-function getStream(msg, client) {
+function getStream(msg) {
 	const channel = msg.content.split("twitch ")[1];
 	const url = `https://www.twitch.tv/${channel}`;
 
@@ -125,7 +127,7 @@ async function fetchNotifications() {
 	return null;
 }
 
-async function checkForCommand(msg, client) {
+async function checkForCommand(msg) {
 	const features = [
 		{ command: "add", func: addChannel },
 		{ command: "remove", func: removeChannel },
@@ -138,7 +140,7 @@ async function checkForCommand(msg, client) {
 	try {
 		if (feature) return await feature.func(msg);
 
-		return await getStream(msg, client);
+		return await getStream(msg);
 	} catch (err) {
 		return err.message;
 	}

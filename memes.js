@@ -26,8 +26,13 @@ async function makeMeme(msg, meme) {
 	} else {
 		for (i = 0; i < message.length; i++) {
 			currentMsg = message[i];
-			image.print(font, meme[`position${i}`].x, meme[`position${i}`].y, currentMsg, meme[`position${i}`].max)
-				.write(`./assets/img/memes/${meme.name}.jpg`);
+			image.print(
+				font,
+				meme[`position${i}`].x,
+				meme[`position${i}`].y,
+				currentMsg,
+				meme[`position${i}`].max,
+			).write(`./assets/img/memes/${meme.name}.jpg`);
 		}
 	}
 

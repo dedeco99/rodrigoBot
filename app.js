@@ -1,28 +1,29 @@
+/* global client */
+
 const discord = require("discord.js");
 const schedule = require("node-schedule");
 
 const secrets = require("./secrets");
 const { initialize } = require("./database");
 const { checkForCommand } = require("./command");
-const twitch = require("./twitch");
+// const twitch = require("./twitch");
 const youtube = require("./youtube");
 
 const Meta = require("./models/meta");
 const Birthday = require("./models/birthday");
 const Cronjob = require("./models/cronjob");
 
-global.lastMsgs = [];
-
-global.musicPlayers = {};
-
-async function handleMessage(msg, client) {
-	const message = await checkForCommand(msg, client);
+async function handleMessage(msg) {
+	const message = await checkForCommand(msg);
 
 	if (message) msg.channel.send(message);
 }
 
 async function run() {
-	const client = new discord.Client();
+	global.client = new discord.Client();
+	global.lastMsgs = [];
+	global.musicPlayers = {};
+
 	client.login(secrets.discordKey);
 
 	// Initialize DB
@@ -35,7 +36,7 @@ async function run() {
 		client.user.setActivity(meta.action.message, { type: meta.action.type });
 	});
 
-	client.on("message", msg => handleMessage(msg, client));
+	client.on("message", msg => handleMessage(msg));
 
 	schedule.scheduleJob("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
@@ -62,7 +63,7 @@ async function run() {
 	for (const cronjob of cronjobs) {
 		schedule.scheduleJob(cronjob.cron, async () => {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
-				const message = await checkForCommand({ content: cronjob.message }, client);
+				const message = await checkForCommand({ content: cronjob.message });
 
 				if (message) client.channels.get(cronjob.room).send(message);
 			} else {

@@ -9,7 +9,6 @@ const youtube = require("./youtube");
 const twitch = require("./twitch");
 const instagram = require("./instagram");
 const custom = require("./custom");
-const { updateMeta } = require("./database");
 const log = require("./log");
 
 const CustomCommand = require("./models/customCommand");
@@ -44,46 +43,12 @@ const features = [
 	{ command: "twitch", func: twitch.checkForCommand },
 
 	{ command: "custom", func: custom.checkForCommand },
+
+	{ command: ["good", "nice", "best", "bom", "bem", "grande"], func: utils.compliment },
+	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], func: utils.insult },
 ];
 
-async function checkForCustomCommands(msg, client) {
-	const customCommands = await CustomCommand.find({ guild: msg.guild.id });
-
-	const customCommand = customCommands.find(c => msg.content.includes(c.word));
-
-	if (customCommand) {
-		if (customCommand.message.toLowerCase().includes("rodrigo")) {
-			const message = await checkForCommand({ ...msg, content: customCommand.message }, client);
-
-			if (message) return message;
-		} else {
-			return customCommand.message;
-		}
-	}
-
-	return null;
-}
-
-async function checkForWord(msg, client) {
-	const customCommand = await checkForCustomCommands(msg, client);
-	if (customCommand) return customCommand;
-
-	const compliments = ["good", "nice", "best", "bom", "bem", "grande"];
-	const insults = ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"];
-	if (compliments.find(compliment => msg.content.includes(compliment))) {
-		const metaInfo = await updateMeta({ likes: true });
-
-		return `Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes. I can't handle it!!! *touches face violently*`;
-	} else if (insults.find(insult => msg.content.includes(insult))) {
-		const metaInfo = await updateMeta({ dislikes: true });
-
-		return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*`;
-	}
-
-	return null;
-}
-
-function checkForCommand(msg, client) {
+async function checkForCommand(msg) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.content.split(" ")[0].toLowerCase();
 
@@ -103,7 +68,7 @@ function checkForCommand(msg, client) {
 
 		if (feature) {
 			try {
-				return feature.func(msg, client);
+				return feature.func(msg);
 			} catch (err) {
 				log.error({ status: "command", data: err.stack });
 
@@ -112,7 +77,21 @@ function checkForCommand(msg, client) {
 		}
 	}
 
-	if (msg.content.toLowerCase().includes(triggerWord)) return checkForWord(msg, client);
+	if (msg.content.toLowerCase().includes(triggerWord)) {
+		const customCommands = await CustomCommand.find({ guild: msg.guild.id });
+
+		const customCommand = customCommands.find(c => msg.content.includes(c.word));
+
+		if (customCommand) {
+			if (customCommand.message.toLowerCase().includes(triggerWord)) {
+				const message = await checkForCommand({ ...msg, content: customCommand.message });
+
+				if (message) return message;
+			} else {
+				return customCommand.message;
+			}
+		}
+	}
 
 	return null;
 }

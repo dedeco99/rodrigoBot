@@ -1,12 +1,12 @@
-/* global lastMsgs */
+/* global lastMsgs musicPlayers */
 
-const { get } = require("./request");
-
-const cheerio = require("cheerio");
+// const cheerio = require("cheerio");
 const ytdl = require("ytdl-core");
 
+const { get } = require("./request");
 const secrets = require("./secrets");
 const embed = require("./embed");
+const { updateMeta } = require("./database");
 
 function deleteLastMsg(msg) {
 	if (lastMsgs.length) {
@@ -166,7 +166,8 @@ async function vote(msg) {
 }
 
 // FIXME: Not working
-async function price(msg) {
+function price() {
+	/*
 	let thing = msg.content.split("price ")[1];
 	thing = thing.replace(/ /g, "%20");
 	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
@@ -198,6 +199,9 @@ async function price(msg) {
 	}
 
 	return "Não existe esse produto do xixo";
+	*/
+
+	return "Função em manutenção";
 }
 
 async function music(msg) {
@@ -271,6 +275,19 @@ function remindMe(msg) {
 	return "Ja te lembro";
 }
 
+async function compliment() {
+	const metaInfo = await updateMeta({ likes: true });
+
+	return `Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes. I can't handle it!!! *touches face violently*`;
+}
+
+async function insult() {
+	const metaInfo = await updateMeta({ dislikes: true });
+
+	return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*`;
+
+}
+
 module.exports = {
 	deleteLastMsg,
 	answer,
@@ -283,4 +300,6 @@ module.exports = {
 	price,
 	music,
 	remindMe,
+	compliment,
+	insult,
 };
