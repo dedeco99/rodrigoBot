@@ -15,7 +15,7 @@ const log = require("./log");
 const CustomCommand = require("./models/customCommand");
 
 const features = [
-	{ command: ["apagar", "delete"], func: utils.deleteLastMsg },
+	{ command: ["apaga", "delete"], func: utils.deleteLastMsg },
 	{ command: "define", func: utils.define },
 	{ command: "procura", func: utils.search },
 	{ command: "responde", func: utils.answer },
