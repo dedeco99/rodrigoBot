@@ -245,6 +245,29 @@ async function music(msg) {
 	return null;
 }
 
+async function remindMe(msg) {
+	const params = msg.split(" ");
+	const remindVars = ["minutes", "hours", "days"];
+	const remindVarsValues = {
+		minutes: 60000,
+		hours: 6000,
+		days: 600,
+	};
+
+	// Get reminder, remind time, and remind time unit
+	const remindUnit = params.find(param => remindVars.includes(param));
+	const remindTime = Number(params[params.indexOf(remindUnit) - 1] || 1);
+	const reminder = params.filter((param) => {
+		return params.indexOf(param) > 2 && params.indexOf(param) < params.length - 3;
+	});
+
+	setTimeout(() => {
+		msg.channel.send(reminder);
+	}, remindTime * remindVarsValues[remindUnit]);
+
+	return "Ja te lembro";
+}
+
 module.exports = {
 	deleteLastMsg,
 	answer,
@@ -256,4 +279,5 @@ module.exports = {
 	vote,
 	price,
 	music,
+	remindMe,
 };
