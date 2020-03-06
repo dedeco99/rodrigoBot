@@ -250,8 +250,8 @@ function remindMe(msg) {
 	const remindVars = ["minutes", "hours", "days"];
 	const remindVarsValues = {
 		minutes: 60000,
-		hours: 6000,
-		days: 600,
+		hours: 60000 * 60,
+		days: 60000 * 60 * 24,
 	};
 
 	// Get reminder, remind time, and remind time unit
@@ -262,7 +262,7 @@ function remindMe(msg) {
 	});
 
 	setTimeout(() => {
-		msg.channel.send(reminder);
+		msg.channel.send(reminder.join(" "));
 	}, remindTime * remindVarsValues[remindUnit]);
 
 	return "Ja te lembro";

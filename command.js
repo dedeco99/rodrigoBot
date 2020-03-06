@@ -97,7 +97,7 @@ function checkForCommand(msg, client) {
 		console.log(command);
 
 		const feature = features.find((feat) => {
-			if (Array.isArray(feat)) return feat.command.includes(command);
+			if (Array.isArray(feat.command)) return feat.command.includes(command);
 			return feat.command === command;
 		});
 
