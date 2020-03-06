@@ -245,8 +245,8 @@ async function music(msg) {
 	return null;
 }
 
-async function remindMe(msg) {
-	const params = msg.split(" ");
+function remindMe(msg) {
+	const params = msg.content.split(" ");
 	const remindVars = ["minutes", "hours", "days"];
 	const remindVarsValues = {
 		minutes: 60000,
