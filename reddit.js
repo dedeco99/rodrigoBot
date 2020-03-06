@@ -76,6 +76,10 @@ async function getRedditPosts(data, accessToken) {
 	const json = res.data;
 	const response = formatResponse(json);
 
+	if (response.title.toLowerCase().match(/cock|dick|penis/g)) {
+		return await getRedditPosts(data, accessToken);
+	}
+
 	return embed.createRedditEmbed(response);
 }
 

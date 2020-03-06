@@ -10,9 +10,12 @@ const embed = require("./embed");
 
 function deleteLastMsg(msg) {
 	if (lastMsgs.length) {
-		lastMsgs[lastMsgs.length - 1].delete();
-		lastMsgs.pop();
-		msg.delete();
+		const lastMessage = lastMsgs[lastMsgs.length - 1];
+		if (lastMessage.channel.id === msg.channel.id) {
+			lastMessage.delete();
+			lastMsgs.pop();
+			msg.delete();
+		}
 	}
 }
 
@@ -245,6 +248,29 @@ async function music(msg) {
 	return null;
 }
 
+function remindMe(msg) {
+	const params = msg.content.split(" ");
+	const remindVars = ["minutes", "hours", "days"];
+	const remindVarsValues = {
+		minutes: 60000,
+		hours: 60000 * 60,
+		days: 60000 * 60 * 24,
+	};
+
+	// Get reminder, remind time, and remind time unit
+	const remindUnit = params.find(param => remindVars.includes(param));
+	const remindTime = Number(params[params.indexOf(remindUnit) - 1] || 1);
+	const reminder = params.filter((param) => {
+		return params.indexOf(param) > 2 && params.indexOf(param) < params.length - 3;
+	});
+
+	setTimeout(() => {
+		msg.channel.send(reminder.join(" "));
+	}, remindTime * remindVarsValues[remindUnit]);
+
+	return "Ja te lembro";
+}
+
 module.exports = {
 	deleteLastMsg,
 	answer,
@@ -256,4 +282,5 @@ module.exports = {
 	vote,
 	price,
 	music,
+	remindMe,
 };
