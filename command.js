@@ -101,12 +101,14 @@ function checkForCommand(msg, client) {
 			return feat.command === command;
 		});
 
-		try {
-			return feature.func(msg, client);
-		} catch (err) {
-			log.error({ status: "command", data: err.stack });
+		if (feature) {
+			try {
+				return feature.func(msg, client);
+			} catch (err) {
+				log.error({ status: "command", data: err.stack });
 
-			return null;
+				return null;
+			}
 		}
 	}
 
