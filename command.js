@@ -15,7 +15,7 @@ const log = require("./log");
 const CustomCommand = require("./models/customCommand");
 
 const features = [
-	{ command: "delete", func: utils.deleteLastMsg },
+	{ command: ["apagar", "delete"], func: utils.deleteLastMsg },
 	{ command: "define", func: utils.define },
 	{ command: "procura", func: utils.search },
 	{ command: "responde", func: utils.answer },
@@ -95,16 +95,17 @@ function checkForCommand(msg, client) {
 		const command = msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
 		console.log(command);
 
-		const feature = features.find(feat => feat.command === command);
+		const feature = features.find((feat) => {
+			if (Array.isArray(feat)) return feat.command.includes(command);
+			return feat.command === command;
+		});
 
-		if (feature) {
-			try {
-				return feature.func(msg, client);
-			} catch (err) {
-				log.error({ status: "command", data: err.stack });
+		try {
+			return feature.func(msg, client);
+		} catch (err) {
+			log.error({ status: "command", data: err.stack });
 
-				return null;
-			}
+			return null;
 		}
 	}
 
