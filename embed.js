@@ -1,24 +1,22 @@
-const discord = require("discord.js");
-
 function createRedditEmbed(res) {
-	const embed = new discord.RichEmbed();
+	const embed = {};
 
 	if (res.contentVideo !== "") return res.contentVideo;
 
-	embed.setTitle(res.title);
-	embed.setURL(res.url);
-	embed.setColor("0x00AE86");
+	embed.title = res.title;
+	embed.url = res.url;
+	embed.color = "0x00AE86";
 
 	if (res.content !== "") {
-		embed.setThumbnail(res.image);
-		embed.addField("Content", res.content);
+		embed.thumbnail = { url: res.image };
+		embed.fields = [{ name: "Content", value: res.content }];
 	} else if (res.contentImage !== "") {
-		embed.setImage(res.contentImage);
+		embed.image = { url: res.contentImage };
 	}
 
-	embed.setFooter(`From: ${res.subreddit} | Upvotes: ${res.score} | `);
+	embed.footer = { text: `From: ${res.subreddit} | Upvotes: ${res.score} | ` };
 
-	return embed;
+	return { embed };
 
 }
 
@@ -27,64 +25,82 @@ function prettyNumber(number) {
 }
 
 function createCryptoEmbed(res) {
-	const embed = new discord.RichEmbed();
+	const embed = {};
 
-	embed.setTitle(`${res.rank}. ${res.name} (${res.symbol})`);
-	embed.setColor("0x00AE86");
-
-	embed.addField("Price (€)", `${res.priceEur.toFixed(2)} €`, true);
+	embed.title = `${res.rank}. ${res.name} (${res.symbol})`;
+	embed.color = "0x00AE86";
 
 	const marketcapEur = prettyNumber(res.marketcapEur);
-	embed.addField("Marketcap (€)", `${marketcapEur} €`, true);
-
 	const availableSupply = prettyNumber(res.availableSupply);
-	embed.addField("Available Supply", `${availableSupply} ${res.symbol}`, true);
-
 	const totalSupply = prettyNumber(res.totalSupply);
-	embed.addField("Total Supply", `${totalSupply} ${res.symbol}`, true);
 
-	embed.setFooter(`1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(2)}%`);
+	embed.fields = [
+		{
+			name: "Price (€)",
+			value: `${res.priceEur.toFixed(2)} €`,
+			inline: true,
+		},
+		{
+			name: "Marketcap (€)",
+			value: `${marketcapEur} €`,
+			inline: true,
+		},
+		{
+			name: "Available Supply",
+			value: `${availableSupply} ${res.symbol}`,
+			inline: true,
+		},
+		{
+			name: "Total Supply",
+			value: `${totalSupply} ${res.symbol}`,
+			inline: true,
+		},
+	];
 
-	return embed;
+	embed.footer = { text: `1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(2)}%` };
+
+	return { embed };
 }
 
 function createSearchEmbed(res) {
-	const embed = new discord.RichEmbed();
+	const embed = {};
 
-	embed.setTitle(res[0].topic);
-	embed.setColor("0x00AE86");
+	embed.title = res[0].topic;
+	embed.color = "0x00AE86";
 
+	embed.fields = [];
 	for (let i = 0; i < 3; i++) {
-		embed.addField(res[i].title, res[i].link);
-		embed.addField("Description", res[i].description);
+		embed.fields.push({ name: res[i].title, value: res[i].link });
+		embed.fields.push({ name: "Description", value: res[i].description });
 	}
 
-	return embed;
+	return { embed };
 }
 
 function createDefineEmbed(res) {
-	const embed = new discord.RichEmbed();
+	const embed = {};
 
-	embed.setTitle(res.word);
-	embed.setColor("0x00AE86");
-	embed.addField(res.definition, res.example);
+	embed.title = res.word;
+	embed.color = "0x00AE86";
+	embed.fields = [{ name: res.definition, value: res.example }];
 
-	return embed;
+	return { embed };
 }
 
 function createPollEmbed(msg, res) {
-	const embed = new discord.RichEmbed();
+	const embed = {};
 
-	embed.setColor("0x00AE86");
-	embed.setTitle(res.title);
+	embed.title = res.title;
+	embed.color = "0x00AE86";
 
 	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
 
+	embed.fields = [];
 	for (let i = 0; i < res.options.length; i++) {
-		embed.addField("----------", `${reacts[i]} - ${res.options[i]}`);
+		embed.fields.push({ name: "----------", value: `${reacts[i]} - ${res.options[i]}` });
 	}
 
-	msg.channel.send(embed)
+	msg.channel.send({ embed })
 		.then(async (message) => {
 			for (let i = 0; i < res.options.length; i++) {
 				// TODO: Promise.all
@@ -94,34 +110,35 @@ function createPollEmbed(msg, res) {
 }
 
 function createInstaEmbed(res) {
-	const embed = new discord.RichEmbed();
+	const embed = {};
 
-	embed.setColor("0xbc2a8d");
-	embed.setThumbnail(res.profilePic);
-	embed.setTitle(res.name);
-	embed.setURL(res.url);
-	embed.addField("Bio", res.bio);
+	embed.title = res.name;
+	embed.color = "0xbc2a8d";
+	embed.thumbnail = { url: res.profilePic };
+	embed.url = res.url;
+	embed.fields = [{ name: "Bio", value: res.bio }];
 
 	if (res.image === null) {
-		embed.addField("Erro", res.error);
+		embed.fields.push({ name: "Erro", value: res.error });
 	} else {
-		embed.setImage(res.image);
+		embed.image = { url: res.image };
 	}
 
-	embed.setFooter(`Posts: ${res.posts} | Followers: ${res.followers} | Follows: ${res.follows}`);
+	embed.footer = { text: `Posts: ${res.posts} | Followers: ${res.followers} | Follows: ${res.follows}` };
 
-	return embed;
+	return { embed };
 }
 
 function createPriceEmbed(res) {
-	const embed = new discord.RichEmbed();
+	const embed = {};
 
-	embed.setColor("0xff9900");
-	embed.setTitle(res[0].search);
-	embed.setURL(res[0].url);
+	embed.title = res[0].search;
+	embed.color = "0xff9900";
+	embed.url = res[0].url;
 
+	embed.fields = [];
 	for (let i = 0; i < res.length; i++) {
-		embed.addField(res[i].price, `[${res[i].product}](${res[i].productUrl})`);
+		embed.fields.push({ name: res[i].price, value: `[${res[i].product}](${res[i].productUrl})` });
 	}
 
 	return embed;
