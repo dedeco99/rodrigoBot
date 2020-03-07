@@ -5,7 +5,7 @@ function createRedditEmbed(res) {
 
 	embed.title = res.title;
 	embed.url = res.url;
-	embed.color = "0x00AE86";
+	embed.color = 0x00AE86;
 
 	if (res.content !== "") {
 		embed.thumbnail = { url: res.image };
@@ -28,7 +28,7 @@ function createCryptoEmbed(res) {
 	const embed = {};
 
 	embed.title = `${res.rank}. ${res.name} (${res.symbol})`;
-	embed.color = "0x00AE86";
+	embed.color = 0x00AE86;
 
 	const marketcapEur = prettyNumber(res.marketcapEur);
 	const availableSupply = prettyNumber(res.availableSupply);
@@ -66,7 +66,7 @@ function createSearchEmbed(res) {
 	const embed = {};
 
 	embed.title = res[0].topic;
-	embed.color = "0x00AE86";
+	embed.color = 0x00AE86;
 
 	embed.fields = [];
 	for (let i = 0; i < 3; i++) {
@@ -81,7 +81,7 @@ function createDefineEmbed(res) {
 	const embed = {};
 
 	embed.title = res.word;
-	embed.color = "0x00AE86";
+	embed.color = 0x00AE86;
 	embed.fields = [{ name: res.definition, value: res.example }];
 
 	return { embed };
@@ -91,7 +91,7 @@ function createPollEmbed(msg, res) {
 	const embed = {};
 
 	embed.title = res.title;
-	embed.color = "0x00AE86";
+	embed.color = 0x00AE86;
 
 	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
 
@@ -113,7 +113,7 @@ function createInstaEmbed(res) {
 	const embed = {};
 
 	embed.title = res.name;
-	embed.color = "0xbc2a8d";
+	embed.color = 0xbc2a8d;
 	embed.thumbnail = { url: res.profilePic };
 	embed.url = res.url;
 	embed.fields = [{ name: "Bio", value: res.bio }];
@@ -133,7 +133,7 @@ function createPriceEmbed(res) {
 	const embed = {};
 
 	embed.title = res[0].search;
-	embed.color = "0xff9900";
+	embed.color = 0xff9900;
 	embed.url = res[0].url;
 
 	embed.fields = [];
