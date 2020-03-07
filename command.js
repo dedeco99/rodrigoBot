@@ -44,8 +44,16 @@ const features = [
 
 	{ command: "custom", func: custom.checkForCommand },
 
-	{ command: ["good", "nice", "best", "bom", "bem", "grande"], func: utils.compliment },
-	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], func: utils.insult },
+	{
+		command: ["good", "nice", "best", "bom", "bem", "grande"],
+		includes: true,
+		func: utils.compliment,
+	},
+	{
+		command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"],
+		includes: true,
+		func: utils.insult,
+	},
 ];
 
 async function checkForCommand(msg) {
@@ -57,13 +65,22 @@ async function checkForCommand(msg) {
 		if (lastMsgs.length > 10) lastMsgs.shift();
 	}
 
-	if (firstWord === triggerWord) {
+	if (msg.content.toLowerCase().includes(triggerWord)) {
 		const command = msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
 		console.log(command);
 
 		const feature = features.find((feat) => {
-			if (Array.isArray(feat.command)) return feat.command.includes(command);
-			return feat.command === command;
+			if (!feat.includes && firstWord === triggerWord) {
+				if (Array.isArray(feat.command)) return feat.command.includes(command);
+				return feat.command === command;
+			} else if (feat.includes) {
+				if (Array.isArray(feat.command)) {
+					return feat.command.some(c => msg.content.includes(c));
+				}
+				return msg.content.includes(feat.command);
+			}
+
+			return false;
 		});
 
 		if (feature) {
@@ -75,9 +92,7 @@ async function checkForCommand(msg) {
 				return null;
 			}
 		}
-	}
 
-	if (msg.content.toLowerCase().includes(triggerWord)) {
 		const customCommands = await CustomCommand.find({ guild: msg.guild.id });
 
 		const customCommand = customCommands.find(c => msg.content.includes(c.word));
