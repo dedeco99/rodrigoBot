@@ -40,7 +40,12 @@ async function run() {
 
 	schedule.scheduleJob("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
-			$expr: { $eq: [{ $dayOfYear: "$date" }, { $dayOfYear: new Date() }] },
+			$expr: {
+				$and: [
+					{ $eq: [{ $dayOfMonth: "$date" }, { $dayOfMonth: new Date() }] },
+					{ $eq: [{ $month: "$date" }, { $month: new Date() }] },
+				],
+			},
 		});
 
 		for (const birthday of birthdays) {
