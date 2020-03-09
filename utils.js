@@ -1,7 +1,8 @@
 /* global lastMsgs musicPlayers */
 
-// const cheerio = require("cheerio");
+const cheerio = require("cheerio");
 const ytdl = require("ytdl-core");
+const moment = require("moment");
 
 const { get } = require("./request");
 const secrets = require("./secrets");
@@ -275,6 +276,42 @@ function remindMe(msg) {
 	return "Ja te lembro";
 }
 
+function sanitizeString(str) {
+	const newStr = str.replace(/[^a-z0-9áéíóúñü \.,_-]/gim, "");
+	return newStr.trim();
+}
+
+async function getRadar(msg, page = 0, data = []) {
+	const params = msg.content.split(" ");
+	const location = params[2];
+
+	const url = `https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=${page}`;
+
+	const res = await get(url);
+	const $ = cheerio.load(res.data);
+
+	const response = data.concat($(".panel").toArray().map((elem) => {
+		return {
+			date: $(elem).find(".panel-heading p").text().trim().split(" ")[0],
+			location: $(elem).find(".panel-body h4").text(),
+			description: $(elem).find(".panel-body .lead").text(),
+		};
+	}));
+
+	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
+		console.log("gooood");
+		return getRadar(msg, page + 1, response);
+	}
+
+	const radarsByLocation = response.filter((radar) => {
+		return moment(radar.date, "DD/MM/YYYY").diff(moment(), "days") === 0 &&
+			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
+	});
+
+	return embed.createRadarEmbed(location, radarsByLocation);
+
+}
+
 async function compliment() {
 	const metaInfo = await updateMeta({ likes: true });
 
@@ -300,6 +337,7 @@ module.exports = {
 	price,
 	music,
 	remindMe,
+	getRadar,
 	compliment,
 	insult,
 };
