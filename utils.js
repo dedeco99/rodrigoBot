@@ -308,7 +308,7 @@ async function getRadar(msg, page = 0, data = []) {
 			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
 	});
 
-	return embed.createRadarEmbed(location, radarsByLocation);
+	return embed.createRadarEmbed(radarsByLocation[0].location, radarsByLocation);
 
 }
 
