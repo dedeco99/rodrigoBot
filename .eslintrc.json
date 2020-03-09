@@ -90,6 +90,7 @@
 		"no-unused-expressions": "error",
 		"no-useless-call": "error",
 		"no-useless-concat": "error",
+		"no-useless-escape": 0,
 		"no-useless-return": "error",
 		"no-void": "error",
 		// "no-warning-comments": "error",
