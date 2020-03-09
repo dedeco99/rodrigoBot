@@ -277,7 +277,7 @@ function remindMe(msg) {
 }
 
 function sanitizeString(str) {
-	const newStr = str.replace(/[^a-z0-9áéíóúñü \.,_-]/gim, "");
+	const newStr = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 	return newStr.trim();
 }
 
@@ -292,14 +292,14 @@ async function getRadar(msg, page = 0, data = []) {
 
 	const response = data.concat($(".panel").toArray().map((elem) => {
 		return {
-			date: $(elem).find(".panel-heading p").text().trim().split(" ")[0],
+			date: $(elem).find(".panel-heading p").text().trim()
+				.split(" ")[0],
 			location: $(elem).find(".panel-body h4").text(),
 			description: $(elem).find(".panel-body .lead").text(),
 		};
 	}));
 
 	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
-		console.log("gooood");
 		return getRadar(msg, page + 1, response);
 	}
 
@@ -308,7 +308,10 @@ async function getRadar(msg, page = 0, data = []) {
 			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
 	});
 
-	return embed.createRadarEmbed(location, radarsByLocation);
+	const title = radarsByLocation[0].location.charAt(0).toUpperCase() +
+		radarsByLocation[0].location.slice(1).toLowerCase();
+
+	return embed.createRadarEmbed(title, radarsByLocation);
 
 }
 
