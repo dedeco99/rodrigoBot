@@ -281,11 +281,15 @@ async function getRadar(msg) {
 	const res = await get(url);
 	const $ = cheerio.load(res.data);
 
-	const response = $(".panel-body").toArray().map((elem) => {
-		return { place: $(elem).find("h4").text(), text: $(elem).find(".lead").text() };
+	const response = $(".panel").toArray().map((elem) => {
+		return {
+			date: new Date($(elem).find(".panel-heading p").text()),
+			place: $(elem).find(".panel-body h4").text(),
+			text: $(elem).find(".panel-body .lead").text(),
+		};
 	});
 
-	return response;
+	return null;
 }
 
 async function compliment() {
