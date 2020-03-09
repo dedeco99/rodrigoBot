@@ -69,7 +69,7 @@ function createRadarEmbed(location, radars) {
 	embed.color = 0x00AE86;
 
 	embed.fields = [];
-	for (const radar of radars) embed.fields.push({ name: "Radar", value: radar.description });
+	for (const radar of radars) embed.fields.push({ name: radar.date, value: radar.description });
 
 	return { embed };
 }
