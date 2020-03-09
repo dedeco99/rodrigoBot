@@ -275,20 +275,35 @@ function remindMe(msg) {
 	return "Ja te lembro";
 }
 
-async function getRadar(msg) {
-	const url = "https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=1";
+function sanitizeString(str) {
+	const newStr = str.replace(/[^a-z0-9áéíóúñü \.,_-]/gim, "");
+	return newStr.trim();
+}
+
+async function getRadar(msg, page = 0, data = []) {
+	const params = msg.content.split(" ");
+	const location = params[2];
+
+	const url = `https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=${page}`;
 
 	const res = await get(url);
 	const $ = cheerio.load(res.data);
 
-	const response = $(".panel").toArray().map((elem) => {
+	const response = data.concat($(".panel").toArray().map((elem) => {
 		return {
 			date: new Date($(elem).find(".panel-heading p").text()),
-			place: $(elem).find(".panel-body h4").text(),
-			text: $(elem).find(".panel-body .lead").text(),
+			location: $(elem).find(".panel-body h4").text(),
+			description: $(elem).find(".panel-body .lead").text(),
 		};
-	});
+	}));
 
+	if (response[response.length - 1].date <= new Date()) getRadar(msg, page + 1, response);
+	else {
+		const radarsByLocation = response.filter(radar => radar.date <= new Date() &&
+sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase());
+
+		return embed.createRadarEmbed(location, radarsByLocation);
+	}
 	return null;
 }
 

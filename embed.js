@@ -62,6 +62,18 @@ function createCryptoEmbed(res) {
 	return { embed };
 }
 
+function createRadarEmbed(location, radars) {
+	const embed = {};
+
+	embed.title = location;
+	embed.color = 0x00AE86;
+
+	embed.fields = [];
+	for (const radar of radars) embed.fields.push({ name: "Radar", value: radar.description });
+
+	return { embed };
+}
+
 function createSearchEmbed(res) {
 	const embed = {};
 
@@ -148,6 +160,7 @@ module.exports = {
 	createRedditEmbed,
 	createCryptoEmbed,
 	createSearchEmbed,
+	createRadarEmbed,
 	createDefineEmbed,
 	createPollEmbed,
 	createInstaEmbed,
