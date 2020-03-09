@@ -2,6 +2,7 @@
 
 const cheerio = require("cheerio");
 const ytdl = require("ytdl-core");
+const moment = require("moment");
 
 const { get } = require("./request");
 const secrets = require("./secrets");
@@ -291,20 +292,24 @@ async function getRadar(msg, page = 0, data = []) {
 
 	const response = data.concat($(".panel").toArray().map((elem) => {
 		return {
-			date: new Date($(elem).find(".panel-heading p").text()),
+			date: $(elem).find(".panel-heading p").text().trim().split(" ")[0],
 			location: $(elem).find(".panel-body h4").text(),
 			description: $(elem).find(".panel-body .lead").text(),
 		};
 	}));
 
-	if (response[response.length - 1].date <= new Date()) getRadar(msg, page + 1, response);
-	else {
-		const radarsByLocation = response.filter(radar => radar.date <= new Date() &&
-sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase());
-
-		return embed.createRadarEmbed(location, radarsByLocation);
+	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
+		console.log("gooood");
+		return getRadar(msg, page + 1, response);
 	}
-	return null;
+
+	const radarsByLocation = response.filter((radar) => {
+		return moment(radar.date, "DD/MM/YYYY").diff(moment(), "days") === 0 &&
+			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
+	});
+
+	return embed.createRadarEmbed(location, radarsByLocation);
+
 }
 
 async function compliment() {
