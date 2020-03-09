@@ -292,7 +292,8 @@ async function getRadar(msg, page = 0, data = []) {
 
 	const response = data.concat($(".panel").toArray().map((elem) => {
 		return {
-			date: $(elem).find(".panel-heading p").text().trim().split(" ")[0],
+			date: $(elem).find(".panel-heading p").text().trim()
+				.split(" ")[0],
 			location: $(elem).find(".panel-body h4").text(),
 			description: $(elem).find(".panel-body .lead").text(),
 		};
@@ -308,7 +309,7 @@ async function getRadar(msg, page = 0, data = []) {
 			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
 	});
 
-	return embed.createRadarEmbed(radarsByLocation[0].location, radarsByLocation);
+	return embed.createRadarEmbed(radarsByLocation[0].location.charAt(0).toUpperCase() + radarsByLocation[0].location.slice(1).toLowerCase(), radarsByLocation);
 
 }
 
