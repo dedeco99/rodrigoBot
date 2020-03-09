@@ -277,7 +277,7 @@ function remindMe(msg) {
 }
 
 function sanitizeString(str) {
-	const newStr = str.replace(/[^a-z0-9áéíóúñü \.,_-]/gim, "");
+	const newStr = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 	return newStr.trim();
 }
 
