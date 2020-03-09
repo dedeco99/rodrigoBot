@@ -1,6 +1,6 @@
 /* global lastMsgs musicPlayers */
 
-// const cheerio = require("cheerio");
+const cheerio = require("cheerio");
 const ytdl = require("ytdl-core");
 
 const { get } = require("./request");
@@ -275,6 +275,19 @@ function remindMe(msg) {
 	return "Ja te lembro";
 }
 
+async function getRadar(msg) {
+	const url = "https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=1";
+
+	const res = await get(url);
+	const $ = cheerio.load(res.data);
+
+	const response = $(".panel-body").toArray().map((elem) => {
+		return { place: $(elem).find("h4").text(), text: $(elem).find(".lead").text() };
+	});
+
+	return response;
+}
+
 async function compliment() {
 	const metaInfo = await updateMeta({ likes: true });
 
@@ -300,6 +313,7 @@ module.exports = {
 	price,
 	music,
 	remindMe,
+	getRadar,
 	compliment,
 	insult,
 };
