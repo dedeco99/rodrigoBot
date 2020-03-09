@@ -300,7 +300,6 @@ async function getRadar(msg, page = 0, data = []) {
 	}));
 
 	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
-		console.log("gooood");
 		return getRadar(msg, page + 1, response);
 	}
 
@@ -309,7 +308,10 @@ async function getRadar(msg, page = 0, data = []) {
 			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
 	});
 
-	return embed.createRadarEmbed(radarsByLocation[0].location.charAt(0).toUpperCase() + radarsByLocation[0].location.slice(1).toLowerCase(), radarsByLocation);
+	const title = radarsByLocation[0].location.charAt(0).toUpperCase() +
+		radarsByLocation[0].location.slice(1).toLowerCase();
+
+	return embed.createRadarEmbed(title, radarsByLocation);
 
 }
 
