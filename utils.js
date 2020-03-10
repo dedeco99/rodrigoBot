@@ -107,6 +107,28 @@ function sort(msg) {
 	return randomized.join(" > ");
 }
 
+async function weather(msg) {
+	const params = msg.content.split(" ");
+	const location = params[2];
+
+	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${secrets.openWeatherMapKey}`;
+
+	const res = await get(url);
+
+	const weatherInfo = {
+		forecast: res.data.weather[0].main,
+		temp: res.data.main.temp,
+		feelsLike: res.data.main.feels_like,
+		minTemp: res.data.main.temp_min.toFixed(0).toString(),
+		maxTemp: res.data.main.temp_max.toFixed(0).toString(),
+		wind: res.data.wind.speed,
+		sunrise: moment(res.data.sys.sunrise * 1000).format("HH:mm"),
+		sunset: moment(res.data.sys.sunset * 1000).format("HH:mm"),
+	};
+
+	return embed.createWeatherEmbed(weatherInfo);
+}
+
 async function convert(msg) {
 	const numberToConvert = msg.content.split(" ")[2];
 	const currencyToConvert = msg.content.split(" ")[3].toUpperCase();
@@ -339,6 +361,7 @@ module.exports = {
 	price,
 	music,
 	remindMe,
+	weather,
 	getRadar,
 	compliment,
 	insult,

@@ -74,6 +74,48 @@ function createRadarEmbed(location, radars) {
 	return { embed };
 }
 
+function createWeatherEmbed(res) {
+	const embed = {};
+
+	embed.title = res.forecast;
+	embed.color = 0x00AE86;
+
+	embed.fields = [
+		{
+			name: "Temperatura atual",
+			value: `${res.temp} (${res.feelsLike}) °C`,
+			inline: true,
+		},
+		{
+			name: "Temperatura máxima",
+			value: `${res.maxTemp} °C`,
+			inline: true,
+		},
+		{
+			name: "Temperatura mínima",
+			value: `${res.minTemp} °C`,
+			inline: true,
+		},
+		{
+			name: "Vento",
+			value: `${res.wind} km/h`,
+			inline: true,
+		},
+		{
+			name: "Nascer do sol",
+			value: res.sunrise,
+			inline: true,
+		},
+		{
+			name: "Pôr do sol",
+			value: res.sunset,
+			inline: true,
+		},
+	];
+
+	return { embed };
+}
+
 function createSearchEmbed(res) {
 	const embed = {};
 
@@ -160,6 +202,7 @@ module.exports = {
 	createRedditEmbed,
 	createCryptoEmbed,
 	createSearchEmbed,
+	createWeatherEmbed,
 	createRadarEmbed,
 	createDefineEmbed,
 	createPollEmbed,

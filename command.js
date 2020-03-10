@@ -26,6 +26,7 @@ const features = [
 	{ command: "music", func: utils.music },
 	{ command: "remindme", func: utils.remindMe },
 	{ command: "radar", func: utils.getRadar },
+	{ command: "weather", func: utils.weather },
 
 	{ command: "meme", func: memes.checkForMemes },
 
