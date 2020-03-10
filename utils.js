@@ -3,6 +3,7 @@
 const cheerio = require("cheerio");
 const ytdl = require("ytdl-core");
 const moment = require("moment");
+const { evaluate } = require("mathjs");
 
 const { get } = require("./request");
 const secrets = require("./secrets");
@@ -150,11 +151,10 @@ async function convert(msg) {
 }
 
 function math(msg) {
-	// eslint-disable-next-line no-unused-vars
 	const expression = msg.content.split("math ")[1];
-	// const result = eval(expression);
+	const result = evaluate(expression);
 
-	return "Esta função foi tão violada no rabinho que foi descontinuada";
+	return result;
 }
 
 async function vote(msg) {
