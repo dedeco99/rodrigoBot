@@ -329,8 +329,10 @@ async function getRadar(msg, page = 0, data = []) {
 			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
 	});
 
-	const title = radarsByLocation[0].location.charAt(0).toUpperCase() +
-		radarsByLocation[0].location.slice(1).toLowerCase();
+	const title = radarsByLocation.length ?
+		radarsByLocation[0].location.charAt(0).toUpperCase() +
+		radarsByLocation[0].location.slice(1).toLowerCase() :
+		location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
 
 	return embed.createRadarEmbed(title, radarsByLocation);
 

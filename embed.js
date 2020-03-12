@@ -71,6 +71,8 @@ function createRadarEmbed(location, radars) {
 	embed.fields = [];
 	for (const radar of radars) embed.fields.push({ name: radar.date, value: radar.description });
 
+	if (!radars.length) embed.description = "Não há radares";
+
 	return { embed };
 }
 
