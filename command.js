@@ -103,7 +103,7 @@ async function checkForCommand(msg) {
 			if (customCommand.message.toLowerCase().includes(triggerWord)) {
 				const message = await checkForCommand({ ...msg, content: customCommand.message });
 
-				if (message) return message;
+				if (message !== null) return message;
 			} else {
 				return customCommand.message;
 			}

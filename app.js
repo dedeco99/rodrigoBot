@@ -16,7 +16,7 @@ const Cronjob = require("./models/cronjob");
 async function handleMessage(msg) {
 	const message = await checkForCommand(msg);
 
-	if (message) msg.channel.send(message);
+	if (message !== null) msg.channel.send(message);
 }
 
 async function run() {
