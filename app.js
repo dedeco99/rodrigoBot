@@ -17,7 +17,7 @@ async function handleMessage(msg) {
 	const message = await checkForCommand(msg);
 
 	// eslint-disable-next-line no-undefined
-	if (message !== null || message !== undefined) msg.channel.send(message);
+	if (message !== null && message !== undefined) msg.channel.send(message);
 }
 
 async function run() {
