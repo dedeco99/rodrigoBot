@@ -1,7 +1,7 @@
 /* global lastMsgs musicPlayers */
 
 const cheerio = require("cheerio");
-const ytdl = require("ytdl-core");
+const ytdl = require("ytdl-core-discord");
 const moment = require("moment");
 const { evaluate } = require("mathjs");
 
@@ -228,12 +228,12 @@ function price() {
 }
 
 async function music(msg) {
-	const play = (musicPlayer, connection) => {
-		const stream = ytdl(musicPlayer.queue[0], { filter: "audioonly" });
-		const streamOptions = { seek: 0, volume: 0.5 };
-		musicPlayer.dispatcher = connection.playStream(stream, streamOptions);
+	const play = async (musicPlayer, connection) => {
+		const stream = await ytdl(musicPlayer.queue[0]);
+		const streamOptions = { seek: 0, volume: 0.5, type: "opus", highWaterMark: 512 };
+		musicPlayer.dispatcher = connection.play(stream, streamOptions);
 
-		musicPlayer.dispatcher.on("end", () => {
+		musicPlayer.dispatcher.on("finish", () => {
 			musicPlayer.queue.shift();
 			if (musicPlayer.queue.length) {
 				play(musicPlayer, connection);
@@ -246,24 +246,27 @@ async function music(msg) {
 	const params = msg.content.split(" ");
 	const command = params[2].toLowerCase();
 
-	if (!musicPlayers[msg.member.guild.id]) musicPlayers[msg.member.guild.id] = { queue: [] };
+	if (!musicPlayers[msg.channel.guild.id]) musicPlayers[msg.channel.guild.id] = { queue: [] };
 
-	const musicPlayer = musicPlayers[msg.member.guild.id];
+	const musicPlayer = musicPlayers[msg.channel.guild.id];
 
 	if (command === "play") {
-		if (!msg.member.voiceChannel) return "Vai para um canal de voz primeiro sua xixada!";
+		const userVoiceState = msg.channel.guild.voiceStates.cache.get(msg.author.id);
+
+		if (!userVoiceState) return "Vai para um canal de voz primeiro sua xixada!";
 
 		musicPlayer.queue.push(params[3]);
 
-		if (!msg.member.guild.voiceConnection) {
-			const connection = await msg.member.voiceChannel.join();
+		if (!musicPlayer.dispatcher) {
+			const userVoiceChannel = msg.channel.guild.channels.cache.get(userVoiceState.channelID);
+			const connection = await userVoiceChannel.join();
 
 			play(musicPlayer, connection);
 		}
 	} else if (musicPlayer && command === "skip") {
 		musicPlayer.dispatcher.end();
 	} else if (musicPlayer && command === "pause") {
-		musicPlayer.dispatcher.pause();
+		musicPlayer.dispatcher.pause(true);
 	} else if (musicPlayer && command === "resume") {
 		musicPlayer.dispatcher.resume();
 	} else if (musicPlayer && command === "end") {

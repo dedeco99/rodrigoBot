@@ -16,7 +16,8 @@ const Cronjob = require("./models/cronjob");
 async function handleMessage(msg) {
 	const message = await checkForCommand(msg);
 
-	if (message !== null) msg.channel.send(message);
+	// eslint-disable-next-line no-undefined
+	if (message !== null || message !== undefined) msg.channel.send(message);
 }
 
 async function run() {
@@ -49,17 +50,17 @@ async function run() {
 		});
 
 		for (const birthday of birthdays) {
-			client.channels.get(birthday.room).send(`Parabéns ${birthday.person}`);
+			client.channels.cache.get(birthday.room).send(`Parabéns ${birthday.person}`);
 		}
 	});
 
 	schedule.scheduleJob("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
-		if (notification) client.channels.get("525343734746054657").send(notification);
+		if (notification) client.channels.cache.get("525343734746054657").send(notification);
 
 		/*
 		notification = await twitch.fetchNotifications();
-		if (notification) client.channels.get("525343734746054657").send(notification);
+		if (notification) client.channels.cache.get("525343734746054657").send(notification);
 		*/
 	});
 
@@ -70,9 +71,9 @@ async function run() {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
 				const message = await checkForCommand({ content: cronjob.message });
 
-				if (message) client.channels.get(cronjob.room).send(message);
+				if (message) client.channels.cache.get(cronjob.room).send(message);
 			} else {
-				client.channels.get(cronjob.room).send(cronjob.message);
+				client.channels.cache.get(cronjob.room).send(cronjob.message);
 			}
 		});
 	}
