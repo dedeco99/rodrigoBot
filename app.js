@@ -1,7 +1,7 @@
 /* global client */
 
 const discord = require("discord.js");
-const schedule = require("node-schedule");
+const cron = require("node-cron");
 
 const secrets = require("./secrets");
 const { initialize } = require("./database");
@@ -39,7 +39,7 @@ async function run() {
 
 	client.on("message", msg => handleMessage(msg));
 
-	schedule.scheduleJob("0 8 * * *", async () => {
+	cron.schedule("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
 			$expr: {
 				$and: [
@@ -54,7 +54,7 @@ async function run() {
 		}
 	});
 
-	schedule.scheduleJob("0/20 * * * *", async () => {
+	cron.schedule("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
 		if (notification) client.channels.cache.get("525343734746054657").send(notification);
 
@@ -67,7 +67,7 @@ async function run() {
 	const cronjobs = await Cronjob.find({}).lean();
 
 	for (const cronjob of cronjobs) {
-		schedule.scheduleJob(cronjob.cron, async () => {
+		cron.schedule(cronjob.cron, async () => {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
 				const message = await checkForCommand({ content: cronjob.message });
 

@@ -1,6 +1,32 @@
-const instagram = require("instagram-scraping");
-
+const { get } = require("./request");
 const embed = require("./embed");
+
+function scrap(data) {
+	const dirtyJSON = JSON.parse(data.match(/window\._sharedData\s?=\s?({.+);<\/script>/)[1]);
+
+	const medias = dirtyJSON.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges.map(post => {
+		return {
+			mediaId: post.node.id,
+			shortcode: post.node.shortcode,
+			text: post.node.edge_media_to_caption.edges[0] && post.node.edge_media_to_caption.edges[0].node.text,
+			commentCount: post.node.edge_media_to_comment.count,
+			likeCount: post.node.edge_liked_by.count,
+			displayUrl: post.node.display_url,
+			ownerId: post.node.owner.id,
+			date: post.node.taken_at_timestamp,
+			thumbnail: post.node.thumbnail_src,
+			thumbnailResource: post.node.thumbnail_resources,
+			isVideo: post.node.is_video
+		};
+	});
+
+	const json = {
+		user: dirtyJSON.entry_data.ProfilePage[0].graphql.user,
+		medias,
+	};
+
+	return json;
+}
 
 function formatResponse(url, num, json) {
 	const profilePic = json.user.profile_pic_url_hd;
@@ -37,7 +63,7 @@ function formatResponse(url, num, json) {
 				finalNum = 0;
 			}
 
-			const image = images[finalNum].display_url;
+			const image = images[finalNum].displayUrl;
 			res.image = image;
 		} else {
 			res.error = "Este perfil não tem fotos";
@@ -53,11 +79,12 @@ async function getPost(msg) {
 	const url = `https://www.instagram.com/${person}/`;
 
 	try {
-		const json = await instagram.scrapeUserPage(person);
+		const res = await get(url);
 
-		const res = formatResponse(url, num, json);
+		const json = scrap(res.data);
+		const post = formatResponse(url, num, json);
 
-		return embed.createInstaEmbed(res);
+		return embed.createInstaEmbed(post);
 	} catch (err) {
 		console.log(err);
 		return "Claramente esse xixo não existe";
