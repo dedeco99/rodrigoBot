@@ -14,19 +14,20 @@ const log = require("./log");
 const CustomCommand = require("./models/customCommand");
 
 const features = [
-	{ command: ["apaga", "delete"], func: utils.deleteLastMsg },
+	{ command: ["delete", "apaga"], func: utils.deleteLastMsg },
 	{ command: "define", func: utils.define },
-	{ command: "procura", func: utils.search },
-	{ command: "responde", func: utils.answer },
+	{ command: ["search", "procura"], func: utils.search },
+	{ command: "answer", func: utils.answer },
 	{ command: "math", func: utils.math },
-	{ command: "ordena", func: utils.sort },
-	{ command: "converte", func: utils.convert },
+	{ command: ["sort", "ordena"], func: utils.sort },
+	{ command: ["convert", "converte"], func: utils.convert },
 	{ command: "vote", func: utils.vote },
 	{ command: "price", func: utils.price },
 	{ command: "music", func: utils.music },
 	{ command: "remindme", func: utils.remindMe },
 	{ command: "radar", func: utils.getRadar },
 	{ command: "weather", func: utils.weather },
+	{ command: "help", func: utils.help },
 
 	{ command: "meme", func: memes.checkForMemes },
 
@@ -68,7 +69,7 @@ async function checkForCommand(msg) {
 	}
 
 	if (msg.content.toLowerCase().includes(triggerWord)) {
-		const command = msg.content.slice(-1) === "?" ? "responde" : msg.content.split(" ")[1];
+		const command = msg.content.slice(-1) === "?" ? "answer" : msg.content.split(" ")[1];
 		console.log(command);
 
 		const feature = features.find((feat) => {

@@ -157,6 +157,10 @@ function math(msg) {
 	return result;
 }
 
+function help() {
+	return "https://dedeco99.github.io/rodrigoBot/";
+}
+
 async function vote(msg) {
 	const message = msg.content.split(" ");
 
@@ -362,6 +366,7 @@ module.exports = {
 	sort,
 	convert,
 	math,
+	help,
 	vote,
 	price,
 	music,
