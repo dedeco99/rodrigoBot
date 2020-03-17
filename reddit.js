@@ -170,7 +170,8 @@ async function checkForReddit(msg) {
 	try {
 		if (feature) return await feature.func(msg);
 
-		const subs = await Subreddit.find({ guild: msg.guild.id }).lean();
+		const query = msg.guild ? { guild: msg.guild.id } : {};
+		const subs = await Subreddit.find(query).lean();
 
 		const searchedSub = msg.content.split(" ")[2];
 		const sub = subs.find(s => s.name === searchedSub);
