@@ -131,7 +131,7 @@ async function checkForReddit(msg) {
 	const sub = subs.find(s => s.name === searchedSub);
 
 	try {
-		return await getAccessToken({ subreddit: sub ? sub.name : searchedSub });
+		return await getAccessToken({ subreddit: sub ? sub.subreddits : searchedSub });
 	} catch (err) {
 		return err.message;
 	}
