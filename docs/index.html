@@ -1,7 +1,319 @@
 <html>
 
+<head>
+	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+		integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+		integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+		crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+		integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+		crossorigin="anonymous"></script>
+
+	<style>
+		html {
+			scroll-behavior: smooth;
+		}
+
+		body {
+			margin-top: 20px;
+			margin-bottom: 20px;
+			background-color: rgb(45, 48, 50);
+			color: white;
+		}
+
+		a {
+			color: white;
+			text-decoration: none;
+		}
+
+		hr {
+			background-color: white;
+		}
+
+		.list-group-item {
+			background-color: rgb(37, 39, 40);
+			color: white;
+			border: 1px solid white;
+		}
+
+		#menu {
+			position: fixed;
+		}
+	</style>
+</head>
+
 <body>
-	Commands for rodrigoBot
+	<div class="container">
+		<div class="row">
+			<div class="col-md-2">
+				<ul class="list-group" id="menu">
+					<li class="list-group-item"><a href="#utils">Utils</a></li>
+					<li class="list-group-item"><a href="#music">Music</a></li>
+					<li class="list-group-item"><a href="#meme-creation">Meme Creation</a></li>
+					<li class="list-group-item"><a href="#reddit">Reddit</a></li>
+					<li class="list-group-item"><a href="#youtube">Youtube</a></li>
+					<li class="list-group-item"><a href="#twitch">Twitch</a></li>
+				</ul>
+			</div>
+			<div class="col-md-10">
+				<h5 id="utils">Utils</h5>
+				<ul class="list-group">
+					<li class="list-group-item" data-toggle="collapse" href="#define">
+						define
+						<div id="define">
+							<hr />
+							Example: rodrigo define «word»
+							<br />
+							Result: Embed with the urban dictionary definition of the word
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#search">
+						search
+						<div id="search">
+							<hr />
+							Example: rodrigo search «word»
+							<br />
+							Result: Embed with the first 5 google results
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#math">
+						math
+						<div id="math">
+							<hr />
+							Example: rodrigo math 1+1
+							<br />
+							Result: 2
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#sort">
+						sort
+						<div id="sort">
+							<hr />
+							Example: rodrigo sort randomly;words;sorted
+							<br />
+							Result: words > randomly > sorted
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#convert">
+						convert
+						<div id="convert">
+							<hr />
+							Example: rodrigo convert 50 USD to EUR
+							<br />
+							Result: 44.81
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#weather">
+						weather
+						<div id="weather">
+							<hr />
+							Example: rodrigo weather «location»
+							<br />
+							Result: Embed with the weather for that location
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#remindme">
+						remindme
+						<div id="remindme">
+							<hr />
+							Example: rodrigo remindme of «something» in «number» «minutes/hours»
+							<br />
+							Result: After the requested time the bot will return the message
+						</div>
+					</li>
+				</ul>
+				<br />
+				<h5 id="music">Music</h5>
+				<ul class="list-group">
+					<li class="list-group-item" data-toggle="collapse" href="#play">
+						play
+						<div id="play">
+							<hr />
+							Example: rodrigo music play «youtube link»
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#pause">
+						pause
+						<div id="pause">
+							<hr />
+							Example: rodrigo music pause
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#resume">
+						resume
+						<div id="resume">
+							<hr />
+							Example: rodrigo music resume
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#skip">
+						skip
+						<div id="skip">
+							<hr />
+							Example: rodrigo music skip
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#end">
+						end
+						<div id="end">
+							<hr />
+							Example: rodrigo music end
+						</div>
+					</li>
+				</ul>
+				<br />
+				<h5 id="meme-creation">Meme Creation</h5>
+				<ul class="list-group">
+					<li class="list-group-item" data-toggle="collapse" href="#truth">
+						truth
+						<div id="truth">
+							<hr />
+							Example: rodrigo meme truth «sentence»
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#safe">
+						safe
+						<div id="safe">
+							<hr />
+							Example: rodrigo meme safe «sentence»
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#drake">
+						drake
+						<div id="drake">
+							<hr />
+							Example: rodrigo meme drake «sentence1»;«sentence2»
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#facts">
+						facts
+						<div id="facts">
+							<hr />
+							Example: rodrigo meme facts «sentence»
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#button">
+						button
+						<div id="button">
+							<hr />
+							Example: rodrigo meme button «sentence»
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#choice">
+						choice
+						<div id="choice">
+							<hr />
+							Example: rodrigo meme choice «sentence1»;«sentence2»
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#pikachu">
+						pikachu
+						<div id="pikachu">
+							<hr />
+							Example: rodrigo meme pikachu «sentence1»;«sentence2»;«sentence3»
+						</div>
+					</li>
+				</ul>
+				<br />
+				<h5 id="reddit">Reddit</h5>
+				<ul class="list-group">
+					<li class="list-group-item" data-toggle="collapse" href="#reddit-post">
+						reddit
+						<div id="reddit-post">
+							<hr />
+							Example: rodrigo reddit «subreddit»
+						</div>
+					</li>
+				</ul>
+				<br />
+				<h5 id="youtube">Youtube</h5>
+				<ul class="list-group">
+					<li class="list-group-item" data-toggle="collapse" href="#youtube-video">
+						youtube
+						<div id="youtube-video">
+							<hr />
+							Example: rodrigo youtube «youtube channel name»
+							<br />
+							Result: Embed with the last youtube video from that channel
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#youtube-add">
+						add
+						<div id="youtube-add">
+							<hr />
+							Example: rodrigo youtube add «youtube channel name»
+							<br />
+							Result: Channel is added to notifications
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#youtube-remove">
+						remove
+						<div id="youtube-remove">
+							<hr />
+							Example: rodrigo youtube remove «youtube channel name»
+							<br />
+							Result: Channel is removed from notifications
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#youtube-get">
+						get
+						<div id="youtube-get">
+							<hr />
+							Example: rodrigo youtube get
+							<br />
+							Result: List of all the youtube channels
+							that will notify the configured text channel when there are new videos
+						</div>
+					</li>
+				</ul>
+				<br />
+				<h5 id="twitch">Twitch</h5>
+				<ul class="list-group">
+					<li class="list-group-item" data-toggle="collapse" href="#twitch-stream">
+						twitch
+						<div id="twitch-stream">
+							<hr />
+							Example: rodrigo twitch «twitch channel name»
+							<br />
+							Result: Twitch stream link
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#twitch-add">
+						add
+						<div id="twitch-add">
+							<hr />
+							Example: rodrigo twitch add «youtube channel name»
+							<br />
+							Result: Channel is added to notifications
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#twitch-remove">
+						remove
+						<div id="twitch-remove">
+							<hr />
+							Example: rodrigo twitch remove «youtube channel name»
+							<br />
+							Result: Channel is removed from notifications
+						</div>
+					</li>
+					<li class="list-group-item" data-toggle="collapse" href="#twitch-get">
+						get
+						<div id="twitch-get">
+							<hr />
+							Example: rodrigo twitch get
+							<br />
+							Result: List of all the twitch streams
+							that will notify the configured text channel when they go live
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
 </body>
 
 </html>
