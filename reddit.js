@@ -122,15 +122,59 @@ async function getRefreshToken() { /* eslint-disable-line no-unused-vars */
 	console.log(json);
 }
 
+async function addSubreddit(msg) {
+	const name = msg.content.split(" ")[3];
+	const subreddits = msg.content.split(" ")[4];
+
+	const subreddit = await Subreddit.findOne({ guild: msg.guild.id, name });
+
+	if (subreddit) return "Esse subreddit já existe seu lixo";
+
+	const newSubreddit = new Subreddit({ guild: msg.guild.id, name, subreddits });
+
+	await newSubreddit.save();
+
+	return "Subreddit adicionado com sucesso";
+}
+
+async function removeSubreddit(msg) {
+	const name = msg.content.split(" ")[3];
+
+	await Subreddit.deleteOne({ name });
+
+	return "Subreddit removido com sucesso";
+}
+
+async function getSubreddits(msg) {
+	let subreddits = await Subreddit.find({
+		$or: [{ guild: null }, { guild: msg.guild.id }],
+	}).sort({ name: 1 });
+
+	subreddits = subreddits.map(subreddit => subreddit.name).join(" | ");
+
+	return subreddits;
+}
+
 async function checkForReddit(msg) {
 	// await getRefreshToken();
 
-	const subs = await Subreddit.find({}).lean();
+	const features = [
+		{ command: "add", func: addSubreddit },
+		{ command: "remove", func: removeSubreddit },
+		{ command: "get", func: getSubreddits },
+	];
 
-	const searchedSub = msg.content.split(" ")[2];
-	const sub = subs.find(s => s.name === searchedSub);
+	const command = msg.content.split(" ")[2];
+	const feature = features.find(f => f.command === command);
 
 	try {
+		if (feature) return await feature.func(msg);
+
+		const subs = await Subreddit.find({ guild: msg.guild.id }).lean();
+
+		const searchedSub = msg.content.split(" ")[2];
+		const sub = subs.find(s => s.name === searchedSub);
+
 		return await getAccessToken({ subreddit: sub ? sub.subreddits : searchedSub });
 	} catch (err) {
 		return err.message;
