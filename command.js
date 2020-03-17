@@ -9,6 +9,7 @@ const youtube = require("./youtube");
 const twitch = require("./twitch");
 const instagram = require("./instagram");
 const custom = require("./custom");
+const birthday = require("./birthday");
 const log = require("./log");
 
 const CustomCommand = require("./models/customCommand");
@@ -46,6 +47,8 @@ const features = [
 	{ command: "twitch", func: twitch.checkForCommand },
 
 	{ command: "custom", func: custom.checkForCommand },
+
+	{ command: "birthday", func: birthday.checkForBirthday },
 
 	{
 		command: ["good", "nice", "best", "bom", "bem", "grande"],
