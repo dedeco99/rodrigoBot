@@ -10,6 +10,7 @@ const twitch = require("./twitch");
 const instagram = require("./instagram");
 const custom = require("./custom");
 const birthday = require("./birthday");
+const cronjob = require("./cronjob");
 const log = require("./log");
 
 const CustomCommand = require("./models/customCommand");
@@ -49,6 +50,8 @@ const features = [
 	{ command: "custom", func: custom.checkForCommand },
 
 	{ command: "birthday", func: birthday.checkForBirthday },
+
+	{ command: "cronjob", func: cronjob.checkForCronjob },
 
 	{
 		command: ["good", "nice", "best", "bom", "bem", "grande"],

@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const CronjobSchema = new Schema({
+	name: { type: String },
 	cron: { type: String },
 	message: { type: String },
 	room: { type: String },

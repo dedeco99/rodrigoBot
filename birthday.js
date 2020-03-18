@@ -29,7 +29,7 @@ async function removeBirthday(msg) {
 	return "Aniversário removido com sucesso";
 }
 
-async function getSubreddits(msg) {
+async function getBirthdays(msg) {
 	let birthdays = await Birthday.find({ room: msg.channel.id }).sort({ name: 1 });
 
 	birthdays = birthdays.map((birthday) => {
@@ -43,7 +43,7 @@ function checkForBirthday(msg) {
 	const features = [
 		{ command: "add", func: addBirthday },
 		{ command: "remove", func: removeBirthday },
-		{ command: "get", func: getSubreddits },
+		{ command: "get", func: getBirthdays },
 	];
 
 	const command = msg.content.split(" ")[2];
