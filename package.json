@@ -20,10 +20,10 @@
 		"axios": "^0.19.2",
 		"cheerio": "^1.0.0-rc.2",
 		"discord.js": "^12.0.2",
-		"jimp": "^0.9.5",
+		"jimp": "^0.9.6",
 		"mathjs": "^6.6.1",
 		"moment": "^2.24.0",
-		"mongoose": "^5.9.4",
+		"mongoose": "^5.9.5",
 		"node-cron": "^2.0.3",
 		"ytdl-core-discord": "^1.1.0"
 	}
