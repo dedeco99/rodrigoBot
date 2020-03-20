@@ -12,17 +12,21 @@ const Cronjob = require("../models/cronjob");
 
 async function addCronjob(msg) {
 	const message = msg.content.split("add ")[1];
-	const [name, cron, command] = message.split(";");
+	const [name, cronString, command] = message.split(";");
 
 	// TODO: validate cron string (cron.validate(cron);)
 
-	const cronjob = await Cronjob.findOne({ name, cron, message: command, room: msg.channel.id });
+	const cronjob = await Cronjob.findOne({
+		name,
+		cron: cronString,
+		message: command, room: msg.channel.id,
+	});
 
 	if (cronjob) return "Esse cronjob já existe seu lixo";
 
 	const newCronjob = new Cronjob({
 		name,
-		cron,
+		cron: cronString,
 		message: command,
 		room: msg.channel.id,
 	});

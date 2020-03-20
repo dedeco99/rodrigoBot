@@ -2,17 +2,6 @@ const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 const embed = require("../utils/embed");
 
-function checkCoinName(searchCoin, coin) {
-	if (
-		searchCoin.charAt(0).toUpperCase() + searchCoin.slice(1) === coin.name ||
-		searchCoin.toUpperCase() === coin.symbol
-	) {
-		return true;
-	}
-	return false;
-
-}
-
 async function getPrice(msg) {
 	const data = msg.content.split("crypto ")[1];
 	let response = null;
@@ -20,12 +9,15 @@ async function getPrice(msg) {
 	let url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/map";
 	const headers = { "X-CMC_PRO_API_KEY": secrets.coinmarketcapKey };
 
-	const res = await get(url, headers);
-	const json = res.data;
+	let res = await get(url, headers);
+	let json = res.data;
 
 	let coinId = null;
 	for (const coin of json.data) {
-		if (checkCoinName(data, coin)) {
+		if (
+			data.charAt(0).toUpperCase() + data.slice(1) === coin.name ||
+			data.toUpperCase() === coin.symbol
+		) {
 			coinId = coin.id;
 			break;
 		}
@@ -34,8 +26,8 @@ async function getPrice(msg) {
 	if (coinId) {
 		url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${coinId}&&convert=EUR`;
 
-		const res = await get(url, headers);
-		const json = res.data;
+		res = await get(url, headers);
+		json = res.data;
 
 		if (json.error) return "Este Market Cap tá na xixada (down)";
 

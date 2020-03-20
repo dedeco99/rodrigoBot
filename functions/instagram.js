@@ -2,13 +2,14 @@ const { get } = require("../utils/request");
 const embed = require("../utils/embed");
 
 function scrap(data) {
-	const dirtyJSON = JSON.parse(data.match(/window\._sharedData\s?=\s?({.+);<\/script>/)[1]);
+	const dirtyJSON = JSON.parse(data.match(/window\._sharedData\s?=\s?(?<a>{.+);<\/script>/)[1]);
 
-	const medias = dirtyJSON.entry_data.ProfilePage[0].graphql.user.edge_owner_to_timeline_media.edges.map(post => {
+	const user = dirtyJSON.entry_data.ProfilePage[0].graphql.user;
+	const medias = user.edge_owner_to_timeline_media.edges.map((post) => {
 		return {
 			mediaId: post.node.id,
 			shortcode: post.node.shortcode,
-			text: post.node.edge_media_to_caption.edges[0] && post.node.edge_media_to_caption.edges[0].node.text,
+			text: post.node.edge_media_to_caption.edges[0].node.text || "",
 			commentCount: post.node.edge_media_to_comment.count,
 			likeCount: post.node.edge_liked_by.count,
 			displayUrl: post.node.display_url,
@@ -16,12 +17,12 @@ function scrap(data) {
 			date: post.node.taken_at_timestamp,
 			thumbnail: post.node.thumbnail_src,
 			thumbnailResource: post.node.thumbnail_resources,
-			isVideo: post.node.is_video
+			isVideo: post.node.is_video,
 		};
 	});
 
 	const json = {
-		user: dirtyJSON.entry_data.ProfilePage[0].graphql.user,
+		user,
 		medias,
 	};
 

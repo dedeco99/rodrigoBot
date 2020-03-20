@@ -57,7 +57,7 @@ function checkForMemes(msg) {
 	];
 
 	const searchedMeme = msg.content.split(" ")[2];
-	const meme = memes.find(meme => meme.name === searchedMeme);
+	const meme = memes.find(m => m.name === searchedMeme);
 
 	if (meme) {
 		return makeMeme(msg, meme);

@@ -143,7 +143,7 @@ function createDefineEmbed(res) {
 	return { embed };
 }
 
-function createPollEmbed(msg, res) {
+async function createPollEmbed(msg, res) {
 	const embed = {};
 
 	embed.title = res.title;
@@ -156,13 +156,14 @@ function createPollEmbed(msg, res) {
 		embed.fields.push({ name: "----------", value: `${reacts[i]} - ${res.options[i]}` });
 	}
 
-	msg.channel.send({ embed })
-		.then(async (message) => {
-			for (let i = 0; i < res.options.length; i++) {
-				// TODO: Promise.all
-				await message.react(reacts[i]);
-			}
-		});
+	const message = await msg.channel.send({ embed });
+
+	const promises = [];
+	for (let i = 0; i < res.options.length; i++) {
+		promises.push(message.react(reacts[i]));
+	}
+
+	await Promise.all(promises);
 }
 
 function createInstaEmbed(res) {

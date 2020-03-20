@@ -154,17 +154,17 @@ async function vote(msg) {
 	if (message[2] === "results") {
 		const poll = message[3];
 
-		const vote = await msg.channel.fetchMessage(poll);
+		const voteMessage = await msg.channel.fetchMessage(poll);
 
-		vote.reactions.forEach(async (reaction) => {
+		voteMessage.reactions.forEach(async (reaction) => {
 			const users = await reaction.fetchUsers();
 			const userRes = users.map(user => user.username).join(" | ");
 
 			msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
 		});
 	} else {
-		const message = msg.content.split("vote ")[1];
-		const options = message.split(";");
+		const params = msg.content.split("vote ")[1];
+		const options = params.split(";");
 		const title = options[0];
 		options.splice(0, 1);
 
@@ -240,7 +240,7 @@ async function weather(msg) {
 	return embed.createWeatherEmbed(weatherInfo);
 }
 
-async function radar(msg, page = 0, data = []) {
+async function radars(msg, page = 0, data = []) {
 	const params = msg.content.split(" ");
 	const location = params[2];
 
@@ -258,7 +258,7 @@ async function radar(msg, page = 0, data = []) {
 	}));
 
 	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
-		return radar(msg, page + 1, response);
+		return radars(msg, page + 1, response);
 	}
 
 	function sanitizeString(str) {
@@ -291,5 +291,5 @@ module.exports = {
 	price,
 	remindMe,
 	weather,
-	radar,
+	radars,
 };
