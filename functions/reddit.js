@@ -1,9 +1,9 @@
-const errors = require("./errors");
-const { get, post } = require("./request");
-const secrets = require("./secrets");
-const embed = require("./embed");
+const errors = require("../utils/errors");
+const { get, post } = require("../utils/request");
+const secrets = require("../utils/secrets");
+const embed = require("../utils/embed");
 
-const Subreddit = require("./models/subreddit");
+const Subreddit = require("../models/subreddit");
 
 function isFile(pathname) {
 	return pathname.split("/").pop().lastIndexOf(".") > -1;

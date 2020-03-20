@@ -1,6 +1,6 @@
-const { get } = require("./request");
-const secrets = require("./secrets");
-const embed = require("./embed");
+const { get } = require("../utils/request");
+const secrets = require("../utils/secrets");
+const embed = require("../utils/embed");
 
 function checkCoinName(searchCoin, coin) {
 	if (

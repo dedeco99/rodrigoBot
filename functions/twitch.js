@@ -1,10 +1,10 @@
 /* global client */
 
-const { get } = require("./request");
-const secrets = require("./secrets");
+const { get } = require("../utils/request");
+const secrets = require("../utils/secrets");
 
-const Channel = require("./models/channel");
-const Notification = require("./models/notification");
+const Channel = require("../models/channel");
+const Notification = require("../models/notification");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;

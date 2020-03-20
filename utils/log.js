@@ -1,4 +1,4 @@
-const Log = require("./models/log");
+const Log = require("../models/log");
 
 exports.error = function error(err) {
 	const log = new Log(err);

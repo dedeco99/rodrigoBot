@@ -1,4 +1,4 @@
-const Cronjob = require("./models/cronjob");
+const Cronjob = require("../models/cronjob");
 
 async function addCronjob(msg) {
 	const message = msg.content.split("add ")[1];

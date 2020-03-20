@@ -1,17 +1,17 @@
 /* global lastMsgs */
 
-const utils = require("./utils");
-const memes = require("./memes");
-const media = require("./media");
-const crypto = require("./crypto");
-const reddit = require("./reddit");
-const youtube = require("./youtube");
-const twitch = require("./twitch");
-const instagram = require("./instagram");
-const custom = require("./custom");
-const birthday = require("./birthday");
-const cronjob = require("./cronjob");
-const log = require("./log");
+const utils = require("./functions/utils");
+const memes = require("./functions//memes");
+const media = require("./functions//media");
+const crypto = require("./functions//crypto");
+const reddit = require("./functions//reddit");
+const youtube = require("./functions//youtube");
+const twitch = require("./functions//twitch");
+const instagram = require("./functions//instagram");
+const custom = require("./functions//custom");
+const birthday = require("./functions//birthday");
+const cronjob = require("./functions//cronjob");
+const log = require("./utils/log");
 
 const CustomCommand = require("./models/customCommand");
 

@@ -5,10 +5,10 @@ const ytdl = require("ytdl-core-discord");
 const moment = require("moment");
 const { evaluate } = require("mathjs");
 
-const { get } = require("./request");
-const secrets = require("./secrets");
-const embed = require("./embed");
-const { updateMeta } = require("./database");
+const { get } = require("../utils/request");
+const secrets = require("../utils/secrets");
+const embed = require("../utils/embed");
+const { updateMeta } = require("../utils/database");
 
 function deleteLastMsg(msg) {
 	if (lastMsgs.length) {
@@ -22,17 +22,22 @@ function deleteLastMsg(msg) {
 }
 
 function answer(msg) {
+	const question = msg.content.split("rodrigo ")[1];
+	const phrase = question.substring(0, question.length - 1);
 	let num = Math.floor(Math.random() >= 0.5);
-	if (msg.content.includes(" ou ")) {
+
+	if (!phrase) {
+		return "Sim, estou vivo";
+	} else if (phrase.includes(" ou ")) {
 		const option1 = msg.content.split(" ou ")[0].slice(8);
 		const option2 = msg.content.split(" ou ")[1].slice(0, -1);
 
 		return num ? option1 : option2;
-	} else if (msg.content.includes(" probabilidade ")) {
+	} else if (phrase.includes(" probabilidade ")) {
 		num = Math.floor(Math.random() * 100);
 
 		return `Cerca de ${num}%`;
-	} else if (msg.content.includes(" nota ")) {
+	} else if (phrase.includes(" nota ")) {
 		num = Math.floor(Math.random() * 20);
 
 		return num;

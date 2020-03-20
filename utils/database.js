@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const secrets = require("./secrets");
 
-const Meta = require("./models/meta");
+const Meta = require("../models/meta");
 
 function initialize() {
 	mongoose.set("useFindAndModify", false);

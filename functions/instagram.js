@@ -1,5 +1,5 @@
-const { get } = require("./request");
-const embed = require("./embed");
+const { get } = require("../utils/request");
+const embed = require("../utils/embed");
 
 function scrap(data) {
 	const dirtyJSON = JSON.parse(data.match(/window\._sharedData\s?=\s?({.+);<\/script>/)[1]);

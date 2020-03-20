@@ -1,9 +1,9 @@
-const errors = require("./errors");
-const { get } = require("./request");
-const secrets = require("./secrets");
+const errors = require("../utils/errors");
+const { get } = require("../utils/request");
+const secrets = require("../utils/secrets");
 
-const Channel = require("./models/channel");
-const Notification = require("./models/notification");
+const Channel = require("../models/channel");
+const Notification = require("../models/notification");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;

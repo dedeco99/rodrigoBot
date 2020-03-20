@@ -3,11 +3,12 @@
 const discord = require("discord.js");
 const cron = require("node-cron");
 
-const secrets = require("./secrets");
-const { initialize } = require("./database");
+const secrets = require("./utils/secrets");
+const { initialize } = require("./utils/database");
 const { checkForCommand } = require("./command");
-// const twitch = require("./twitch");
-const youtube = require("./youtube");
+
+// const twitch = require("./functions/twitch");
+const youtube = require("./functions/youtube");
 
 const Meta = require("./models/meta");
 const Birthday = require("./models/birthday");

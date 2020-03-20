@@ -1,6 +1,6 @@
 /* global client */
 
-const { updateMeta } = require("./database");
+const { updateMeta } = require("../utils/database");
 
 function play(msg) {
 	const action = msg.content.split("play")[1];
