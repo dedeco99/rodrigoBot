@@ -1,25 +1,10 @@
-/* global lastMsgs musicPlayers */
-
 const cheerio = require("cheerio");
-const ytdl = require("ytdl-core-discord");
 const moment = require("moment");
 const { evaluate } = require("mathjs");
 
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 const embed = require("../utils/embed");
-const { updateMeta } = require("../utils/database");
-
-function deleteLastMsg(msg) {
-	if (lastMsgs.length) {
-		const lastMessage = lastMsgs[lastMsgs.length - 1];
-		if (lastMessage.channel.id === msg.channel.id) {
-			lastMessage.delete();
-			lastMsgs.pop();
-			msg.delete();
-		}
-	}
-}
 
 function answer(msg) {
 	const question = msg.content.split("rodrigo ")[1];
@@ -113,28 +98,6 @@ function sort(msg) {
 	return randomized.join(" > ");
 }
 
-async function weather(msg) {
-	const params = msg.content.split(" ");
-	const location = params[2];
-
-	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${secrets.openWeatherMapKey}`;
-
-	const res = await get(url);
-
-	const weatherInfo = {
-		forecast: res.data.weather[0].main,
-		temp: res.data.main.temp,
-		feelsLike: res.data.main.feels_like,
-		minTemp: res.data.main.temp_min.toFixed(0).toString(),
-		maxTemp: res.data.main.temp_max.toFixed(0).toString(),
-		wind: res.data.wind.speed,
-		sunrise: moment(res.data.sys.sunrise * 1000).format("HH:mm"),
-		sunset: moment(res.data.sys.sunset * 1000).format("HH:mm"),
-	};
-
-	return embed.createWeatherEmbed(weatherInfo);
-}
-
 async function convert(msg) {
 	const numberToConvert = msg.content.split(" ")[2];
 	const currencyToConvert = msg.content.split(" ")[3].toUpperCase();
@@ -162,8 +125,27 @@ function math(msg) {
 	return result;
 }
 
-function help() {
-	return "https://dedeco99.github.io/rodrigoBot/";
+function remindMe(msg) {
+	const params = msg.content.split(" ");
+	const remindVars = ["minutes", "hours", "days"];
+	const remindVarsValues = {
+		minutes: 60000,
+		hours: 60000 * 60,
+		days: 60000 * 60 * 24,
+	};
+
+	// Get reminder, remind time, and remind time unit
+	const remindUnit = params.find(param => remindVars.includes(param));
+	const remindTime = Number(params[params.indexOf(remindUnit) - 1] || 1);
+	const reminder = params.filter((param) => {
+		return params.indexOf(param) > 2 && params.indexOf(param) < params.length - 3;
+	});
+
+	setTimeout(() => {
+		msg.channel.send(reminder.join(" "));
+	}, remindTime * remindVarsValues[remindUnit]);
+
+	return "Ja te lembro";
 }
 
 async function vote(msg) {
@@ -236,86 +218,29 @@ function price() {
 	return "Função em manutenção";
 }
 
-async function music(msg) {
-	const play = async (musicPlayer, connection) => {
-		const stream = await ytdl(musicPlayer.queue[0]);
-		const streamOptions = { seek: 0, volume: 0.5, type: "opus", highWaterMark: 512 };
-		musicPlayer.dispatcher = connection.play(stream, streamOptions);
+async function weather(msg) {
+	const params = msg.content.split(" ");
+	const location = params[2];
 
-		musicPlayer.dispatcher.on("finish", () => {
-			musicPlayer.queue.shift();
-			if (musicPlayer.queue.length) {
-				play(musicPlayer, connection);
-			} else {
-				connection.disconnect();
-			}
-		});
+	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${secrets.openWeatherMapKey}`;
+
+	const res = await get(url);
+
+	const weatherInfo = {
+		forecast: res.data.weather[0].main,
+		temp: res.data.main.temp,
+		feelsLike: res.data.main.feels_like,
+		minTemp: res.data.main.temp_min.toFixed(0).toString(),
+		maxTemp: res.data.main.temp_max.toFixed(0).toString(),
+		wind: res.data.wind.speed,
+		sunrise: moment(res.data.sys.sunrise * 1000).format("HH:mm"),
+		sunset: moment(res.data.sys.sunset * 1000).format("HH:mm"),
 	};
 
-	const params = msg.content.split(" ");
-	const command = params[2].toLowerCase();
-
-	if (!musicPlayers[msg.channel.guild.id]) musicPlayers[msg.channel.guild.id] = { queue: [] };
-
-	const musicPlayer = musicPlayers[msg.channel.guild.id];
-
-	if (command === "play") {
-		const userVoiceState = msg.channel.guild.voiceStates.cache.get(msg.author.id);
-
-		if (!userVoiceState) return "Vai para um canal de voz primeiro sua xixada!";
-
-		musicPlayer.queue.push(params[3]);
-
-		if (!musicPlayer.dispatcher) {
-			const userVoiceChannel = msg.channel.guild.channels.cache.get(userVoiceState.channelID);
-			const connection = await userVoiceChannel.join();
-
-			play(musicPlayer, connection);
-		}
-	} else if (musicPlayer && command === "skip") {
-		musicPlayer.dispatcher.end();
-	} else if (musicPlayer && command === "pause") {
-		musicPlayer.dispatcher.pause(true);
-	} else if (musicPlayer && command === "resume") {
-		musicPlayer.dispatcher.resume();
-	} else if (musicPlayer && command === "end") {
-		musicPlayer.dispatcher.end();
-
-		delete musicPlayers[msg.member.guild.id];
-	}
-
-	return null;
+	return embed.createWeatherEmbed(weatherInfo);
 }
 
-function remindMe(msg) {
-	const params = msg.content.split(" ");
-	const remindVars = ["minutes", "hours", "days"];
-	const remindVarsValues = {
-		minutes: 60000,
-		hours: 60000 * 60,
-		days: 60000 * 60 * 24,
-	};
-
-	// Get reminder, remind time, and remind time unit
-	const remindUnit = params.find(param => remindVars.includes(param));
-	const remindTime = Number(params[params.indexOf(remindUnit) - 1] || 1);
-	const reminder = params.filter((param) => {
-		return params.indexOf(param) > 2 && params.indexOf(param) < params.length - 3;
-	});
-
-	setTimeout(() => {
-		msg.channel.send(reminder.join(" "));
-	}, remindTime * remindVarsValues[remindUnit]);
-
-	return "Ja te lembro";
-}
-
-function sanitizeString(str) {
-	const newStr = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-	return newStr.trim();
-}
-
-async function getRadar(msg, page = 0, data = []) {
+async function radar(msg, page = 0, data = []) {
 	const params = msg.content.split(" ");
 	const location = params[2];
 
@@ -333,7 +258,12 @@ async function getRadar(msg, page = 0, data = []) {
 	}));
 
 	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
-		return getRadar(msg, page + 1, response);
+		return radar(msg, page + 1, response);
+	}
+
+	function sanitizeString(str) {
+		const newStr = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+		return newStr.trim();
 	}
 
 	const radarsByLocation = response.filter((radar) => {
@@ -350,34 +280,16 @@ async function getRadar(msg, page = 0, data = []) {
 
 }
 
-async function compliment() {
-	const metaInfo = await updateMeta({ likes: true });
-
-	return `Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes. I can't handle it!!! *touches face violently*`;
-}
-
-async function insult() {
-	const metaInfo = await updateMeta({ dislikes: true });
-
-	return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*`;
-
-}
-
 module.exports = {
-	deleteLastMsg,
 	answer,
 	define,
 	search,
 	sort,
 	convert,
 	math,
-	help,
 	vote,
 	price,
-	music,
 	remindMe,
 	weather,
-	getRadar,
-	compliment,
-	insult,
+	radar,
 };
