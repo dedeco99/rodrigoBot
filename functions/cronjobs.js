@@ -2,8 +2,6 @@
 
 const cron = require("node-cron");
 
-const { checkForCommand } = require("../utils/command");
-
 const youtube = require("./youtube");
 // const twitch = require("./twitch");
 
@@ -54,7 +52,7 @@ async function getCronjobs(msg) {
 	return cronjobs;
 }
 
-async function runCronjobs() {
+async function runCronjobs(checkForCommand) {
 	cron.schedule("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
 			$expr: {

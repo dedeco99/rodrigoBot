@@ -34,7 +34,7 @@ async function run() {
 
 	client.on("message", msg => handleMessage(msg));
 
-	await runCronjobs();
+	await runCronjobs(checkForCommand);
 }
 
 run();
