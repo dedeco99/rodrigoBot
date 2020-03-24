@@ -277,7 +277,40 @@ async function radars(msg, page = 0, data = []) {
 		location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
 
 	return embed.createRadarEmbed(title, radarsByLocation);
+}
 
+async function corona(msg) {
+	const country = msg.content.split(" ")[2];
+	const url = "https://www.worldometers.info/coronavirus/";
+
+	const res = await get(url);
+	const $ = cheerio.load(res.data);
+
+	const total = $(".maincounter-number").toArray().map((elem) => {
+		return Number($(elem).find("span").text().replace(",", ""));
+	});
+
+	const countries = $("tr").toArray().map((elem) => {
+		return {
+			country: $(elem).children().eq(0).text(),
+			totalCases: $(elem).children().eq(1).text(),
+			newCases: $(elem).children().eq(2).text(),
+			totalDeaths: $(elem).children().eq(3).text(),
+			newDeaths: $(elem).children().eq(4).text(),
+			totalRecovered: $(elem).children().eq(5).text(),
+			activeCases: $(elem).children().eq(6).text(),
+			seriousCases: $(elem).children().eq(7).text(),
+			casesPer1M: $(elem).children().eq(8).text(),
+			deathsPer1M: $(elem).children().eq(9).text(),
+		};
+	});
+
+	const response = {
+		total,
+		country: countries.find(e => e.country.toLowerCase() === country.toLowerCase()),
+	};
+
+	return embed.createCoronaEmbed(response);
 }
 
 module.exports = {
@@ -292,4 +325,5 @@ module.exports = {
 	remindMe,
 	weather,
 	radars,
+	corona,
 };

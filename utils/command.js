@@ -30,6 +30,7 @@ const features = [
 	{ command: "price", func: utils.price },
 	{ command: "weather", func: utils.weather },
 	{ command: "radar", func: utils.radars },
+	{ command: "corona", func: utils.corona },
 
 	// Meme Creation
 	{ command: "meme", func: memes.checkForMemes },

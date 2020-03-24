@@ -76,6 +76,78 @@ function createRadarEmbed(location, radars) {
 	return { embed };
 }
 
+function createCoronaEmbed(res) {
+	const embed = {};
+
+	embed.title = res.country.country;
+	embed.color = 0x00AE86;
+
+	embed.fields = [
+		{
+			name: "Total Cases",
+			value: res.total[0] || 0,
+			inline: true,
+		},
+		{
+			name: "Total Deaths",
+			value: res.total[1] || 0,
+			inline: true,
+		},
+		{
+			name: "Total Recovered",
+			value: res.total[2] || 0,
+			inline: true,
+		},
+		{
+			name: "Cases",
+			value: res.country.totalCases || 0,
+			inline: true,
+		},
+		{
+			name: "New Cases",
+			value: res.country.newCases || 0,
+			inline: true,
+		},
+		{
+			name: "Deaths",
+			value: res.country.totalDeaths || 0,
+			inline: true,
+		},
+		{
+			name: "New Deaths",
+			value: res.country.newDeaths || 0,
+			inline: true,
+		},
+		{
+			name: "Recovered",
+			value: res.country.totalRecovered || 0,
+			inline: true,
+		},
+		{
+			name: "Active Cases",
+			value: res.country.activeCases || 0,
+			inline: true,
+		},
+		{
+			name: "Serious Cases",
+			value: res.country.seriousCases || 0,
+			inline: true,
+		},
+		{
+			name: "Cases per 1M",
+			value: res.country.casesPer1M || 0,
+			inline: true,
+		},
+		{
+			name: "Deaths per 1M",
+			value: res.country.deathsPer1M || 0,
+			inline: true,
+		},
+	];
+
+	return { embed };
+}
+
 function createWeatherEmbed(res) {
 	const embed = {};
 
@@ -207,6 +279,7 @@ module.exports = {
 	createSearchEmbed,
 	createWeatherEmbed,
 	createRadarEmbed,
+	createCoronaEmbed,
 	createDefineEmbed,
 	createPollEmbed,
 	createInstaEmbed,
