@@ -59,12 +59,12 @@ const features = [
 	{
 		command: ["good", "nice", "best", "bom", "bem", "grande"],
 		includes: true,
-		func: utils.compliment,
+		func: system.compliment,
 	},
 	{
 		command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"],
 		includes: true,
-		func: utils.insult,
+		func: system.insult,
 	},
 ];
 
