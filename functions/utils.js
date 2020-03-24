@@ -280,7 +280,7 @@ async function radars(msg, page = 0, data = []) {
 }
 
 async function corona(msg) {
-	const country = msg.content.split(" ")[2];
+	const country = msg.content.split("corona ")[1];
 	const url = "https://www.worldometers.info/coronavirus/";
 
 	const res = await get(url);
@@ -292,22 +292,26 @@ async function corona(msg) {
 
 	const countries = $("tr").toArray().map((elem) => {
 		return {
-			country: $(elem).children().eq(0).text(),
-			totalCases: $(elem).children().eq(1).text(),
-			newCases: $(elem).children().eq(2).text(),
-			totalDeaths: $(elem).children().eq(3).text(),
-			newDeaths: $(elem).children().eq(4).text(),
-			totalRecovered: $(elem).children().eq(5).text(),
-			activeCases: $(elem).children().eq(6).text(),
-			seriousCases: $(elem).children().eq(7).text(),
-			casesPer1M: $(elem).children().eq(8).text(),
-			deathsPer1M: $(elem).children().eq(9).text(),
+			country: $(elem).children().eq(0).text().trim(),
+			totalCases: $(elem).children().eq(1).text().trim(),
+			newCases: $(elem).children().eq(2).text().trim(),
+			totalDeaths: $(elem).children().eq(3).text().trim(),
+			newDeaths: $(elem).children().eq(4).text().trim(),
+			totalRecovered: $(elem).children().eq(5).text().trim(),
+			activeCases: $(elem).children().eq(6).text().trim(),
+			seriousCases: $(elem).children().eq(7).text().trim(),
+			casesPer1M: $(elem).children().eq(8).text().trim(),
+			deathsPer1M: $(elem).children().eq(9).text().trim(),
 		};
 	});
 
+	const countryData = countries.find(e => e.country.toLowerCase() === country.toLowerCase());
+
+	if (!countryData) return "Esse país é imune a corona";
+
 	const response = {
 		total,
-		country: countries.find(e => e.country.toLowerCase() === country.toLowerCase()),
+		country: countryData,
 	};
 
 	return embed.createCoronaEmbed(response);

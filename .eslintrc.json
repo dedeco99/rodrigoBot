@@ -220,7 +220,7 @@
 		"newline-per-chained-call": [
 			"error",
 			{
-				"ignoreChainWithDepth": 4
+				"ignoreChainWithDepth": 5
 			}
 		],
 		"no-array-constructor": "error",

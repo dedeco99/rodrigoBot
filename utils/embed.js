@@ -84,21 +84,6 @@ function createCoronaEmbed(res) {
 
 	embed.fields = [
 		{
-			name: "Total Cases",
-			value: res.total[0] || 0,
-			inline: true,
-		},
-		{
-			name: "Total Deaths",
-			value: res.total[1] || 0,
-			inline: true,
-		},
-		{
-			name: "Total Recovered",
-			value: res.total[2] || 0,
-			inline: true,
-		},
-		{
 			name: "Cases",
 			value: res.country.totalCases || 0,
 			inline: true,
@@ -144,6 +129,8 @@ function createCoronaEmbed(res) {
 			inline: true,
 		},
 	];
+
+	embed.footer = { text: `World - Cases : ${res.total[0]} | Deaths: ${res.total[1]} | Recovered: ${res.total[2]} ` };
 
 	return { embed };
 }
