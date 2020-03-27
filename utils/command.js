@@ -36,7 +36,7 @@ const features = [
 	{ command: "meme", func: memes.checkForMemes },
 
 	// Media
-	{ command: "music", func: utils.music },
+	{ command: "music", func: media.music },
 	{ command: "play", func: media.play },
 	{ command: "watch", func: media.watch },
 	{ command: "listen", func: media.listen },
