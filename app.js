@@ -20,6 +20,7 @@ async function run() {
 	global.client = new discord.Client();
 	global.lastMsgs = [];
 	global.musicPlayers = {};
+	global.redditPosts = [];
 
 	client.login(secrets.discordKey);
 

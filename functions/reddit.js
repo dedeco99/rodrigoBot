@@ -1,3 +1,5 @@
+/* global redditPosts */
+
 const errors = require("../utils/errors");
 const { get, post } = require("../utils/request");
 const secrets = require("../utils/secrets");
@@ -45,6 +47,7 @@ function formatResponse(json) {
 	}
 
 	const res = {
+		id: json.data.children[num].data.id,
 		after: json.data.after,
 		content,
 		contentImage,
@@ -60,7 +63,7 @@ function formatResponse(json) {
 	return res;
 }
 
-async function getRedditPosts(data, accessToken) {
+async function getRedditPosts(data, accessToken, retries = 0) {
 	const url = `https://oauth.reddit.com/r/${data.subreddit}?limit=100&sort=hot`;
 	const headers = {
 		"User-Agent": "Entertainment-Hub by dedeco99",
@@ -75,10 +78,13 @@ async function getRedditPosts(data, accessToken) {
 	const json = res.data;
 	const response = formatResponse(json);
 
-	if (response.title.toLowerCase().match(/cock|dick|penis/g)) {
-		console.log("dick detected");
-		return getRedditPosts(data, accessToken);
+	if (retries < 5 && global.redditPosts.includes(response.id)) {
+		retries++;
+		return getRedditPosts(data, accessToken, retries);
 	}
+
+	redditPosts.push(response.id);
+	if (redditPosts.length > 10) redditPosts.shift();
 
 	return embed.createRedditEmbed(response);
 }
