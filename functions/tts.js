@@ -1,33 +1,29 @@
-var { getVoiceStream } = require("discord-tts");
+/* global client musicPlayers */
 
-var connection;
+const { getVoiceStream } = require("discord-tts");
 
-async function speak(msg){
-    if(msg.content.length>200) return msg.channel.send("Isso e muito texto");
-    
-    const channelId = msg.member.voice.channelID;
-    const broadcast = global.client.voice.createBroadcast();
-    var channel = global.client.channels.cache.get(channelId);
-    var paramsArray=msg.content.split(" ");
-    var text = paramsArray.splice(2,paramsArray.length-1).join(" ");
-    console.log(text);
-    try{
-        //Create connection and add event for diconnecting
-        if(!isConnected()){
-            connection=await channel.join();
-            connection.on("disconnect",()=>{connection=undefined;});
-        }
-        broadcast.play(getVoiceStream(text,"en-GB"));
-        const dispatcher=connection.play(broadcast);
-    }catch(err){
-        console.log(err);
-    }
-}
+async function speak(msg) {
+	if (msg.content.length > 200) return "Isso é muito texto";
 
-function isConnected(){
-    return connection!==undefined;
+	const userVoiceState = msg.channel.guild.voiceStates.cache.get(msg.author.id);
+	if (!userVoiceState) return "Vai para um canal de voz primeiro sua xixada!";
+
+	if (musicPlayers[msg.channel.guild.id]) return "Está a tocar música palhaço";
+
+	const paramsArray = msg.content.split(" ");
+	const text = paramsArray.splice(2, paramsArray.length - 1).join(" ");
+
+	const channel = client.channels.cache.get(userVoiceState.channelID);
+
+	const connection = await channel.join();
+
+	const dispatcher = connection.play(getVoiceStream(text, "en-GB"));
+
+	dispatcher.on("finish", () => connection.disconnect());
+
+	return null;
 }
 
 module.exports = {
-    speak
+	speak,
 };
