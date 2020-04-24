@@ -34,9 +34,12 @@ async function music(msg) {
 
 		musicPlayer.queue.push(params[3]);
 
-		if (!musicPlayer.dispatcher) {
-			const userVoiceChannel = msg.channel.guild.channels.cache.get(userVoiceState.channelID);
-			musicPlayer.connection = await userVoiceChannel.join();
+		const userVoiceChannel = msg.channel.guild.channels.cache.get(userVoiceState.channelID);
+
+		if (musicPlayer.userVoiceChannel !== userVoiceChannel || !musicPlayer.dispatcher) {
+			musicPlayer.queue = [];
+			musicPlayer.userVoiceChannel = userVoiceChannel;
+			musicPlayer.connection = await musicPlayer.userVoiceChannel.join();
 
 			playMusic(musicPlayer, musicPlayer.connection);
 		}
