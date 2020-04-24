@@ -7,7 +7,7 @@ const { updateMeta } = require("../utils/database");
 async function music(msg) {
 	const playMusic = async (musicPlayer, connection) => {
 		const stream = await ytdl(musicPlayer.queue[0]);
-		const streamOptions = { seek: 0, volume: 0.5, type: "opus", highWaterMark: 512 };
+		const streamOptions = { seek: 0, volume: 0.5, type: "opus" };
 		musicPlayer.dispatcher = connection.play(stream, streamOptions);
 
 		musicPlayer.dispatcher.on("finish", () => {
