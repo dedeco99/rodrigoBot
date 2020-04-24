@@ -32,12 +32,11 @@ async function music(msg) {
 
 		if (!userVoiceState) return "Vai para um canal de voz primeiro sua xixada!";
 
-		musicPlayer.queue.push(params[3]);
-
 		const userVoiceChannel = msg.channel.guild.channels.cache.get(userVoiceState.channelID);
 
 		if (musicPlayer.userVoiceChannel !== userVoiceChannel || !musicPlayer.dispatcher) {
 			musicPlayer.queue = [];
+			musicPlayer.queue.push(params[3]);
 			musicPlayer.userVoiceChannel = userVoiceChannel;
 			musicPlayer.connection = await musicPlayer.userVoiceChannel.join();
 
