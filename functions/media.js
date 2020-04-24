@@ -36,9 +36,9 @@ async function music(msg) {
 
 		if (!musicPlayer.dispatcher) {
 			const userVoiceChannel = msg.channel.guild.channels.cache.get(userVoiceState.channelID);
-			const connection = await userVoiceChannel.join();
+			musicPlayer.connection = await userVoiceChannel.join();
 
-			playMusic(musicPlayer, connection);
+			playMusic(musicPlayer, musicPlayer.connection);
 		}
 	} else if (musicPlayer && command === "skip") {
 		musicPlayer.dispatcher.end();
@@ -46,7 +46,7 @@ async function music(msg) {
 		musicPlayer.dispatcher.pause(true);
 	} else if (musicPlayer && command === "resume") {
 		musicPlayer.dispatcher.resume();
-	} else if (musicPlayer && command === "end") {
+	} else if (musicPlayer && (command === "end" || command === "stop")) {
 		musicPlayer.dispatcher.end();
 
 		delete musicPlayers[msg.member.guild.id];
