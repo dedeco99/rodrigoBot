@@ -286,9 +286,7 @@ async function corona(msg) {
 	const res = await get(url);
 	const $ = cheerio.load(res.data);
 
-	const total = $(".maincounter-number").toArray().map((elem) => {
-		return Number($(elem).find("span").text().replace(",", ""));
-	});
+	const total = $(".maincounter-number").toArray().map(elem => $(elem).find("span").text());
 
 	const countries = $("tr").toArray().map((elem) => {
 		return {
