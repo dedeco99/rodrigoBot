@@ -36,7 +36,7 @@ async function makeMeme(msg, meme) {
 		}
 	}
 
-	return { "file": `./assets/img/memes/${meme.name}.jpg` };
+	return { files: [`./assets/img/memes/${meme.name}.jpg`] };
 }
 
 function checkForMemes(msg) {
