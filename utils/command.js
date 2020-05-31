@@ -14,7 +14,7 @@ const custom = require("../functions/custom");
 const birthday = require("../functions/birthdays");
 const cronjob = require("../functions/cronjobs");
 const system = require("../functions/system");
-const tts= require("../functions/tts");
+const tts = require("../functions/tts");
 const CustomCommand = require("../models/customCommand");
 
 const features = [
@@ -31,6 +31,7 @@ const features = [
 	{ command: "weather", func: utils.weather },
 	{ command: "radar", func: utils.radars },
 	{ command: "corona", func: utils.corona },
+	{ command: "pin", func: utils.pin },
 
 	// Meme Creation
 	{ command: "meme", func: memes.checkForMemes },
@@ -40,8 +41,9 @@ const features = [
 	{ command: "play", func: media.play },
 	{ command: "watch", func: media.watch },
 	{ command: "listen", func: media.listen },
-	//TTS
-	{ command: "tts", func: tts.speak},
+
+	// TTS
+	{ command: "tts", func: tts.speak },
 
 	// Social Media
 	{ command: "reddit", func: reddit.checkForReddit },

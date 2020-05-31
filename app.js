@@ -6,6 +6,7 @@ const secrets = require("./utils/secrets");
 const database = require("./utils/database");
 const { checkForCommand } = require("./utils/command");
 
+const { pin } = require("./functions/utils");
 const { runCronjobs } = require("./functions/cronjobs");
 
 const Meta = require("./models/meta");
@@ -34,6 +35,14 @@ async function run() {
 	});
 
 	client.on("message", msg => handleMessage(msg));
+
+	client.on("messageReactionAdd", (reaction) => {
+		if (reaction.message.channel.guild.id === "651025812312555551") {
+			if (reaction._emoji.name === "📌" || reaction._emoji.name === "📍") {
+				pin(reaction.message, true);
+			}
+		}
+	});
 
 	await runCronjobs(checkForCommand);
 }

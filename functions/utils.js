@@ -315,6 +315,26 @@ async function corona(msg) {
 	return embed.createCoronaEmbed(response);
 }
 
+async function pin(msg, isMessageToPin) {
+	let message = msg;
+
+	if (!isMessageToPin) {
+		const id = msg.content.split("pin ")[1];
+
+		message = await msg.channel.messages.fetch(id);
+	}
+
+	const permalink = `https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`;
+
+	if (message.attachments.values().next().value) {
+		const url = message.attachments.values().next().value.attachment;
+
+		global.client.channels.cache.get("716652868311973888").send(`${permalink}\n`, { files: [url] });
+	} else {
+		global.client.channels.cache.get("716652868311973888").send(`${permalink}\n> ${message.content}`);
+	}
+}
+
 module.exports = {
 	answer,
 	define,
@@ -328,4 +348,5 @@ module.exports = {
 	weather,
 	radars,
 	corona,
+	pin,
 };
