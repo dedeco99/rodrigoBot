@@ -316,6 +316,7 @@ async function corona(msg) {
 }
 
 async function pin(msg, isMessageToPin) {
+	const pinChannelId = "716652868311973888";
 	let message = msg;
 
 	if (!isMessageToPin) {
@@ -324,15 +325,24 @@ async function pin(msg, isMessageToPin) {
 		message = await msg.channel.messages.fetch(id);
 	}
 
-	const permalink = `https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`;
+	const channelMessages = await global.client.channels.cache.get(pinChannelId).messages.fetch();
 
-	if (message.attachments.values().next().value) {
-		const url = message.attachments.values().next().value.attachment;
+	const duplicatedMessage = Array.from(channelMessages.values())
+		.find(m => m.content.includes(message.id));
 
-		global.client.channels.cache.get("716652868311973888").send(`${permalink}\n`, { files: [url] });
-	} else {
-		global.client.channels.cache.get("716652868311973888").send(`${permalink}\n> ${message.content}`);
+	if (!duplicatedMessage) {
+		const permalink = `https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`;
+
+		if (message.attachments.values().next().value) {
+			const url = message.attachments.values().next().value.attachment;
+
+			global.client.channels.cache.get(pinChannelId).send(`${permalink}\n`, { files: [url] });
+		} else {
+			global.client.channels.cache.get(pinChannelId).send(`${permalink}\n> ${message.content}`);
+		}
 	}
+
+	return null;
 }
 
 module.exports = {
