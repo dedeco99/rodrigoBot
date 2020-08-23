@@ -5,9 +5,7 @@
 		"es6": true,
 		"node": true
 	},
-	"extends": [
-		"eslint:recommended"
-	],
+	"extends": ["eslint:recommended"],
 	"globals": {
 		"Atomics": "readonly",
 		"SharedArrayBuffer": "readonly"
@@ -34,18 +32,12 @@
 		"array-callback-return": "error",
 		"block-scoped-var": "error",
 		// "class-methods-use-this": "error",
-		"complexity": [
-			"warn",
-			15
-		],
+		"complexity": ["warn", 15],
 		"consistent-return": "error",
 		// "curly": "error",
 		"default-case": "error",
 		"default-param-last": "error",
-		"dot-location": [
-			"error",
-			"property"
-		],
+		"dot-location": ["error", "property"],
 		"dot-notation": "error",
 		"eqeqeq": "error",
 		// "guard-for-in": "error",
@@ -104,10 +96,7 @@
 		"wrap-iife": "error",
 		"yoda": "error",
 		/* variables */
-		"init-declarations": [
-			"error",
-			"always"
-		],
+		"init-declarations": ["error", "always"],
 		"no-label-var": "error",
 		"no-restricted-globals": "error",
 		"no-shadow": "warn",
@@ -210,10 +199,7 @@
 		],
 		// "max-statements": "error",
 		"max-statements-per-line": "error",
-		"multiline-comment-style": [
-			"error",
-			"bare-block"
-		],
+		"multiline-comment-style": ["error", "bare-block"],
 		// "multiline-ternary": "error",
 		// "new-cap": "error",
 		"new-parens": "error",
@@ -245,30 +231,18 @@
 		"no-whitespace-before-property": "error",
 		"nonblock-statement-body-position": "error",
 		"object-curly-newline": "error",
-		"object-curly-spacing": [
-			"error",
-			"always"
-		],
+		"object-curly-spacing": ["error", "always"],
 		// "object-property-newline": "error",
 		// "one-var": "error",
 		"one-var-declaration-per-line": "error",
 		"operator-assignment": "error",
-		"operator-linebreak": [
-			"error",
-			"after"
-		],
+		"operator-linebreak": ["error", "after"],
 		// "padded-blocks": "error",
 		"padding-line-between-statements": "error",
 		"prefer-object-spread": "error",
 		// "quote-props": "error",
-		"quotes": [
-			"error",
-			"double"
-		],
-		"semi": [
-			"error",
-			"always"
-		],
+		"quotes": ["error", "double"],
+		"semi": ["error", "always"],
 		"semi-spacing": "error",
 		"semi-style": "error",
 		// "sort-keys": "error",
@@ -291,13 +265,7 @@
 		"wrap-regex": "error",
 		/* ecmascript */
 		// "arrow-body-style": "error",
-		"arrow-parens": [
-			"error",
-			"as-needed",
-			{
-				"requireForBlockBody": true
-			}
-		],
+		"arrow-parens": ["error", "as-needed"],
 		"arrow-spacing": "error",
 		"generator-star-spacing": "error",
 		"no-confusing-arrow": "error",

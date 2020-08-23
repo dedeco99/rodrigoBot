@@ -14,25 +14,17 @@ async function makeMeme(msg, meme) {
 		let sum = 0;
 		for (i = 0; i < message.length; i++) {
 			currentMsg = message[i];
-			image.print(
-				font,
-				meme.position0.x,
-				meme.position0.y + sum,
-				currentMsg,
-				meme.position0.max,
-			).write(`./assets/img/memes/${meme.name}.jpg`);
+			image
+				.print(font, meme.position0.x, meme.position0.y + sum, currentMsg, meme.position0.max)
+				.write(`./assets/img/memes/${meme.name}.jpg`);
 			sum += 50;
 		}
 	} else {
 		for (i = 0; i < message.length; i++) {
 			currentMsg = message[i];
-			image.print(
-				font,
-				meme[`position${i}`].x,
-				meme[`position${i}`].y,
-				currentMsg,
-				meme[`position${i}`].max,
-			).write(`./assets/img/memes/${meme.name}.jpg`);
+			image
+				.print(font, meme[`position${i}`].x, meme[`position${i}`].y, currentMsg, meme[`position${i}`].max)
+				.write(`./assets/img/memes/${meme.name}.jpg`);
 		}
 	}
 
@@ -66,6 +58,4 @@ function checkForMemes(msg) {
 	return "Esse meme não existe";
 }
 
-module.exports = {
-	checkForMemes,
-};
+module.exports = { checkForMemes };

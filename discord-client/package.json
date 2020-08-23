@@ -1,0 +1,30 @@
+{
+	"name": "rodrigo-discord-client",
+	"version": "1.0.0",
+	"author": "dedeco99",
+	"license": "MIT",
+	"main": "app.js",
+	"engines": {
+		"node": "12.13.0"
+	},
+	"scripts": {
+		"start": "nodemon app",
+		"lint": "eslint '**/*.js' --ignore-pattern node_modules/ --ignore-pattern build/ --ignore-pattern public/"
+	},
+	"devDependencies": {
+		"eslint": "^7.1.0",
+		"nodemon": "^2.0.4"
+	},
+	"dependencies": {
+		"@discordjs/opus": "^0.3.2",
+		"axios": "^0.19.2",
+		"discord-tts": "^1.0.0",
+		"discord.js": "^12.2.0",
+		"jimp": "^0.12.1",
+		"moment": "^2.26.0",
+		"mongoose": "^5.9.16",
+		"node-cron": "^2.0.3",
+		"rodrigo": "file:../server",
+		"ytdl-core-discord": "^1.2.0"
+	}
+}

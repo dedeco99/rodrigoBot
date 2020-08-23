@@ -4,18 +4,17 @@ const { evaluate } = require("mathjs");
 
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
-const embed = require("../utils/embed");
 
 function answer(msg) {
-	const question = msg.content.split("rodrigo ")[1];
+	const question = msg.split("rodrigo ")[1];
 	const phrase = question.substring(0, question.length - 1);
 	let num = Math.floor(Math.random() >= 0.5);
 
 	if (!phrase) {
 		return "Sim, estou vivo";
 	} else if (phrase.includes(" ou ")) {
-		const option1 = msg.content.split(" ou ")[0].slice(8);
-		const option2 = msg.content.split(" ou ")[1].slice(0, -1);
+		const option1 = msg.split(" ou ")[0].slice(8);
+		const option2 = msg.split(" ou ")[1].slice(0, -1);
 
 		return num ? option1 : option2;
 	} else if (phrase.includes(" probabilidade ")) {
@@ -32,7 +31,7 @@ function answer(msg) {
 }
 
 async function define(msg) {
-	const word = msg.content.split("define ")[1];
+	const word = msg.split(" ")[2];
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
 	const res = await get(url);
@@ -42,11 +41,11 @@ async function define(msg) {
 	if (json.list.length === 0) {
 		response = {
 			word,
-			"definition": "Não há definição para esta palavra",
-			"example": "Não há exemplo",
+			definition: "Não há definição para esta palavra",
+			example: "Não há exemplo",
 		};
 	} else {
-		const cleanString = (string) => {
+		const cleanString = string => {
 			return string.substring(0, 255).replace(/\[/g, "").replace(/\]/g, "");
 		};
 
@@ -60,11 +59,11 @@ async function define(msg) {
 		};
 	}
 
-	return embed.createDefineEmbed(response);
+	return response;
 }
 
 async function search(msg) {
-	const topic = msg.content.split("procura ")[1];
+	const topic = msg.split(" ")[2];
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
@@ -80,11 +79,11 @@ async function search(msg) {
 		});
 	}
 
-	return embed.createSearchEmbed(response);
+	return response;
 }
 
 function sort(msg) {
-	let options = msg.content.split("ordena")[1];
+	let options = msg.split(" ")[2];
 	options = options.split(";");
 	const randomized = [];
 	const times = options.length;
@@ -99,9 +98,9 @@ function sort(msg) {
 }
 
 async function convert(msg) {
-	const numberToConvert = msg.content.split(" ")[2];
-	const currencyToConvert = msg.content.split(" ")[3].toUpperCase();
-	const currencyConverted = msg.content.split(" ")[5].toUpperCase();
+	const numberToConvert = msg.split(" ")[2];
+	const currencyToConvert = msg.split(" ")[3].toUpperCase();
+	const currencyConverted = msg.split(" ")[5].toUpperCase();
 	const url = "https://api.exchangeratesapi.io/latest";
 
 	const res = await get(url);
@@ -119,70 +118,16 @@ async function convert(msg) {
 }
 
 function math(msg) {
-	const expression = msg.content.split("math ")[1];
+	const expression = msg.split("math ")[1];
 	const result = evaluate(expression);
 
 	return result;
 }
 
-function remindMe(msg) {
-	const params = msg.content.split(" ");
-	const remindVars = ["minutes", "hours", "days"];
-	const remindVarsValues = {
-		minutes: 60000,
-		hours: 60000 * 60,
-		days: 60000 * 60 * 24,
-	};
-
-	// Get reminder, remind time, and remind time unit
-	const remindUnit = params.find(param => remindVars.includes(param));
-	const remindTime = Number(params[params.indexOf(remindUnit) - 1] || 1);
-	const reminder = params.filter((param) => {
-		return params.indexOf(param) > 2 && params.indexOf(param) < params.length - 3;
-	});
-
-	setTimeout(() => {
-		msg.channel.send(reminder.join(" "));
-	}, remindTime * remindVarsValues[remindUnit]);
-
-	return "Ja te lembro";
-}
-
-async function vote(msg) {
-	const message = msg.content.split(" ");
-
-	if (message[2] === "results") {
-		const poll = message[3];
-
-		const voteMessage = await msg.channel.fetchMessage(poll);
-
-		voteMessage.reactions.forEach(async (reaction) => {
-			const users = await reaction.fetchUsers();
-			const userRes = users.map(user => user.username).join(" | ");
-
-			msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
-		});
-	} else {
-		const params = msg.content.split("vote ")[1];
-		const options = params.split(";");
-		const title = options[0];
-		options.splice(0, 1);
-
-		const res = {
-			title,
-			options,
-		};
-
-		return embed.createPollEmbed(msg, res);
-	}
-
-	return null;
-}
-
 // FIXME: Not working
 function price() {
 	/*
-	let thing = msg.content.split("price ")[1];
+	let thing = msg.split("price ")[1];
 	thing = thing.replace(/ /g, "%20");
 	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
 
@@ -219,7 +164,7 @@ function price() {
 }
 
 async function weather(msg) {
-	const params = msg.content.split(" ");
+	const params = msg.split(" ");
 	const location = params[2];
 
 	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${secrets.openWeatherMapKey}`;
@@ -237,11 +182,11 @@ async function weather(msg) {
 		sunset: moment(res.data.sys.sunset * 1000).format("HH:mm"),
 	};
 
-	return embed.createWeatherEmbed(weatherInfo);
+	return weatherInfo;
 }
 
 async function radars(msg, page = 0, data = []) {
-	const params = msg.content.split(" ");
+	const params = msg.split(" ");
 	const location = params[2];
 
 	const url = `https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=${page}`;
@@ -249,13 +194,17 @@ async function radars(msg, page = 0, data = []) {
 	const res = await get(url);
 	const $ = cheerio.load(res.data);
 
-	const response = data.concat($(".panel").toArray().map((elem) => {
-		return {
-			date: $(elem).find(".panel-heading p").text().trim(),
-			location: $(elem).find(".panel-body h4").text(),
-			description: $(elem).find(".panel-body .lead").text(),
-		};
-	}));
+	const response = data.concat(
+		$(".panel")
+			.toArray()
+			.map(elem => {
+				return {
+					date: $(elem).find(".panel-heading p").text().trim(),
+					location: $(elem).find(".panel-body h4").text(),
+					description: $(elem).find(".panel-body .lead").text(),
+				};
+			}),
+	);
 
 	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
 		return radars(msg, page + 1, response);
@@ -266,42 +215,47 @@ async function radars(msg, page = 0, data = []) {
 		return newStr.trim();
 	}
 
-	const radarsByLocation = response.filter((radar) => {
-		return moment(radar.date, "DD/MM/YYYY").diff(moment(), "days") === 0 &&
-			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase();
+	const radarsByLocation = response.filter(radar => {
+		return (
+			moment(radar.date, "DD/MM/YYYY").diff(moment(), "days") === 0 &&
+			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase()
+		);
 	});
 
-	const title = radarsByLocation.length ?
-		radarsByLocation[0].location.charAt(0).toUpperCase() +
-		radarsByLocation[0].location.slice(1).toLowerCase() :
-		location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
+	const title = radarsByLocation.length
+		? radarsByLocation[0].location.charAt(0).toUpperCase() + radarsByLocation[0].location.slice(1).toLowerCase()
+		: location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
 
-	return embed.createRadarEmbed(title, radarsByLocation);
+	return { location: title, radars: radarsByLocation };
 }
 
 async function corona(msg) {
-	const country = msg.content.split("corona ")[1];
+	const country = msg.split("corona ")[1];
 	const url = "https://www.worldometers.info/coronavirus/";
 
 	const res = await get(url);
 	const $ = cheerio.load(res.data);
 
-	const total = $(".maincounter-number").toArray().map(elem => $(elem).find("span").text());
+	const total = $(".maincounter-number")
+		.toArray()
+		.map(elem => $(elem).find("span").text());
 
-	const countries = $("tr").toArray().map((elem) => {
-		return {
-			country: $(elem).children().eq(0).text().trim(),
-			totalCases: $(elem).children().eq(1).text().trim(),
-			newCases: $(elem).children().eq(2).text().trim(),
-			totalDeaths: $(elem).children().eq(3).text().trim(),
-			newDeaths: $(elem).children().eq(4).text().trim(),
-			totalRecovered: $(elem).children().eq(5).text().trim(),
-			activeCases: $(elem).children().eq(6).text().trim(),
-			seriousCases: $(elem).children().eq(7).text().trim(),
-			casesPer1M: $(elem).children().eq(8).text().trim(),
-			deathsPer1M: $(elem).children().eq(9).text().trim(),
-		};
-	});
+	const countries = $("tr")
+		.toArray()
+		.map(elem => {
+			return {
+				country: $(elem).children().eq(0).text().trim(),
+				totalCases: $(elem).children().eq(1).text().trim(),
+				newCases: $(elem).children().eq(2).text().trim(),
+				totalDeaths: $(elem).children().eq(3).text().trim(),
+				newDeaths: $(elem).children().eq(4).text().trim(),
+				totalRecovered: $(elem).children().eq(5).text().trim(),
+				activeCases: $(elem).children().eq(6).text().trim(),
+				seriousCases: $(elem).children().eq(7).text().trim(),
+				casesPer1M: $(elem).children().eq(8).text().trim(),
+				deathsPer1M: $(elem).children().eq(9).text().trim(),
+			};
+		});
 
 	const countryData = countries.find(e => e.country.toLowerCase() === country.toLowerCase());
 
@@ -312,37 +266,11 @@ async function corona(msg) {
 		country: countryData,
 	};
 
-	return embed.createCoronaEmbed(response);
+	return response;
 }
 
-async function pin(msg, isMessageToPin) {
-	const pinChannelId = "716652868311973888";
-	let message = msg;
-
-	if (!isMessageToPin) {
-		const id = msg.content.split("pin ")[1];
-
-		message = await msg.channel.messages.fetch(id);
-	}
-
-	const channelMessages = await global.client.channels.cache.get(pinChannelId).messages.fetch();
-
-	const duplicatedMessage = Array.from(channelMessages.values())
-		.find(m => m.content.includes(message.id));
-
-	if (!duplicatedMessage) {
-		const permalink = `https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`;
-
-		if (message.attachments.values().next().value) {
-			const url = message.attachments.values().next().value.attachment;
-
-			global.client.channels.cache.get(pinChannelId).send(`${permalink}\n`, { files: [url] });
-		} else {
-			global.client.channels.cache.get(pinChannelId).send(`${permalink}\n> ${message.content}`);
-		}
-	}
-
-	return null;
+function help() {
+	return "https://dedeco99.github.io/rodrigoBot/";
 }
 
 module.exports = {
@@ -352,11 +280,9 @@ module.exports = {
 	sort,
 	convert,
 	math,
-	vote,
 	price,
-	remindMe,
 	weather,
 	radars,
 	corona,
-	pin,
+	help,
 };

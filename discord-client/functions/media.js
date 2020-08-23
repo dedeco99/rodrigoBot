@@ -1,5 +1,3 @@
-/* global client musicPlayers */
-
 const ytdl = require("ytdl-core-discord");
 
 const { updateMeta } = require("../utils/database");
@@ -23,9 +21,9 @@ async function music(msg) {
 	const params = msg.content.split(" ");
 	const command = params[2].toLowerCase();
 
-	if (!musicPlayers[msg.channel.guild.id]) musicPlayers[msg.channel.guild.id] = { queue: [] };
+	if (!global.musicPlayers[msg.channel.guild.id]) global.musicPlayers[msg.channel.guild.id] = { queue: [] };
 
-	const musicPlayer = musicPlayers[msg.channel.guild.id];
+	const musicPlayer = global.musicPlayers[msg.channel.guild.id];
 
 	if (command === "play") {
 		const userVoiceState = msg.channel.guild.voiceStates.cache.get(msg.author.id);
@@ -51,7 +49,7 @@ async function music(msg) {
 	} else if (musicPlayer && (command === "end" || command === "stop")) {
 		musicPlayer.dispatcher.end();
 
-		delete musicPlayers[msg.member.guild.id];
+		delete global.musicPlayers[msg.member.guild.id];
 	}
 
 	return null;
@@ -59,21 +57,21 @@ async function music(msg) {
 
 function play(msg) {
 	const action = msg.content.split("play")[1];
-	client.user.setActivity(action, { type: "PLAYING" });
+	global.client.user.setActivity(action, { type: "PLAYING" });
 
 	updateMeta({ action: { message: action, type: "PLAYING" } });
 }
 
 function watch(msg) {
 	const action = msg.content.split("watch")[1];
-	client.user.setActivity(action, { type: "WATCHING" });
+	global.client.user.setActivity(action, { type: "WATCHING" });
 
 	updateMeta({ action: { message: action, type: "WATCHING" } });
 }
 
 function listen(msg) {
 	const action = msg.content.split("listen")[1];
-	client.user.setActivity(action, { type: "LISTENING" });
+	global.client.user.setActivity(action, { type: "LISTENING" });
 
 	updateMeta({ action: { message: action, type: "LISTENING" } });
 }

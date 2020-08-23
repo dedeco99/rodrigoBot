@@ -1,9 +1,8 @@
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
-const embed = require("../utils/embed");
 
 async function getPrice(msg) {
-	const data = msg.content.split("crypto ")[1];
+	const data = msg.split(" ")[2];
 	let response = null;
 
 	let url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/map";
@@ -14,10 +13,7 @@ async function getPrice(msg) {
 
 	let coinId = null;
 	for (const coin of json.data) {
-		if (
-			data.charAt(0).toUpperCase() + data.slice(1) === coin.name ||
-			data.toUpperCase() === coin.symbol
-		) {
+		if (data.charAt(0).toUpperCase() + data.slice(1) === coin.name || data.toUpperCase() === coin.symbol) {
 			coinId = coin.id;
 			break;
 		}
@@ -45,7 +41,7 @@ async function getPrice(msg) {
 			volumeEur: json.data[coinId].quote.EUR.volume_24h,
 		};
 
-		return embed.createCryptoEmbed(response);
+		return response;
 	}
 
 	return "Essa moeda deve estar no xixo porque não a encontro";

@@ -1,16 +1,14 @@
-/* global client */
-
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
-const Channel = require("../models/channel");
-const Notification = require("../models/notification");
+const Channel = require("../../discord-client/models/channel");
+const Notification = require("../../discord-client/models/notification");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;
 
 	const headers = {
-		"Accept": "application/vnd.twitchtv.v5+json",
+		Accept: "application/vnd.twitchtv.v5+json",
 		"Client-ID": secrets.twitchClientId,
 	};
 
@@ -18,15 +16,6 @@ async function checkIfChannelExists(channel) {
 	const json = res.data;
 
 	return json.data.length > 0 ? json : null;
-}
-
-function getStream(msg) {
-	const channel = msg.content.split("twitch ")[1];
-	const url = `https://www.twitch.tv/${channel}`;
-
-	client.user.setActivity(channel, { url, type: "WATCHING" });
-
-	return url;
 }
 
 async function addChannel(msg) {
@@ -79,7 +68,9 @@ async function fetchChannels(msg) {
 	let channels = await Channel.find({
 		guild: msg.guild.id,
 		platform: "twitch",
-	}).collation({ "locale": "en" }).sort({ name: 1 });
+	})
+		.collation({ locale: "en" })
+		.sort({ name: 1 });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
@@ -96,7 +87,7 @@ async function fetchNotifications() {
 	const url = `https://api.twitch.tv/helix/streams?${channelsString}`;
 
 	const headers = {
-		"Accept": "application/vnd.twitchtv.v5+json",
+		Accept: "application/vnd.twitchtv.v5+json",
 		"Client-ID": secrets.twitchClientId,
 	};
 
@@ -139,11 +130,11 @@ async function checkForCommand(msg) {
 
 	try {
 		if (feature) return await feature.func(msg);
-
-		return await getStream(msg);
 	} catch (err) {
 		return err.message;
 	}
+
+	return null;
 }
 
 module.exports = {

@@ -5,7 +5,7 @@ function createRedditEmbed(res) {
 
 	embed.title = res.title;
 	embed.url = res.url;
-	embed.color = 0x00AE86;
+	embed.color = 0x00ae86;
 
 	if (res.content !== "") {
 		embed.thumbnail = { url: res.image };
@@ -17,7 +17,6 @@ function createRedditEmbed(res) {
 	embed.footer = { text: `From: ${res.subreddit} | Upvotes: ${res.score} | ` };
 
 	return { embed };
-
 }
 
 function prettyNumber(number) {
@@ -28,7 +27,7 @@ function createCryptoEmbed(res) {
 	const embed = {};
 
 	embed.title = `${res.rank}. ${res.name} (${res.symbol})`;
-	embed.color = 0x00AE86;
+	embed.color = 0x00ae86;
 
 	const marketcapEur = prettyNumber(res.marketcapEur);
 	const availableSupply = prettyNumber(res.availableSupply);
@@ -57,19 +56,21 @@ function createCryptoEmbed(res) {
 		},
 	];
 
-	embed.footer = { text: `1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(2)}%` };
+	embed.footer = {
+		text: `1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(2)}%`,
+	};
 
 	return { embed };
 }
 
-function createRadarEmbed(location, radars) {
+function createRadarEmbed(radars) {
 	const embed = {};
 
-	embed.title = location;
-	embed.color = 0x00AE86;
+	embed.title = radars.location;
+	embed.color = 0x00ae86;
 
 	embed.fields = [];
-	for (const radar of radars) embed.fields.push({ name: radar.date, value: radar.description });
+	for (const radar of radars.radars) embed.fields.push({ name: radar.date, value: radar.description });
 
 	if (!radars.length) embed.description = "Não há radares";
 
@@ -80,7 +81,7 @@ function createCoronaEmbed(res) {
 	const embed = {};
 
 	embed.title = res.country.country;
-	embed.color = 0x00AE86;
+	embed.color = 0x00ae86;
 
 	embed.fields = [
 		{
@@ -130,7 +131,9 @@ function createCoronaEmbed(res) {
 		},
 	];
 
-	embed.footer = { text: `World - Cases : ${res.total[0]} | Deaths: ${res.total[1]} | Recovered: ${res.total[2]} ` };
+	embed.footer = {
+		text: `World - Cases : ${res.total[0]} | Deaths: ${res.total[1]} | Recovered: ${res.total[2]} `,
+	};
 
 	return { embed };
 }
@@ -139,7 +142,7 @@ function createWeatherEmbed(res) {
 	const embed = {};
 
 	embed.title = res.forecast;
-	embed.color = 0x00AE86;
+	embed.color = 0x00ae86;
 
 	embed.fields = [
 		{
@@ -181,7 +184,7 @@ function createSearchEmbed(res) {
 	const embed = {};
 
 	embed.title = res[0].topic;
-	embed.color = 0x00AE86;
+	embed.color = 0x00ae86;
 
 	embed.fields = [];
 	for (let i = 0; i < 3; i++) {
@@ -196,7 +199,7 @@ function createDefineEmbed(res) {
 	const embed = {};
 
 	embed.title = res.word;
-	embed.color = 0x00AE86;
+	embed.color = 0x00ae86;
 	embed.fields = [{ name: res.definition, value: res.example }];
 
 	return { embed };
@@ -206,7 +209,7 @@ async function createPollEmbed(msg, res) {
 	const embed = {};
 
 	embed.title = res.title;
-	embed.color = 0x00AE86;
+	embed.color = 0x00ae86;
 
 	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
 

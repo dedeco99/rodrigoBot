@@ -1,11 +1,10 @@
 const { get } = require("../utils/request");
-const embed = require("../utils/embed");
 
 function scrap(data) {
 	const dirtyJSON = JSON.parse(data.match(/window\._sharedData\s?=\s?(?<a>{.+);<\/script>/)[1]);
 
 	const user = dirtyJSON.entry_data.ProfilePage[0].graphql.user;
-	const medias = user.edge_owner_to_timeline_media.edges.map((post) => {
+	const medias = user.edge_owner_to_timeline_media.edges.map(post => {
 		return {
 			mediaId: post.node.id,
 			shortcode: post.node.shortcode,
@@ -75,8 +74,8 @@ function formatResponse(url, num, json) {
 }
 
 async function getPost(msg) {
-	const person = msg.content.split(" ")[2];
-	const num = msg.content.split(" ").pop();
+	const person = msg.split(" ")[2];
+	const num = msg.split(" ").pop();
 	const url = `https://www.instagram.com/${person}/`;
 
 	try {
@@ -85,7 +84,7 @@ async function getPost(msg) {
 		const json = scrap(res.data);
 		const post = formatResponse(url, num, json);
 
-		return embed.createInstaEmbed(post);
+		return post;
 	} catch (err) {
 		console.log(err);
 		return "Claramente esse xixo não existe";
