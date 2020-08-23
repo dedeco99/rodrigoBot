@@ -1,6 +1,6 @@
 const moment = require("moment");
 
-const Birthday = require("../models/birthday");
+const Birthday = require("../../discord-client/models/birthday");
 
 async function addBirthday(msg) {
 	const person = msg.content.split(" ")[3];
@@ -32,9 +32,11 @@ async function removeBirthday(msg) {
 async function getBirthdays(msg) {
 	let birthdays = await Birthday.find({ room: msg.channel.id }).sort({ name: 1 });
 
-	birthdays = birthdays.map((birthday) => {
-		return `${birthday.person} (${moment(birthday.date).format("DD-MM-YYYY")})`;
-	}).join(" | ");
+	birthdays = birthdays
+		.map(birthday => {
+			return `${birthday.person} (${moment(birthday.date).format("DD-MM-YYYY")})`;
+		})
+		.join(" | ");
 
 	return birthdays;
 }

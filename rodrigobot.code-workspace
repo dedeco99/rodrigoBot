@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "path": "web-client"
+    },
+    {
+      "path": "discord-client"
+    },
+    {
+      "path": "server"
+    }
+  ],
+  "settings": {}
+}

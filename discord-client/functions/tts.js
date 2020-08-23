@@ -1,5 +1,3 @@
-/* global client musicPlayers */
-
 const { getVoiceStream } = require("discord-tts");
 
 async function speak(msg) {
@@ -8,12 +6,12 @@ async function speak(msg) {
 	const userVoiceState = msg.channel.guild.voiceStates.cache.get(msg.author.id);
 	if (!userVoiceState) return "Vai para um canal de voz primeiro sua xixada!";
 
-	if (musicPlayers[msg.channel.guild.id]) return "Está a tocar música palhaço";
+	if (global.musicPlayers[msg.channel.guild.id]) return "Está a tocar música palhaço";
 
 	const paramsArray = msg.content.split(" ");
 	const text = paramsArray.splice(2, paramsArray.length - 1).join(" ");
 
-	const channel = client.channels.cache.get(userVoiceState.channelID);
+	const channel = global.client.channels.cache.get(userVoiceState.channelID);
 
 	const connection = await channel.join();
 

@@ -1,5 +1,3 @@
-/* global client */
-
 const cron = require("node-cron");
 
 const youtube = require("./youtube");
@@ -17,7 +15,8 @@ async function addCronjob(msg) {
 	const cronjob = await Cronjob.findOne({
 		name,
 		cron: cronString,
-		message: command, room: msg.channel.id,
+		message: command,
+		room: msg.channel.id,
 	});
 
 	if (cronjob) return "Esse cronjob já existe seu lixo";
@@ -64,13 +63,13 @@ async function runCronjobs(checkForCommand) {
 		});
 
 		for (const birthday of birthdays) {
-			client.channels.cache.get(birthday.room).send(`Parabéns ${birthday.person}`);
+			global.client.channels.cache.get(birthday.room).send(`Parabéns ${birthday.person}`);
 		}
 	});
 
 	cron.schedule("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
-		if (notification) client.channels.cache.get("525343734746054657").send(notification);
+		if (notification) global.client.channels.cache.get("525343734746054657").send(notification);
 
 		/*
 		notification = await twitch.fetchNotifications();
@@ -85,9 +84,9 @@ async function runCronjobs(checkForCommand) {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
 				const message = await checkForCommand({ content: cronjob.message });
 
-				if (message) client.channels.cache.get(cronjob.room).send(message);
+				if (message) global.client.channels.cache.get(cronjob.room).send(message);
 			} else {
-				client.channels.cache.get(cronjob.room).send(cronjob.message);
+				global.client.channels.cache.get(cronjob.room).send(cronjob.message);
 			}
 		});
 	}

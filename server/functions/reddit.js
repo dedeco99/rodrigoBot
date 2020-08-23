@@ -1,11 +1,6 @@
-/* global redditPosts */
-
 const errors = require("../utils/errors");
 const { get, post } = require("../utils/request");
 const secrets = require("../utils/secrets");
-const embed = require("../utils/embed");
-
-const Subreddit = require("../models/subreddit");
 
 function isFile(pathname) {
 	return pathname.split("/").pop().lastIndexOf(".") > -1;
@@ -67,7 +62,7 @@ async function getRedditPosts(data, accessToken, retries = 0) {
 	const url = `https://oauth.reddit.com/r/${data.subreddit}?limit=100&sort=hot`;
 	const headers = {
 		"User-Agent": "Entertainment-Hub by dedeco99",
-		"Authorization": `bearer ${accessToken}`,
+		Authorization: `bearer ${accessToken}`,
 	};
 
 	const res = await get(url, headers);
@@ -83,21 +78,23 @@ async function getRedditPosts(data, accessToken, retries = 0) {
 		return getRedditPosts(data, accessToken, retries);
 	}
 
-	redditPosts.push(response.id);
-	if (redditPosts.length > 10) redditPosts.shift();
+	global.redditPosts.push(response.id);
+	if (global.redditPosts.length > 10) global.redditPosts.shift();
 
-	return embed.createRedditEmbed(response);
+	return response;
 }
 
 async function getAccessToken(data) {
 	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`;
 
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
+	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+		"base64",
+	); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
 
 	const headers = {
 		"User-Agent": "RodrigoBot",
-		"Authorization": auth,
+		Authorization: auth,
 	};
 
 	const res = await post(url, null, headers);
@@ -111,15 +108,19 @@ async function getAccessToken(data) {
 	return response;
 }
 
-async function getRefreshToken() { /* eslint-disable-line no-unused-vars */
-	const url = "https://www.reddit.com/api/v1/access_token?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul";
+async function getRefreshToken() {
+	/* eslint-disable-line no-unused-vars */
+	const url =
+		"https://www.reddit.com/api/v1/access_token?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul";
 
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString("base64"); /* eslint-disable-line no-undef */
+	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+		"base64",
+	); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
 
 	const headers = {
 		"User-Agent": "RodrigoBot",
-		"Authorization": auth,
+		Authorization: auth,
 	};
 
 	const res = await post(url, null, headers);
@@ -128,66 +129,16 @@ async function getRefreshToken() { /* eslint-disable-line no-unused-vars */
 	console.log(json);
 }
 
-async function addSubreddit(msg) {
-	const name = msg.content.split(" ")[3];
-	const subreddits = msg.content.split(" ")[4];
-
-	const subreddit = await Subreddit.findOne({ guild: msg.guild.id, name });
-
-	if (subreddit) return "Esse subreddit já existe seu lixo";
-
-	const newSubreddit = new Subreddit({ guild: msg.guild.id, name, subreddits });
-
-	await newSubreddit.save();
-
-	return "Subreddit adicionado com sucesso";
-}
-
-async function removeSubreddit(msg) {
-	const name = msg.content.split(" ")[3];
-
-	await Subreddit.deleteOne({ name });
-
-	return "Subreddit removido com sucesso";
-}
-
-async function getSubreddits(msg) {
-	let subreddits = await Subreddit.find({
-		$or: [{ guild: null }, { guild: msg.guild.id }],
-	}).sort({ name: 1 });
-
-	subreddits = subreddits.map(subreddit => subreddit.name).join(" | ");
-
-	return subreddits;
-}
-
 async function checkForReddit(msg) {
 	// await getRefreshToken();
 
-	const features = [
-		{ command: "add", func: addSubreddit },
-		{ command: "remove", func: removeSubreddit },
-		{ command: "get", func: getSubreddits },
-	];
-
-	const command = msg.content.split(" ")[2];
-	const feature = features.find(f => f.command === command);
-
 	try {
-		if (feature) return await feature.func(msg);
+		const subreddit = msg.split(" ")[2];
 
-		const query = msg.guild ? { $or: [{ guild: msg.guild.id }, { guild: null }] } : {};
-		const subs = await Subreddit.find(query).lean();
-
-		const searchedSub = msg.content.split(" ")[2];
-		const sub = subs.find(s => s.name === searchedSub);
-
-		return await getAccessToken({ subreddit: sub ? sub.subreddits : searchedSub });
+		return await getAccessToken({ subreddit });
 	} catch (err) {
 		return err.message;
 	}
 }
 
-module.exports = {
-	checkForReddit,
-};
+module.exports = { checkForReddit };

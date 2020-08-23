@@ -2,8 +2,8 @@ const errors = require("../utils/errors");
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
-const Channel = require("../models/channel");
-const Notification = require("../models/notification");
+const Channel = require("../../discord-client/models/channel");
+const Notification = require("../../discord-client/models/notification");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
@@ -27,28 +27,6 @@ async function getChannelsPlaylist(channel) {
 	const json = res.data;
 
 	return json.items;
-}
-
-async function getVideo(msg) {
-	const channelName = msg.content.split("youtube ")[1];
-
-	const channelFound = await checkIfChannelExists(channelName);
-
-	if (channelFound) {
-		const playlist = await getChannelsPlaylist(channelFound.id.channelId);
-
-		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist[0].contentDetails.relatedPlaylists.uploads}&maxResults=5&key=${secrets.youtubeKey}`;
-
-		const res = await get(url);
-
-		if (res.status === 403) throw errors.youtubeLimit;
-
-		const json = res.data;
-
-		return `https://youtu.be/${json.items[0].snippet.resourceId.videoId}`;
-	}
-
-	return "Esse canal deve estar no xixo porque não o encontro";
 }
 
 async function addChannel(msg) {
@@ -105,7 +83,9 @@ async function fetchChannels(msg) {
 	let channels = await Channel.find({
 		guild: msg.guild.id,
 		platform: "youtube",
-	}).collation({ "locale": "en" }).sort({ name: 1 });
+	})
+		.collation({ locale: "en" })
+		.sort({ name: 1 });
 
 	channels = channels.map(channel => channel.name).join(" | ");
 
@@ -159,11 +139,11 @@ async function checkForCommand(msg) {
 
 	try {
 		if (feature) return await feature.func(msg);
-
-		return await getVideo(msg);
 	} catch (err) {
 		return err.message;
 	}
+
+	return null;
 }
 
 module.exports = {

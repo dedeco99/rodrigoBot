@@ -1,4 +1,4 @@
-const CustomCommand = require("../models/customCommand");
+const CustomCommand = require("../../discord-client/models/customCommand");
 
 async function addCustomCommand(msg) {
 	const params = msg.content.split("add ")[1];
