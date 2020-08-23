@@ -51,7 +51,7 @@ async function getCronjobs(msg) {
 	return cronjobs;
 }
 
-async function runCronjobs(checkForCommand) {
+async function runCronjobs(checkForCommand, customCommands) {
 	cron.schedule("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
 			$expr: {
@@ -82,7 +82,7 @@ async function runCronjobs(checkForCommand) {
 	for (const cronjob of cronjobs) {
 		cron.schedule(cronjob.cron, async () => {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
-				const message = await checkForCommand({ content: cronjob.message });
+				const message = await checkForCommand(cronjob.message);
 
 				if (message) global.client.channels.cache.get(cronjob.room).send(message);
 			} else {

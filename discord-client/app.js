@@ -117,6 +117,8 @@ async function run() {
 			}
 		}
 	});
+
+	await cronjob.runCronjobs(rodrigo.handleMessage);
 }
 
 run();
