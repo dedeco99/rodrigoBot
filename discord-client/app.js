@@ -27,12 +27,14 @@ const embeds = {
 	insta: embed.createInstaEmbed,
 	crypto: embed.createCryptoEmbed,
 	vote: embed.createPollEmbed,
+	keyboardGroupBuys: embed.createKeyboardEmbed,
 };
 
 const discordFeatures = [
 	// Utils
 	{ command: "remindme", func: utils.remindMe },
 	{ command: "vote", func: utils.vote },
+	{ command: "keyboardGroupBuys", func: utils.keyboardGroupBuys },
 
 	// Meme Creation
 	{ command: "meme", func: memes.checkForMemes },
@@ -57,6 +59,46 @@ const discordFeatures = [
 	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
 ];
 
+async function handleMessage(msg, cronjob) {
+	if (msg.author && msg.author.username === "RodrigoBot") {
+		global.lastMsgs.push(msg);
+		if (global.lastMsgs.length > 10) global.lastMsgs.shift();
+
+		return null;
+	}
+
+	let customCommands = cronjob ? [] : await CustomCommand.find({ guild: msg.guild.id });
+
+	customCommands = customCommands.map(customCommand => ({
+		command: customCommand.word,
+		func: () => customCommand.message,
+	}));
+
+	customCommands = customCommands.concat(
+		discordFeatures.map(feat => ({ command: feat.command, includes: feat.includes, func: () => null })),
+	);
+
+	let response = await rodrigo.handleMessage(msg.content, customCommands);
+
+	if (!response || !response.message) return null;
+
+	const discordFeature = discordFeatures.find(
+		feat => (Array.isArray(feat.command) ? feat.command[0] : feat.command) === response.command,
+	);
+
+	if (discordFeature) {
+		response = { command: discordFeature.command, message: await discordFeature.func(msg) };
+	}
+
+	const message = embeds[response.command] ? embeds[response.command](response.message) : response.message;
+
+	if (!cronjob && message) {
+		msg.channel.send(message);
+	}
+
+	return message;
+}
+
 async function run() {
 	global.client = new discord.Client();
 	global.lastMsgs = [];
@@ -74,41 +116,7 @@ async function run() {
 		global.client.user.setActivity(meta.action.message, { type: meta.action.type });
 	});
 
-	global.client.on("message", async msg => {
-		if (msg.author && msg.author.username === "RodrigoBot") {
-			global.lastMsgs.push(msg);
-			if (global.lastMsgs.length > 10) global.lastMsgs.shift();
-
-			return null;
-		}
-
-		let customCommands = await CustomCommand.find({ guild: msg.guild.id });
-
-		customCommands = customCommands.map(customCommand => ({
-			command: customCommand.word,
-			func: () => customCommand.message,
-		}));
-
-		customCommands = customCommands.concat(
-			discordFeatures.map(feat => ({ command: feat.command, includes: feat.includes, func: () => null })),
-		);
-
-		let response = await rodrigo.handleMessage(msg.content, customCommands);
-
-		if (!response) return null;
-
-		const discordFeature = discordFeatures.find(
-			feat => (feat.command.length ? feat.command[0] : feat.command) === response.command,
-		);
-
-		if (discordFeature) {
-			response = { command: discordFeature.command, message: await discordFeature.func(msg) };
-		}
-
-		if (response.message) {
-			msg.channel.send(embeds[response.command] ? embeds[response.command](response.message) : response.message);
-		}
-	});
+	global.client.on("message", handleMessage);
 
 	global.client.on("messageReactionAdd", reaction => {
 		if (reaction.message.channel.guild.id === "651025812312555551") {
@@ -118,7 +126,7 @@ async function run() {
 		}
 	});
 
-	await cronjob.runCronjobs(rodrigo.handleMessage);
+	await cronjob.runCronjobs(handleMessage);
 }
 
 run();

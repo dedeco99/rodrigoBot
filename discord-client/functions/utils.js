@@ -1,4 +1,9 @@
+const moment = require("moment");
+
+const { get } = require("../utils/request");
 const embed = require("../utils/embed");
+
+const GroupBuy = require("../../discord-client/models/groupBuy");
 
 function remindMe(msg) {
 	const params = msg.content.split(" ");
@@ -83,4 +88,43 @@ async function pin(msg, isMessageToPin) {
 	return null;
 }
 
-module.exports = { remindMe, vote, pin };
+async function keyboardGroupBuys() {
+	const res = await get("https://mechgroupbuys.com/gb-data");
+	const json = res.data;
+
+	const liveGroupBuys = json
+		.filter(i => {
+			return (
+				(i.type === "keyboards" || i.type === "keycaps" || i.type === "switches") &&
+				i.startDate &&
+				moment(i.startDate, "M/D/YY").diff(moment(), "days") <= 0 &&
+				(!i.endDate || moment(i.endDate, "M/D/YY").diff(moment(), "days") >= 0)
+			);
+		})
+		.map(i => ({
+			name: i.name,
+			type: i.type,
+			image: i.mainImage,
+			startDate: moment(i.startDate, "M/D/YY").format("DD/MM/YYYY"),
+			endDate: moment(i.endDate, "M/D/YY").format("DD/MM/YYYY"),
+			pricing: i.pricing,
+			saleType: i.saleType,
+			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),
+		}));
+
+	for (const groupBuy of liveGroupBuys) {
+		const groupBuyExists = await GroupBuy.findOne({ name: groupBuy.name });
+
+		if (!groupBuyExists) {
+			const newGroupBuy = new GroupBuy(groupBuy);
+
+			await newGroupBuy.save();
+
+			return groupBuy;
+		}
+	}
+
+	return null;
+}
+
+module.exports = { remindMe, vote, pin, keyboardGroupBuys };

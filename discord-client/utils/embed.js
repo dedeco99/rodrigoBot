@@ -228,6 +228,28 @@ async function createPollEmbed(msg, res) {
 	await Promise.all(promises);
 }
 
+function createKeyboardEmbed(res) {
+	const embed = {};
+
+	embed.title = res.name;
+	embed.color = 0x00ae86;
+	embed.url = res.link;
+	embed.fields = [
+		{ name: "Pricing", value: res.pricing ? res.pricing : "?", inline: true },
+		{ name: "Sale Type", value: res.saleType, inline: true },
+	];
+
+	embed.image = { url: res.image };
+
+	embed.footer = {
+		text: `Start date: ${res.startDate === "Invalid date" ? "?" : res.startDate} | End date: ${
+			res.endDate === "Invalid date" ? "?" : res.endDate
+		}`,
+	};
+
+	return { embed };
+}
+
 function createInstaEmbed(res) {
 	const embed = {};
 
@@ -272,6 +294,7 @@ module.exports = {
 	createCoronaEmbed,
 	createDefineEmbed,
 	createPollEmbed,
+	createKeyboardEmbed,
 	createInstaEmbed,
 	createPriceEmbed,
 };

@@ -82,7 +82,7 @@ async function runCronjobs(checkForCommand, customCommands) {
 	for (const cronjob of cronjobs) {
 		cron.schedule(cronjob.cron, async () => {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
-				const message = await checkForCommand(cronjob.message);
+				const message = await checkForCommand({ content: cronjob.message }, true);
 
 				if (message) global.client.channels.cache.get(cronjob.room).send(message);
 			} else {
