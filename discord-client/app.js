@@ -59,7 +59,7 @@ const discordFeatures = [
 	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
 ];
 
-async function handleMessage(msg, cronjob) {
+async function handleMessage(msg, isCronjob) {
 	if (msg.author && msg.author.username === "RodrigoBot") {
 		global.lastMsgs.push(msg);
 		if (global.lastMsgs.length > 10) global.lastMsgs.shift();
@@ -67,7 +67,7 @@ async function handleMessage(msg, cronjob) {
 		return null;
 	}
 
-	let customCommands = cronjob ? [] : await CustomCommand.find({ guild: msg.guild.id });
+	let customCommands = isCronjob ? [] : await CustomCommand.find({ guild: msg.guild.id });
 
 	customCommands = customCommands.map(customCommand => ({
 		command: customCommand.word,
@@ -80,7 +80,7 @@ async function handleMessage(msg, cronjob) {
 
 	let response = await rodrigo.handleMessage(msg.content, customCommands);
 
-	if (!response || !response.message) return null;
+	if (!response || !response.command) return null;
 
 	const discordFeature = discordFeatures.find(
 		feat => (Array.isArray(feat.command) ? feat.command[0] : feat.command) === response.command,
@@ -90,9 +90,11 @@ async function handleMessage(msg, cronjob) {
 		response = { command: discordFeature.command, message: await discordFeature.func(msg) };
 	}
 
+	if (!response.message) return null;
+
 	const message = embeds[response.command] ? embeds[response.command](response.message) : response.message;
 
-	if (!cronjob && message) {
+	if (!isCronjob && message) {
 		msg.channel.send(message);
 	}
 

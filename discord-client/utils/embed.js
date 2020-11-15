@@ -236,7 +236,7 @@ function createKeyboardEmbed(res) {
 	embed.url = res.link;
 	embed.fields = [
 		{ name: "Pricing", value: res.pricing ? res.pricing : "?", inline: true },
-		{ name: "Sale Type", value: res.saleType, inline: true },
+		{ name: "Sale Type", value: res.saleType ? res.saleType : "?", inline: true },
 	];
 
 	embed.image = { url: res.image };
