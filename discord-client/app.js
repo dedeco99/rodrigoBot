@@ -35,6 +35,7 @@ const discordFeatures = [
 	{ command: "remindme", func: utils.remindMe },
 	{ command: "vote", func: utils.vote },
 	{ command: "keyboardGroupBuys", func: utils.keyboardGroupBuys },
+	{ command: "stockTracker", func: utils.stockTracker },
 
 	// Meme Creation
 	{ command: "meme", func: memes.checkForMemes },

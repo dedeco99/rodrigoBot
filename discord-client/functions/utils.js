@@ -1,9 +1,11 @@
 const moment = require("moment");
+const cheerio = require("cheerio");
 
 const { get } = require("../utils/request");
 const embed = require("../utils/embed");
 
 const GroupBuy = require("../../discord-client/models/groupBuy");
+const Stock = require("../../discord-client/models/stock");
 
 function remindMe(msg) {
 	const params = msg.content.split(" ");
@@ -127,4 +129,67 @@ async function keyboardGroupBuys() {
 	return null;
 }
 
-module.exports = { remindMe, vote, pin, keyboardGroupBuys };
+async function stockTracker(msg) {
+	const message = msg.content.split(" ");
+
+	if (message[2]) {
+		if (message[2].includes("globaldata") || message[2].includes("chiptec")) {
+			const stock = new Stock({ link: message[2] });
+
+			await stock.save();
+
+			return "Link adicionado com sucesso";
+		}
+
+		return "Loja não é válida";
+	}
+
+	const stocks = await Stock.find({}).lean();
+
+	for (const stock of stocks) {
+		const url = stock.link;
+
+		const res = await get(url);
+		const $ = cheerio.load(res.data);
+
+		let shop = null;
+		let title = null;
+		let stockMessage = null;
+		let inStock = null;
+		if (url.includes("globaldata")) {
+			shop = "Globaldata";
+			title = $(".page-title")
+				.toArray()
+				.map(elem => $(elem).find("span").text());
+			title = title[0];
+
+			stockMessage = $(".stock-shops")
+				.toArray()
+				.map(elem => $(elem).find("span").first().text());
+			stockMessage = stockMessage[0].trim();
+			inStock = stockMessage === "Em Stock";
+		} else if (url.includes("chiptec")) {
+			shop = "Chiptec";
+			title = $(".prod_tit")
+				.toArray()
+				.map(elem => $(elem).find("h1").text());
+			title = title[0];
+
+			stockMessage = $(".amstockstatus")
+				.toArray()
+				.map(elem => $(elem).text());
+			stockMessage = stockMessage[0].trim();
+			inStock = stockMessage === "Disponível";
+		}
+
+		if (stock.stock !== stockMessage) {
+			await Stock.updateOne({ _id: stock._id }, { stock: stockMessage });
+
+			if (inStock) return `${shop} - ${title} - ${stockMessage}`;
+		}
+	}
+
+	return null;
+}
+
+module.exports = { remindMe, vote, pin, keyboardGroupBuys, stockTracker };
