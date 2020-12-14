@@ -134,6 +134,10 @@ async function stockTracker(msg) {
 
 	if (message[2]) {
 		if (message[2].includes("globaldata") || message[2].includes("chiptec")) {
+			const stockExists = await Stock.findOne({ link: message[2] }).lean();
+
+			if (stockExists) return "Já existe";
+
 			const stock = new Stock({ link: message[2] });
 
 			await stock.save();
@@ -185,7 +189,7 @@ async function stockTracker(msg) {
 		if (stock.stock !== stockMessage) {
 			await Stock.updateOne({ _id: stock._id }, { stock: stockMessage });
 
-			if (inStock) return `${shop} - ${title} - ${stockMessage}`;
+			if (inStock) return `<@&788132015160426496> ${shop} - ${title} - ${stockMessage}`;
 		}
 	}
 
