@@ -28,6 +28,7 @@ const embeds = {
 	crypto: embed.createCryptoEmbed,
 	vote: embed.createPollEmbed,
 	keyboardGroupBuys: embed.createKeyboardEmbed,
+	stockTracker: embed.createStockEmbed,
 };
 
 const discordFeatures = [
@@ -60,6 +61,7 @@ const discordFeatures = [
 	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
 ];
 
+// eslint-disable-next-line complexity
 async function handleMessage(msg, isCronjob) {
 	if (msg.author && msg.author.username === "RodrigoBot") {
 		global.lastMsgs.push(msg);
@@ -96,7 +98,14 @@ async function handleMessage(msg, isCronjob) {
 	const message = embeds[response.command] ? embeds[response.command](response.message) : response.message;
 
 	if (!isCronjob && message) {
-		msg.channel.send(message);
+		if (message.length && typeof message !== "string") {
+			if (response.command === "stockTracker") msg.channel.send("<@&788132015160426496>");
+			for (const singleMsg of message) {
+				msg.channel.send(singleMsg);
+			}
+		} else {
+			msg.channel.send(message);
+		}
 	}
 
 	return message;

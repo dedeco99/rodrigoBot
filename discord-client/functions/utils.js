@@ -129,6 +129,7 @@ async function keyboardGroupBuys() {
 	return null;
 }
 
+// eslint-disable-next-line max-lines-per-function
 async function stockTracker(msg) {
 	const message = msg.content.split(" ");
 
@@ -150,6 +151,7 @@ async function stockTracker(msg) {
 
 	const stocks = await Stock.find({}).lean();
 
+	const products = [];
 	for (const stock of stocks) {
 		const url = stock.link;
 
@@ -158,6 +160,7 @@ async function stockTracker(msg) {
 
 		let shop = null;
 		let title = null;
+		let image = null;
 		let stockMessage = null;
 		let inStock = null;
 		if (url.includes("globaldata")) {
@@ -166,6 +169,10 @@ async function stockTracker(msg) {
 				.toArray()
 				.map(elem => $(elem).find("span").text());
 			title = title[0];
+			image = $("#mtImageContainer")
+				.toArray()
+				.map(elem => $(elem).find("img").attr("src"));
+			image = image[0];
 
 			stockMessage = $(".stock-shops")
 				.toArray()
@@ -178,6 +185,10 @@ async function stockTracker(msg) {
 				.toArray()
 				.map(elem => $(elem).find("h1").text());
 			title = title[0];
+			image = $(".product-image")
+				.toArray()
+				.map(elem => $(elem).find("img").attr("src"));
+			image = image[0];
 
 			stockMessage = $(".amstockstatus")
 				.toArray()
@@ -189,11 +200,11 @@ async function stockTracker(msg) {
 		if (stock.stock !== stockMessage) {
 			await Stock.updateOne({ _id: stock._id }, { stock: stockMessage });
 
-			if (inStock) return `<@&788132015160426496> ${shop} - ${title} - ${stockMessage}`;
+			if (inStock) products.push({ shop, title, url, image, stockMessage });
 		}
 	}
 
-	return null;
+	return products.length ? products : null;
 }
 
 module.exports = { remindMe, vote, pin, keyboardGroupBuys, stockTracker };
