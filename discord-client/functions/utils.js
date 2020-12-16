@@ -178,7 +178,7 @@ async function stockTracker(msg) {
 				.toArray()
 				.map(elem => $(elem).find("span").first().text());
 			stockMessage = stockMessage[0].trim();
-			inStock = stockMessage === "Em Stock";
+			inStock = stockMessage !== "Esgotado";
 		} else if (url.includes("chiptec")) {
 			shop = "Chiptec";
 			title = $(".prod_tit")
