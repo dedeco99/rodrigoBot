@@ -250,6 +250,27 @@ function createKeyboardEmbed(res) {
 	return { embed };
 }
 
+function createStockEmbed(products) {
+	const embeds = [];
+
+	for (const res of products) {
+		const embed = {};
+
+		embed.title = res.title;
+		embed.color = 0x00ae86;
+		embed.thumbnail = { url: res.image };
+		embed.url = res.url;
+		embed.fields = [
+			{ name: "Loja", value: res.shop, inline: true },
+			{ name: "Stock", value: res.stockMessage, inline: true },
+		];
+
+		embeds.push({ embed });
+	}
+
+	return embeds;
+}
+
 function createInstaEmbed(res) {
 	const embed = {};
 
@@ -295,6 +316,7 @@ module.exports = {
 	createDefineEmbed,
 	createPollEmbed,
 	createKeyboardEmbed,
+	createStockEmbed,
 	createInstaEmbed,
 	createPriceEmbed,
 };
