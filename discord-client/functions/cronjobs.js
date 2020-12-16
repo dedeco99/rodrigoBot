@@ -84,7 +84,18 @@ async function runCronjobs(checkForCommand, customCommands) {
 			if (cronjob.message.toLowerCase().includes("rodrigo")) {
 				const message = await checkForCommand({ content: cronjob.message }, true);
 
-				if (message) global.client.channels.cache.get(cronjob.room).send(message);
+				if (message) {
+					if (message.length && typeof message !== "string") {
+						if (cronjob.message.includes("stockTracker")) {
+							global.client.channels.cache.get(cronjob.room).send("<@&788132015160426496>");
+						}
+						for (const singleMsg of message) {
+							global.client.channels.cache.get(cronjob.room).send(singleMsg);
+						}
+					} else {
+						global.client.channels.cache.get(cronjob.room).send(message);
+					}
+				}
 			} else {
 				global.client.channels.cache.get(cronjob.room).send(cronjob.message);
 			}
