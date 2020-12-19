@@ -134,7 +134,7 @@ async function stockTracker(msg) {
 	const message = msg.content.split(" ");
 
 	if (message[2]) {
-		if (message[2].includes("globaldata") || message[2].includes("chiptec")) {
+		if (message[2].includes("globaldata") || message[2].includes("chiptec") || message[2].includes("pcdiga")) {
 			const stockExists = await Stock.findOne({ link: message[2] }).lean();
 
 			if (stockExists) return "Já existe";
@@ -195,6 +195,21 @@ async function stockTracker(msg) {
 				.map(elem => $(elem).text());
 			stockMessage = stockMessage[0].trim();
 			inStock = stockMessage === "Disponível";
+		} else if (url.includes("pcdiga")) {
+			shop = "PCDiga";
+			title = $(".item.product")
+				.toArray()
+				.map(elem => $(elem).find("strong").text());
+			title = title[0];
+			image = $(".gallery-placeholder__image")
+				.toArray()
+				.map(elem => $(elem).attr("src"));
+			image = image[0];
+
+			const index = res.data.indexOf("'is_in_stock': ");
+			stockMessage = res.data.substring(index + 15, index + 16);
+			inStock = stockMessage === "1";
+			stockMessage = inStock ? "Em Stock" : "Esgotado";
 		}
 
 		if (stock.stock !== stockMessage) {
