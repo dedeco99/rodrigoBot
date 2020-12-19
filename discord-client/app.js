@@ -61,8 +61,7 @@ const discordFeatures = [
 	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
 ];
 
-// eslint-disable-next-line complexity
-async function handleMessage(msg, isCronjob) {
+async function handleMessage(msg, room) {
 	if (msg.author && msg.author.username === "RodrigoBot") {
 		global.lastMsgs.push(msg);
 		if (global.lastMsgs.length > 10) global.lastMsgs.shift();
@@ -70,7 +69,7 @@ async function handleMessage(msg, isCronjob) {
 		return null;
 	}
 
-	let customCommands = isCronjob ? [] : await CustomCommand.find({ guild: msg.guild.id });
+	let customCommands = room ? [] : await CustomCommand.find({ guild: msg.guild.id });
 
 	customCommands = customCommands.map(customCommand => ({
 		command: customCommand.word,
@@ -95,20 +94,23 @@ async function handleMessage(msg, isCronjob) {
 
 	if (!response.message) return null;
 
-	const message = embeds[response.command] ? embeds[response.command](response.message) : response.message;
+	if (embeds[response.command] && typeof response.message !== "string") {
+		response.message = embeds[response.command](response.message);
+	}
 
-	if (!isCronjob && message) {
-		if (message.length && typeof message !== "string") {
-			if (response.command === "stockTracker") msg.channel.send("<@&788132015160426496>");
-			for (const singleMsg of message) {
-				msg.channel.send(singleMsg);
+	const messages = Array.isArray(response.message) ? response.message : [response.message];
+
+	for (const message of messages) {
+		if (message) {
+			if (room) {
+				global.client.channels.cache.get(room).send(message);
+			} else {
+				msg.channel.send(message);
 			}
-		} else {
-			msg.channel.send(message);
 		}
 	}
 
-	return message;
+	return null;
 }
 
 async function run() {
