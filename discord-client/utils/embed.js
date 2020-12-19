@@ -251,7 +251,7 @@ function createKeyboardEmbed(res) {
 }
 
 function createStockEmbed(products) {
-	const embeds = [];
+	const embeds = ["<@&788132015160426496>"];
 
 	for (const res of products) {
 		const embed = {};
