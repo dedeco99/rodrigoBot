@@ -1,5 +1,4 @@
-const discord = require("discord.js");
-const { AudioPlayerStatus, entersState, joinVoiceChannel, VoiceConnectionStatus } = require("@discordjs/voice");
+const { Intents, Client } = require("discord.js");
 const rodrigo = require("rodrigo");
 
 const secrets = require("./utils/secrets");
@@ -14,8 +13,6 @@ const custom = require("./functions/custom");
 const birthday = require("./functions/birthdays");
 const cronjob = require("./functions/cronjobs");
 const system = require("./functions/system");
-const { Track } = require("./functions/music/track");
-const { MusicSubscription } = require("./functions/music/subscription");
 
 const Meta = require("./models/meta");
 const CustomCommand = require("./models/customCommand");
@@ -45,7 +42,6 @@ const discordFeatures = [
 	{ command: "meme", func: memes.checkForMemes },
 
 	// Media
-	{ command: "music", func: media.music },
 	{ command: "play", func: media.play },
 	{ command: "watch", func: media.watch },
 	{ command: "listen", func: media.listen },
@@ -78,14 +74,6 @@ const commands = [
 		],
 	},
 	{
-		name: "skip",
-		description: "Skip to the next song in the queue",
-	},
-	{
-		name: "queue",
-		description: "See the music queue",
-	},
-	{
 		name: "pause",
 		description: "Pauses the song that is currently playing",
 	},
@@ -94,14 +82,22 @@ const commands = [
 		description: "Resume playback of the current song",
 	},
 	{
-		name: "leave",
+		name: "skip",
+		description: "Skip to the next song in the queue",
+	},
+	{
+		name: "queue",
+		description: "See the music queue",
+	},
+	{
+		name: "stop",
 		description: "Leave the voice channel",
 	},
 ];
 
 // eslint-disable-next-line complexity
 async function handleMessage(msg, room) {
-	if (msg.content.toLowerCase() === "!deploy") {
+	if (msg.content.toLowerCase() === "rodrigo commands") {
 		await msg.guild.commands.set(commands);
 
 		await msg.reply("Deployed!");
@@ -158,133 +154,16 @@ async function handleMessage(msg, room) {
 	return null;
 }
 
-/**
- * Maps guild IDs to music subscriptions, which exist if the bot has an active VoiceConnection to the guild.
- */
-const subscriptions = new Map();
-
-// eslint-disable-next-line complexity,max-lines-per-function
 async function handleInteraction(interaction) {
 	if (!interaction.isCommand() || !interaction.guildId) return;
-	let subscription = subscriptions.get(interaction.guildId);
 
-	if (interaction.commandName === "play") {
-		await interaction.defer();
-		// Extract the video URL from the command
-		const url = interaction.options.get("song").value;
-
-		// If a connection to the guild doesn't already exist and the user is in a voice channel, join that channel and create a subscription.
-		if (!subscription) {
-			if (interaction.member instanceof discord.GuildMember && interaction.member.voice.channel) {
-				const channel = interaction.member.voice.channel;
-				subscription = new MusicSubscription(
-					joinVoiceChannel({
-						channelId: channel.id,
-						guildId: channel.guild.id,
-						adapterCreator: channel.guild.voiceAdapterCreator,
-					}),
-				);
-				subscription.voiceConnection.on("error", console.warn);
-				subscriptions.set(interaction.guildId, subscription);
-			}
-		}
-
-		// If there is no subscription, tell the user they need to join a channel.
-		if (!subscription) {
-			await interaction.reply("Join a voice channel and then try that again!");
-			return;
-		}
-
-		// Make sure the connection is ready before processing the user's request
-		try {
-			await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
-		} catch (error) {
-			console.warn("teste", error);
-			await interaction.followUp("Failed to join voice channel within 20 seconds, please try again later!");
-			return;
-		}
-
-		try {
-			// Attempt to create a Track from the user's video URL
-			const track = await Track.from(url, {
-				onStart() {
-					interaction.followUp({ content: "Now playing!", ephemeral: true }).catch(console.warn);
-				},
-				onFinish() {
-					interaction.followUp({ content: "Now finished!", ephemeral: true }).catch(console.warn);
-				},
-				onError(error) {
-					console.warn(error);
-					interaction.followUp({ content: `Error: ${error.message}`, ephemeral: true }).catch(console.warn);
-				},
-			});
-			// Enqueue the track and reply a success message to the user
-			subscription.enqueue(track);
-			await interaction.reply(`Enqueued **${track.title}**`);
-		} catch (error) {
-			console.warn(error);
-			await interaction.reply("Failed to play track, please try again later!");
-		}
-	} else if (interaction.commandName === "skip") {
-		if (subscription) {
-			subscription.audioPlayer.stop();
-			await interaction.reply("Skipped song!");
-		} else {
-			await interaction.reply("Not playing in this server!");
-		}
-	} else if (interaction.commandName === "queue") {
-		// Print out the current queue, including up to the next 5 tracks to be played.
-		if (subscription) {
-			const current =
-				subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
-					? "Nothing is currently playing!"
-					: `Playing **${subscription.audioPlayer.state.resource.metadata.title}**`;
-
-			const queue = subscription.queue
-				.slice(0, 5)
-				.map((track, index) => `${index + 1}) ${track.title}`)
-				.join("\n");
-
-			await interaction.reply(`${current}\n\n${queue}`);
-		} else {
-			await interaction.reply("Not playing in this server!");
-		}
-	} else if (interaction.commandName === "pause") {
-		if (subscription) {
-			subscription.audioPlayer.pause();
-			await interaction.reply({ content: "Paused!", ephemeral: true });
-		} else {
-			await interaction.reply("Not playing in this server!");
-		}
-	} else if (interaction.commandName === "resume") {
-		if (subscription) {
-			subscription.audioPlayer.unpause();
-			await interaction.reply({ content: "Unpaused!", ephemeral: true });
-		} else {
-			await interaction.reply("Not playing in this server!");
-		}
-	} else if (interaction.commandName === "leave") {
-		if (subscription) {
-			subscription.voiceConnection.destroy();
-			subscriptions.delete(interaction.guildId);
-			await interaction.reply({ content: "Left channel!", ephemeral: true });
-		} else {
-			await interaction.reply("Not playing in this server!");
-		}
-	} else {
-		await interaction.reply("Unknown command");
-	}
+	await media.music(interaction);
 }
 
 async function run() {
-	const intents = new discord.Intents([
-		"GUILDS",
-		"GUILD_MESSAGES",
-		"GUILD_MESSAGE_REACTIONS",
-		"GUILD_VOICE_STATES",
-	]);
+	const intents = new Intents(["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]);
 
-	global.client = new discord.Client({ intents });
+	global.client = new Client({ intents });
 	global.lastMsgs = [];
 	global.musicPlayers = {};
 	global.redditPosts = [];
