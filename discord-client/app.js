@@ -1,4 +1,4 @@
-const discord = require("discord.js");
+const { Intents, Client } = require("discord.js");
 const rodrigo = require("rodrigo");
 
 const secrets = require("./utils/secrets");
@@ -42,7 +42,6 @@ const discordFeatures = [
 	{ command: "meme", func: memes.checkForMemes },
 
 	// Media
-	{ command: "music", func: media.music },
 	{ command: "play", func: media.play },
 	{ command: "watch", func: media.watch },
 	{ command: "listen", func: media.listen },
@@ -61,7 +60,49 @@ const discordFeatures = [
 	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
 ];
 
+const commands = [
+	{
+		name: "play",
+		description: "Plays a song",
+		options: [
+			{
+				name: "song",
+				type: "STRING",
+				description: "The URL of the song to play",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "pause",
+		description: "Pauses the song that is currently playing",
+	},
+	{
+		name: "resume",
+		description: "Resume playback of the current song",
+	},
+	{
+		name: "skip",
+		description: "Skip to the next song in the queue",
+	},
+	{
+		name: "queue",
+		description: "See the music queue",
+	},
+	{
+		name: "stop",
+		description: "Leave the voice channel",
+	},
+];
+
+// eslint-disable-next-line complexity
 async function handleMessage(msg, room) {
+	if (msg.content.toLowerCase() === "rodrigo commands") {
+		await msg.guild.commands.set(commands);
+
+		await msg.reply("Deployed!");
+	}
+
 	if (msg.author && msg.author.username === "RodrigoBot") {
 		global.lastMsgs.push(msg);
 		if (global.lastMsgs.length > 10) global.lastMsgs.shift();
@@ -113,8 +154,16 @@ async function handleMessage(msg, room) {
 	return null;
 }
 
+async function handleInteraction(interaction) {
+	if (!interaction.isCommand() || !interaction.guildId) return;
+
+	await media.music(interaction);
+}
+
 async function run() {
-	global.client = new discord.Client();
+	const intents = new Intents(["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]);
+
+	global.client = new Client({ intents });
 	global.lastMsgs = [];
 	global.musicPlayers = {};
 	global.redditPosts = [];
@@ -130,7 +179,9 @@ async function run() {
 		global.client.user.setActivity(meta.action.message, { type: meta.action.type });
 	});
 
-	global.client.on("message", handleMessage);
+	global.client.on("messageCreate", handleMessage);
+
+	global.client.on("interactionCreate", handleInteraction);
 
 	global.client.on("messageReactionAdd", reaction => {
 		if (reaction.message.channel.guild.id === "651025812312555551") {

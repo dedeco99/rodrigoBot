@@ -127,6 +127,18 @@ async function fetchNotifications() {
 	return null;
 }
 
+async function getVideoSearch(search) {
+	const url = `https://www.googleapis.com/youtube/v3/search?q=${search}&maxResults=1&key=${secrets.youtubeKey}`;
+
+	const res = await get(url);
+
+	if (res.status === 403) throw errors.youtubeLimit;
+
+	const json = res.data;
+
+	return `https://www.youtube.com/watch?v=${json.items[0].id.videoId}`;
+}
+
 async function checkForCommand(msg) {
 	const features = [
 		{ command: "add", func: addChannel },
@@ -149,4 +161,5 @@ async function checkForCommand(msg) {
 module.exports = {
 	fetchNotifications,
 	checkForCommand,
+	getVideoSearch,
 };

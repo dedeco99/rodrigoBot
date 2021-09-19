@@ -236,7 +236,7 @@
 		// "one-var": "error",
 		"one-var-declaration-per-line": "error",
 		"operator-assignment": "error",
-		"operator-linebreak": ["error", "after"],
+		// "operator-linebreak": ["error", "after"],
 		// "padded-blocks": "error",
 		"padding-line-between-statements": "error",
 		"prefer-object-spread": "error",
