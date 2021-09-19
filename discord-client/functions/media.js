@@ -6,49 +6,56 @@ const { MusicSubscription } = require("./music/subscription");
 
 const { updateMeta } = require("../utils/database");
 
+const { getVideoSearch } = require("./youtube");
+
 const subscriptions = new Map();
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function,complexity
 async function music(interaction) {
 	let subscription = subscriptions.get(interaction.guildId);
 
 	if (interaction.commandName === "play") {
-		await interaction.defer();
+		await interaction.deferReply();
 
-		const url = interaction.options.get("song").value;
+		const song = interaction.options.get("song").value;
 
-		if (!subscription) {
-			if (interaction.member instanceof GuildMember && interaction.member.voice.channel) {
-				const channel = interaction.member.voice.channel;
-				subscription = new MusicSubscription(
-					joinVoiceChannel({
-						channelId: channel.id,
-						guildId: channel.guild.id,
-						adapterCreator: channel.guild.voiceAdapterCreator,
-					}),
-				);
-				subscription.voiceConnection.on("error", console.warn);
-				subscriptions.set(interaction.guildId, subscription);
-			}
+		const url =
+			song.includes("https://www.youtube.com") || song.includes("https://youtu.be")
+				? song
+				: await getVideoSearch(interaction.options.get("song").value);
+
+		if (!subscription && interaction.member instanceof GuildMember && interaction.member.voice.channel) {
+			const channel = interaction.member.voice.channel;
+			subscription = new MusicSubscription(
+				joinVoiceChannel({
+					channelId: channel.id,
+					guildId: channel.guild.id,
+					adapterCreator: channel.guild.voiceAdapterCreator,
+				}),
+			);
+			subscription.voiceConnection.on("error", console.warn);
+			subscriptions.set(interaction.guildId, subscription);
 		}
 
 		if (!subscription) {
-			await interaction.reply("Join a voice channel and then try that again!");
+			await interaction.followUp("Join a voice channel and then try that again");
 			return;
 		}
 
 		try {
 			await entersState(subscription.voiceConnection, VoiceConnectionStatus.Ready, 20e3);
 		} catch (error) {
-			console.warn("teste", error);
-			await interaction.followUp("Failed to join voice channel within 20 seconds, please try again later!");
+			console.warn(error);
+
+			await interaction.followUp("Failed to join voice channel within 20 seconds gg");
+
 			return;
 		}
 
 		try {
 			const track = await Track.from(url, {
-				onStart() {
-					interaction.followUp("Now playing!").catch(console.warn);
+				async onStart() {
+					await interaction.followUp(":notes: Playing :arrow_up_small:");
 				},
 				onFinish() {
 					// interaction.followUp("Now finished!").catch(console.warn);
@@ -61,25 +68,25 @@ async function music(interaction) {
 
 			subscription.enqueue(track);
 
-			await interaction.reply(`Added **${track.title}** to the queue`);
+			await interaction.followUp(`Added **${track.title}** to the queue`);
 		} catch (error) {
 			console.warn(error);
 
-			await interaction.reply("Failed to play track, please try again later!");
+			await interaction.followUp("Failed to play track. Please leave google");
 		}
 
 		return;
 	}
 
 	if (!subscription) {
-		await interaction.reply("Not playing in this server!");
+		await interaction.reply("Not playing in this server");
 		return;
 	}
 
 	if (interaction.commandName === "skip") {
 		subscription.audioPlayer.stop();
 
-		await interaction.reply("Skipped song!");
+		await interaction.reply("Get skipped lmao");
 	} else if (interaction.commandName === "queue") {
 		const current =
 			subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
@@ -95,17 +102,17 @@ async function music(interaction) {
 	} else if (interaction.commandName === "pause") {
 		subscription.audioPlayer.pause();
 
-		await interaction.reply({ content: "Paused!", ephemeral: true });
+		await interaction.reply(":pause_button: Paused!");
 	} else if (interaction.commandName === "resume") {
 		subscription.audioPlayer.unpause();
 
-		await interaction.reply({ content: "Unpaused!", ephemeral: true });
-	} else if (interaction.commandName === "leave") {
+		await interaction.reply(":arrow_forward: Unpaused!");
+	} else if (interaction.commandName === "stop") {
 		subscription.voiceConnection.destroy();
 
 		subscriptions.delete(interaction.guildId);
 
-		await interaction.reply({ content: "Left channel!", ephemeral: true });
+		await interaction.reply("Left channel :wave:");
 	} else {
 		await interaction.reply("Unknown command");
 	}
