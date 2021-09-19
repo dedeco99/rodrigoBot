@@ -5,11 +5,9 @@ const secrets = require("./secrets");
 const Meta = require("../models/meta");
 
 function initialize() {
-	mongoose.set("useFindAndModify", false);
 	mongoose.connect(secrets.databaseConnectionString, {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
-		useCreateIndex: true,
 	});
 }
 

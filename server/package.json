@@ -12,13 +12,13 @@
 		"lint": "eslint '**/*.js' --ignore-pattern node_modules/ --ignore-pattern build/ --ignore-pattern public/"
 	},
 	"devDependencies": {
-		"eslint": "^7.1.0",
-		"nodemon": "^2.0.4"
+		"eslint": "^7.32.0",
+		"nodemon": "^2.0.12"
 	},
 	"dependencies": {
-		"axios": "^0.19.2",
-		"cheerio": "^1.0.0-rc.2",
-		"mathjs": "^7.0.1",
-		"moment": "^2.26.0"
+		"axios": "^0.21.4",
+		"cheerio": "^1.0.0-rc.10",
+		"mathjs": "^9.4.5",
+		"moment": "^2.29.1"
 	}
 }
