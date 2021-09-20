@@ -1,6 +1,7 @@
 const log = require("../utils/log");
 
 const utils = require("../functions/utils");
+const memes = require("../functions/memes");
 const reddit = require("../functions/reddit");
 const youtube = require("../functions/youtube");
 const twitch = require("../functions/twitch");
@@ -21,6 +22,9 @@ let features = [
 	{ command: "radar", func: utils.radars },
 	{ command: "corona", func: utils.corona },
 	{ command: "help", func: utils.help },
+
+	// Memes
+	{ command: "meme", func: memes.createMeme },
 
 	// Social Media
 	{ command: "reddit", func: reddit.getPost },

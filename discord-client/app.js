@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 const { Intents, Client } = require("discord.js");
 const rodrigo = require("rodrigo");
 
@@ -6,7 +7,6 @@ const database = require("./utils/database");
 const embed = require("./utils/embed");
 
 const utils = require("./functions/utils");
-const memes = require("./functions/memes");
 const media = require("./functions/media");
 const tts = require("./functions/tts");
 const custom = require("./functions/custom");
@@ -37,9 +37,6 @@ const discordFeatures = [
 	{ command: "vote", func: utils.vote },
 	{ command: "keyboardGroupBuys", func: utils.keyboardGroupBuys },
 	{ command: "stockTracker", func: utils.stockTracker },
-
-	// Meme Creation
-	{ command: "meme", func: memes.checkForMemes },
 
 	// Media
 	{ command: "play", func: media.play },
@@ -98,6 +95,7 @@ const commands = [
 			},
 		],
 	},
+	/*
 	{
 		name: "convert",
 		description: "Converts one currency to another",
@@ -122,6 +120,7 @@ const commands = [
 			},
 		],
 	},
+	*/
 	{
 		name: "math",
 		description: "Returns the result for the provided mathematical expression",
@@ -236,6 +235,153 @@ const commands = [
 			},
 		],
 	},
+	// Memes
+	{
+		name: "meme",
+		description: "Create a meme",
+		options: [
+			{
+				name: "truth",
+				type: "SUB_COMMAND",
+				description: "Truth meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "safe",
+				type: "SUB_COMMAND",
+				description: "Safe meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "drake",
+				type: "SUB_COMMAND",
+				description: "Drake meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "First phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "facts",
+				type: "SUB_COMMAND",
+				description: "Facts meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "button",
+				type: "SUB_COMMAND",
+				description: "Button meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "choice",
+				type: "SUB_COMMAND",
+				description: "Choice meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "marioluigi",
+				type: "SUB_COMMAND",
+				description: "Mario Luigi meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+					{
+						name: "phrase3",
+						type: "STRING",
+						description: "Third phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "pikachu",
+				type: "SUB_COMMAND",
+				description: "Pikachu meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+					{
+						name: "phrase3",
+						type: "STRING",
+						description: "Third phrase",
+						required: true,
+					},
+				],
+			},
+		],
+	},
 	// Music
 	{
 		name: "play",
@@ -330,6 +476,7 @@ async function handleMessage(msg, room) {
 	return null;
 }
 
+// eslint-disable-next-line complexity
 async function handleInteraction(interaction) {
 	if (!interaction.isCommand() || !interaction.guildId) return;
 
@@ -342,9 +489,25 @@ async function handleInteraction(interaction) {
 
 	const command = commands.find(c => c.name === interaction.commandName);
 
+	let subCommand = null;
+	try {
+		subCommand = interaction.options.getSubcommand();
+		// eslint-disable-next-line no-empty
+	} catch (err) {}
+
 	const options = {};
 	for (const option of command.options.map(o => o.name)) {
-		options[option] = interaction.options.get(option) ? interaction.options.get(option).value : null;
+		if (subCommand) {
+			options[interaction.commandName] = subCommand;
+
+			const subCommandOptions = command.options.find(o => o.name === subCommand).options;
+
+			for (const subOption of subCommandOptions.map(o => o.name)) {
+				options[subOption] = interaction.options.get(subOption) ? interaction.options.get(subOption).value : null;
+			}
+		} else {
+			options[option] = interaction.options.get(option) ? interaction.options.get(option).value : null;
+		}
 	}
 
 	const response = await rodrigo.handleCommand(interaction.commandName, options);
