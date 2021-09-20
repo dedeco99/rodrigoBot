@@ -4,14 +4,16 @@ const secrets = require("./secrets");
 
 const Meta = require("../models/meta");
 
-function initialize() {
-	mongoose.connect(secrets.databaseConnectionString, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-	});
-}
+mongoose.connect(secrets.databaseConnectionString, {
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+});
 
 /* Meta */
+
+function getMetadata() {
+	return Meta.findOne();
+}
 
 async function updateMetadata(obj) {
 	let body = obj;
@@ -27,6 +29,6 @@ async function updateMetadata(obj) {
 }
 
 module.exports = {
-	initialize,
+	getMetadata,
 	updateMetadata,
 };

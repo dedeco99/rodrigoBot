@@ -8,16 +8,16 @@ const secrets = require("../utils/secrets");
 const GroupBuy = require("../models/groupBuy");
 const Stock = require("../models/stock");
 
-function answer(msg) {
-	const question = msg.split("rodrigo ")[1];
+function answer(options) {
+	const question = options.question;
 	const phrase = question.substring(0, question.length - 1);
 	let num = Math.floor(Math.random() >= 0.5);
 
 	if (!phrase) {
 		return "Sim, estou vivo";
 	} else if (phrase.includes(" ou ")) {
-		const option1 = msg.split(" ou ")[0].slice(8);
-		const option2 = msg.split(" ou ")[1].slice(0, -1);
+		const option1 = phrase.split(" ou ")[0];
+		const option2 = phrase.split(" ou ")[1];
 
 		return num ? option1 : option2;
 	} else if (phrase.includes(" probabilidade ")) {

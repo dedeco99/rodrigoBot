@@ -39,7 +39,7 @@ let features = [
 	{ command: "insult", func: personality.insult },
 ];
 
-async function checkForCommand(msg, customCommands) {
+async function handleMessage(msg, customCommands) {
 	const triggerWord = "rodrigo";
 	const firstWord = msg.split(" ")[0].toLowerCase();
 
@@ -79,7 +79,7 @@ async function checkForCommand(msg, customCommands) {
 	return null;
 }
 
-async function processCommand(command, options) {
+async function handleCommand(command, options) {
 	const feature = features.find(feat => feat.command === command);
 
 	if (!feature) return null;
@@ -95,4 +95,4 @@ async function processCommand(command, options) {
 	}
 }
 
-module.exports = { checkForCommand, processCommand };
+module.exports = { handleMessage, handleCommand };

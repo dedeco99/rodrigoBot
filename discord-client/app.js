@@ -40,6 +40,18 @@ const discordFeatures = [
 const commands = [
 	// Utils
 	{
+		name: "answer",
+		description: "Answers a question",
+		options: [
+			{
+				name: "question",
+				type: "STRING",
+				description: "The question you want to ask",
+				required: true,
+			},
+		],
+	},
+	{
 		name: "define",
 		description: "Returns the urban definition of a word",
 		options: [
