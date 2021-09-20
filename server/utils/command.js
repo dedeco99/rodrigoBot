@@ -15,7 +15,7 @@ let features = [
 	{ command: "define", func: utils.define },
 	{ command: "search", func: utils.search },
 	{ command: "sort", func: utils.sort },
-	// { command: "convert", func: utils.convert },
+	{ command: "convert", func: utils.convert },
 	{ command: "math", func: utils.math },
 	// { command: "price", func: utils.price },
 	{ command: "crypto", func: crypto.getPrice },
@@ -80,26 +80,19 @@ async function checkForCommand(msg, customCommands) {
 }
 
 async function processCommand(command, options) {
-	const feature = features.find(feat => {
-		if (!feat.includes) {
-			if (Array.isArray(feat.command)) return feat.command.includes(command);
-			return feat.command === command;
-		}
-	});
+	const feature = features.find(feat => feat.command === command);
 
-	if (feature) {
-		console.log(command);
+	if (!feature) return null;
 
-		try {
-			return { command, message: await feature.func(options) };
-		} catch (err) {
-			log.error({ status: "command", data: err.stack });
+	console.log(command);
 
-			return null;
-		}
+	try {
+		return { command, message: await feature.func(options) };
+	} catch (err) {
+		log.error({ status: "command", data: err.stack });
+
+		return null;
 	}
-
-	return null;
 }
 
 module.exports = { checkForCommand, processCommand };

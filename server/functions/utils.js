@@ -102,22 +102,14 @@ function sort(options) {
 
 // FIXME: Change api
 async function convert(options) {
-	const numberToConvert = options.number;
-	const currencyToConvert = options.from;
-	const currencyConverted = options.to;
-	const url = "https://api.exchangeratesapi.io/latest";
+	const url = `https://api.exchangerate.host/latest?base=${options.from}`;
 
 	const res = await get(url);
 	const json = res.data;
 
-	let converted = 0;
-	if (currencyToConvert === "EUR") {
-		converted = (numberToConvert * json.rates[currencyConverted]).toFixed(2);
-	} else {
-		converted = (numberToConvert / json.rates[currencyToConvert]).toFixed(2);
-	}
-
-	return converted;
+	return `${options.number} ${options.from} = ${(options.number * json.rates[options.to]).toFixed(2)} ${
+		options.to
+	}`;
 }
 
 function math(options) {

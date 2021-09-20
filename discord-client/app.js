@@ -75,7 +75,6 @@ const commands = [
 			},
 		],
 	},
-	/*
 	{
 		name: "convert",
 		description: "Converts one currency to another",
@@ -100,7 +99,6 @@ const commands = [
 			},
 		],
 	},
-	*/
 	{
 		name: "math",
 		description: "Returns the result for the provided mathematical expression",
