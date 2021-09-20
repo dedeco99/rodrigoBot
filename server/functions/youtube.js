@@ -48,4 +48,16 @@ async function getVideo(options) {
 	return "Esse canal deve estar no xixo porque não o encontro";
 }
 
-module.exports = { getVideo };
+async function getVideoSearch(search) {
+	const url = `https://www.googleapis.com/youtube/v3/search?q=${search}&maxResults=1&key=${secrets.youtubeKey}`;
+
+	const res = await get(url);
+
+	if (res.status === 403) throw errors.youtubeLimit;
+
+	const json = res.data;
+
+	return `https://www.youtube.com/watch?v=${json.items[0].id.videoId}`;
+}
+
+module.exports = { getVideo, getVideoSearch };

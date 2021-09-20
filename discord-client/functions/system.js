@@ -1,4 +1,4 @@
-const { updateMeta } = require("../utils/database");
+const { updateMetadata } = require("rodrigo");
 
 function activity(options) {
 	const type = options.type;
@@ -6,7 +6,7 @@ function activity(options) {
 
 	global.client.user.setActivity(action, { type });
 
-	updateMeta({ action: { message: action, type } });
+	updateMetadata({ action: { message: action, type } });
 
 	return "Activity changed";
 }
@@ -22,21 +22,7 @@ function deleteLastMsg(msg) {
 	}
 }
 
-async function compliment() {
-	const metaInfo = await updateMeta({ likes: true });
-
-	return `Durante a minha existência já gostaram de mim ${metaInfo.likes} vezes. I can't handle it!!! *touches face violently*`;
-}
-
-async function insult() {
-	const metaInfo = await updateMeta({ dislikes: true });
-
-	return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*`;
-}
-
 module.exports = {
 	activity,
 	deleteLastMsg,
-	compliment,
-	insult,
 };

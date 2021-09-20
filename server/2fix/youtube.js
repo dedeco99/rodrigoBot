@@ -2,8 +2,8 @@ const errors = require("../utils/errors");
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
-const Channel = require("../../discord-client/models/channel");
-const Notification = require("../../discord-client/models/notification");
+const Channel = require("../models/channel");
+const Notification = require("../models/notification");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
@@ -127,18 +127,6 @@ async function fetchNotifications() {
 	return null;
 }
 
-async function getVideoSearch(search) {
-	const url = `https://www.googleapis.com/youtube/v3/search?q=${search}&maxResults=1&key=${secrets.youtubeKey}`;
-
-	const res = await get(url);
-
-	if (res.status === 403) throw errors.youtubeLimit;
-
-	const json = res.data;
-
-	return `https://www.youtube.com/watch?v=${json.items[0].id.videoId}`;
-}
-
 async function checkForCommand(msg) {
 	const features = [
 		{ command: "add", func: addChannel },
@@ -161,5 +149,4 @@ async function checkForCommand(msg) {
 module.exports = {
 	fetchNotifications,
 	checkForCommand,
-	getVideoSearch,
 };

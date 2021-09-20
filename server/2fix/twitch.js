@@ -1,8 +1,8 @@
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
-const Channel = require("../../discord-client/models/channel");
-const Notification = require("../../discord-client/models/notification");
+const Channel = require("../models/channel");
+const Notification = require("../models/notification");
 
 async function checkIfChannelExists(channel) {
 	const url = `https://api.twitch.tv/helix/users?login=${channel}`;

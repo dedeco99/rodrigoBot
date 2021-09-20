@@ -1,6 +1,6 @@
 const moment = require("moment");
 
-const Birthday = require("../../discord-client/models/birthday");
+const Birthday = require("../models/birthday");
 
 async function addBirthday(msg) {
 	const person = msg.content.split(" ")[3];

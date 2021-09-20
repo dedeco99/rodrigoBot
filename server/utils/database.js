@@ -13,7 +13,7 @@ function initialize() {
 
 /* Meta */
 
-async function updateMeta(obj) {
+async function updateMetadata(obj) {
 	let body = obj;
 	if (obj.likes) {
 		body = { $inc: { likes: 1 } };
@@ -28,5 +28,5 @@ async function updateMeta(obj) {
 
 module.exports = {
 	initialize,
-	updateMeta,
+	updateMetadata,
 };

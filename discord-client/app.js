@@ -2,20 +2,13 @@
 const { Intents, Client } = require("discord.js");
 const rodrigo = require("rodrigo");
 
-const secrets = require("./utils/secrets");
-const database = require("./utils/database");
+const secrets = require("../server/utils/secrets");
 const embed = require("./utils/embed");
 
 const utils = require("./functions/utils");
 const media = require("./functions/media");
 const tts = require("./functions/tts");
-const custom = require("./functions/custom");
-const birthday = require("./functions/birthdays");
-const cronjob = require("./functions/cronjobs");
 const system = require("./functions/system");
-
-const Meta = require("./models/meta");
-const CustomCommand = require("./models/customCommand");
 
 const embeds = {
 	define: embed.createDefineEmbed,
@@ -27,30 +20,21 @@ const embeds = {
 	insta: embed.createInstaEmbed,
 	crypto: embed.createCryptoEmbed,
 	vote: embed.createPollEmbed,
-	keyboardGroupBuys: embed.createKeyboardEmbed,
-	stockTracker: embed.createStockEmbed,
+	keyboards: embed.createKeyboardEmbed,
+	stock: embed.createStockEmbed,
 };
 
 const discordFeatures = [
 	// Utils
 	{ command: "remindme", func: utils.remindMe },
 	{ command: "vote", func: utils.vote },
-	{ command: "keyboardGroupBuys", func: utils.keyboardGroupBuys },
-	{ command: "stockTracker", func: utils.stockTracker },
 
 	// TTS
 	{ command: "tts", func: tts.speak },
 
-	// Custom
-	// { command: "custom", func: custom.checkForCommand },
-	// { command: "birthday", func: birthday.checkForBirthday },
-	{ command: "cronjob", func: cronjob.checkForCronjob },
-
 	// System
 	{ command: "activity", func: system.activity },
 	// { command: ["delete", "apaga"], func: system.deleteLastMsg },
-	// { command: ["good", "nice", "best", "bom", "bem", "grande"], includes: true, func: system.compliment },
-	// { command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
 ];
 
 const commands = [
@@ -174,6 +158,21 @@ const commands = [
 				type: "STRING",
 				description: "The country you want the information from",
 				required: true,
+			},
+		],
+	},
+	{
+		name: "keyboards",
+		description: "Returns information about a keyboard group buy",
+	},
+	{
+		name: "stock",
+		description: "Returns information about stock of added products",
+		options: [
+			{
+				name: "link",
+				type: "STRING",
+				description: "The link for the product you want to track",
 			},
 		],
 	},
@@ -455,6 +454,7 @@ async function handleMessage(msg, room) {
 		return null;
 	}
 
+	/*
 	let customCommands = room ? [] : await CustomCommand.find({ guild: msg.guild.id });
 
 	customCommands = customCommands.map(customCommand => ({
@@ -465,8 +465,11 @@ async function handleMessage(msg, room) {
 	customCommands = customCommands.concat(
 		discordFeatures.map(feat => ({ command: feat.command, includes: feat.includes, func: () => null })),
 	);
+	*/
 
-	let response = await rodrigo.handleMessage(msg.content, customCommands);
+	let response = await rodrigo.handleMessage(msg.content, []);
+
+	console.log(response);
 
 	if (!response || !response.command) return null;
 
@@ -519,21 +522,27 @@ async function handleInteraction(interaction) {
 	} catch (err) {}
 
 	const options = {};
-	for (const option of command.options.map(o => o.name)) {
-		if (subCommand) {
-			options[interaction.commandName] = subCommand;
+	if (command.options) {
+		for (const option of command.options.map(o => o.name)) {
+			if (subCommand) {
+				options[interaction.commandName] = subCommand;
 
-			const subCommandOptions = command.options.find(o => o.name === subCommand).options;
+				const subCommandOptions = command.options.find(o => o.name === subCommand).options;
 
-			for (const subOption of subCommandOptions.map(o => o.name)) {
-				options[subOption] = interaction.options.get(subOption) ? interaction.options.get(subOption).value : null;
+				for (const subOption of subCommandOptions.map(o => o.name)) {
+					options[subOption] = interaction.options.get(subOption)
+						? interaction.options.get(subOption).value
+						: null;
+				}
+			} else {
+				options[option] = interaction.options.get(option) ? interaction.options.get(option).value : null;
 			}
-		} else {
-			options[option] = interaction.options.get(option) ? interaction.options.get(option).value : null;
 		}
 	}
 
 	let response = await rodrigo.handleCommand(interaction.commandName, options);
+
+	console.log(response);
 
 	if (!response) {
 		const discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
@@ -542,7 +551,7 @@ async function handleInteraction(interaction) {
 			response = { command: discordFeature.command, message: await discordFeature.func(options) };
 		}
 
-		if (!response.message) return interaction.followUp("Either you or I did something wrong");
+		if (!response || !response.message) return interaction.followUp("Either you or I did something wrong");
 	}
 
 	if (embeds[response.command] && typeof response.message !== "string") {
@@ -561,18 +570,16 @@ async function run() {
 
 	global.client = new Client({ intents });
 	global.lastMsgs = [];
-	global.musicPlayers = {};
 	global.redditPosts = [];
 
 	global.client.login(secrets.discordKey);
 
-	database.initialize();
-
-	const meta = await Meta.findOne();
+	const meta = await rodrigo.getMetadata();
 
 	global.client.on("ready", () => {
 		console.log(`Logged in as ${global.client.user.tag}!`);
-		global.client.user.setActivity(meta.action.message, { type: meta.action.type });
+
+		system.activity({ type: meta.action.type, activity: meta.action.message });
 	});
 
 	global.client.on("messageCreate", handleMessage);
@@ -587,7 +594,7 @@ async function run() {
 		}
 	});
 
-	await cronjob.runCronjobs(handleMessage);
+	// await cronjob.runCronjobs(handleMessage);
 }
 
 run();

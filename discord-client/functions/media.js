@@ -1,12 +1,9 @@
 const { GuildMember } = require("discord.js");
 const { AudioPlayerStatus, entersState, joinVoiceChannel, VoiceConnectionStatus } = require("@discordjs/voice");
+const { getVideoSearch } = require("rodrigo");
 
 const { Track } = require("./music/track");
 const { MusicSubscription } = require("./music/subscription");
-
-const { updateMeta } = require("../utils/database");
-
-const { getVideoSearch } = require("./youtube");
 
 const subscriptions = new Map();
 

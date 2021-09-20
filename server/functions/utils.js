@@ -5,6 +5,9 @@ const { evaluate } = require("mathjs");
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
+const GroupBuy = require("../models/groupBuy");
+const Stock = require("../models/stock");
+
 function answer(msg) {
 	const question = msg.split("rodrigo ")[1];
 	const phrase = question.substring(0, question.length - 1);
@@ -269,8 +272,136 @@ async function corona(options) {
 	return response;
 }
 
-function help() {
-	return "https://dedeco99.github.io/rodrigoBot/";
+async function keyboards() {
+	const res = await get("https://mechgroupbuys.com/gb-data");
+	const json = res.data;
+
+	const liveGroupBuys = json
+		.filter(i => {
+			return (
+				(i.type === "keyboards" || i.type === "keycaps" || i.type === "switches") &&
+				i.startDate &&
+				moment(i.startDate, "M/D/YY").diff(moment(), "days") <= 0 &&
+				(!i.endDate || moment(i.endDate, "M/D/YY").diff(moment(), "days") >= 0)
+			);
+		})
+		.map(i => ({
+			name: i.name,
+			type: i.type,
+			image: i.mainImage,
+			startDate: moment(i.startDate, "M/D/YY").format("DD/MM/YYYY"),
+			endDate: moment(i.endDate, "M/D/YY").format("DD/MM/YYYY"),
+			pricing: i.pricing,
+			saleType: i.saleType,
+			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),
+		}));
+
+	for (const groupBuy of liveGroupBuys) {
+		const groupBuyExists = await GroupBuy.findOne({ name: groupBuy.name });
+
+		if (!groupBuyExists) {
+			const newGroupBuy = new GroupBuy(groupBuy);
+
+			await newGroupBuy.save();
+
+			return groupBuy;
+		}
+	}
+
+	return null;
+}
+
+// eslint-disable-next-line max-lines-per-function
+async function stock(options) {
+	const link = options.link;
+
+	if (link) {
+		if (link.includes("globaldata") || link.includes("chiptec") || link.includes("pcdiga")) {
+			const stockExists = await Stock.findOne({ link }).lean();
+
+			if (stockExists) return "Já existe";
+
+			const stock = new Stock({ link });
+
+			await stock.save();
+
+			return "Link adicionado com sucesso";
+		}
+
+		return "Loja não é válida";
+	}
+
+	const stocks = await Stock.find({}).lean();
+
+	const products = [];
+	for (const stock of stocks) {
+		const url = stock.link;
+
+		const res = await get(url);
+		const $ = cheerio.load(res.data);
+
+		let shop = null;
+		let title = null;
+		let image = null;
+		let stockMessage = null;
+		let inStock = null;
+		if (url.includes("globaldata")) {
+			shop = "Globaldata";
+			title = $(".page-title")
+				.toArray()
+				.map(elem => $(elem).find("span").text());
+			title = title[0];
+			image = $("#mtImageContainer")
+				.toArray()
+				.map(elem => $(elem).find("img").attr("src"));
+			image = image[0];
+
+			stockMessage = $(".stock-shops")
+				.toArray()
+				.map(elem => $(elem).find("span").first().text());
+			stockMessage = stockMessage[0].trim();
+			inStock = stockMessage !== "Esgotado";
+		} else if (url.includes("chiptec")) {
+			shop = "Chiptec";
+			title = $(".prod_tit")
+				.toArray()
+				.map(elem => $(elem).find("h1").text());
+			title = title[0];
+			image = $(".product-image")
+				.toArray()
+				.map(elem => $(elem).find("img").attr("src"));
+			image = image[0];
+
+			stockMessage = $(".amstockstatus")
+				.toArray()
+				.map(elem => $(elem).text());
+			stockMessage = stockMessage[0].trim();
+			inStock = stockMessage === "Disponível";
+		} else if (url.includes("pcdiga")) {
+			shop = "PCDiga";
+			title = $(".item.product")
+				.toArray()
+				.map(elem => $(elem).find("strong").text());
+			title = title[0];
+			image = $(".gallery-placeholder__image")
+				.toArray()
+				.map(elem => $(elem).attr("src"));
+			image = image[0];
+
+			const index = res.data.indexOf("'is_in_stock': ");
+			stockMessage = res.data.substring(index + 15, index + 16);
+			inStock = stockMessage === "1";
+			stockMessage = inStock ? "Em Stock" : "Esgotado";
+		}
+
+		if (stock.stock !== stockMessage) {
+			await Stock.updateOne({ _id: stock._id }, { stock: stockMessage });
+
+			if (inStock) products.push({ shop, title, url, image, stockMessage });
+		}
+	}
+
+	return products.length ? products : null;
 }
 
 module.exports = {
@@ -284,5 +415,6 @@ module.exports = {
 	weather,
 	radars,
 	corona,
-	help,
+	keyboards,
+	stock,
 };

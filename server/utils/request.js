@@ -1,7 +1,8 @@
 const axios = require("axios");
+const https = require("https");
 
 async function get(url, headers = {}) {
-	const config = { headers };
+	const config = { headers, httpsAgent: new https.Agent({ rejectUnauthorized: false }) };
 
 	try {
 		const response = await axios.get(url, config);

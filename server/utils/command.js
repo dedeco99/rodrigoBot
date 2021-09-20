@@ -7,6 +7,7 @@ const youtube = require("../functions/youtube");
 const twitch = require("../functions/twitch");
 const instagram = require("../functions/instagram");
 const crypto = require("../functions/crypto");
+const personality = require("../functions/personality");
 
 let features = [
 	// Utils
@@ -21,7 +22,8 @@ let features = [
 	{ command: "weather", func: utils.weather },
 	{ command: "radar", func: utils.radars },
 	{ command: "corona", func: utils.corona },
-	{ command: "help", func: utils.help },
+	{ command: "keyboards", func: utils.keyboards },
+	{ command: "stock", func: utils.stock },
 
 	// Memes
 	{ command: "meme", func: memes.createMeme },
@@ -31,6 +33,10 @@ let features = [
 	{ command: "youtube", func: youtube.getVideo },
 	{ command: "twitch", func: twitch.getStream },
 	{ command: "insta", func: instagram.getPost },
+
+	// Personality
+	{ command: "compliment", func: personality.compliment },
+	{ command: "insult", func: personality.insult },
 ];
 
 async function checkForCommand(msg, customCommands) {
