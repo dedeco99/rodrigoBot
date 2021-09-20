@@ -38,23 +38,19 @@ const discordFeatures = [
 	{ command: "keyboardGroupBuys", func: utils.keyboardGroupBuys },
 	{ command: "stockTracker", func: utils.stockTracker },
 
-	// Media
-	{ command: "play", func: media.play },
-	{ command: "watch", func: media.watch },
-	{ command: "listen", func: media.listen },
-
 	// TTS
 	{ command: "tts", func: tts.speak },
 
 	// Custom
-	{ command: "custom", func: custom.checkForCommand },
-	{ command: "birthday", func: birthday.checkForBirthday },
+	// { command: "custom", func: custom.checkForCommand },
+	// { command: "birthday", func: birthday.checkForBirthday },
 	{ command: "cronjob", func: cronjob.checkForCronjob },
 
 	// System
-	{ command: ["delete", "apaga"], func: system.deleteLastMsg },
-	{ command: ["good", "nice", "best", "bom", "bem", "grande"], includes: true, func: system.compliment },
-	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
+	{ command: "activity", func: system.activity },
+	// { command: ["delete", "apaga"], func: system.deleteLastMsg },
+	// { command: ["good", "nice", "best", "bom", "bem", "grande"], includes: true, func: system.compliment },
+	// { command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
 ];
 
 const commands = [
@@ -415,6 +411,33 @@ const commands = [
 		name: "stop",
 		description: "Leave the voice channel",
 	},
+	// System
+	{
+		name: "activity",
+		description: "Change the current activity of the bot",
+		options: [
+			{
+				name: "type",
+				type: "STRING",
+				description: "The type of activity",
+				required: true,
+				choices: [
+					{ name: "Playing", value: "PLAYING" },
+					{ name: "Watching", value: "WATCHING" },
+					{ name: "Listening", value: "LISTENING" },
+					{ name: "Streaming", value: "STREAMING" },
+					{ name: "Competing", value: "COMPETING" },
+					{ name: "Custom", value: "CUSTOM" },
+				],
+			},
+			{
+				name: "activity",
+				type: "STRING",
+				description: "The  activity",
+				required: true,
+			},
+		],
+	},
 ];
 
 // eslint-disable-next-line complexity
@@ -510,11 +533,16 @@ async function handleInteraction(interaction) {
 		}
 	}
 
-	const response = await rodrigo.handleCommand(interaction.commandName, options);
+	let response = await rodrigo.handleCommand(interaction.commandName, options);
 
-	if (!response || !response.command) {
-		await interaction.followUp("Either you or I did something wrong");
-		return;
+	if (!response) {
+		const discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
+
+		if (discordFeature) {
+			response = { command: discordFeature.command, message: await discordFeature.func(options) };
+		}
+
+		if (!response.message) return interaction.followUp("Either you or I did something wrong");
 	}
 
 	if (embeds[response.command] && typeof response.message !== "string") {
