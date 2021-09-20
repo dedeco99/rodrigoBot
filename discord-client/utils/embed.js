@@ -16,7 +16,7 @@ function createRedditEmbed(res) {
 
 	embed.footer = { text: `From: ${res.subreddit} | Upvotes: ${res.score} | ` };
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function prettyNumber(number) {
@@ -60,7 +60,7 @@ function createCryptoEmbed(res) {
 		text: `1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(2)}%`,
 	};
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function createRadarEmbed(radars) {
@@ -74,7 +74,7 @@ function createRadarEmbed(radars) {
 
 	if (!radars.length) embed.description = "Não há radares";
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function createCoronaEmbed(res) {
@@ -86,47 +86,47 @@ function createCoronaEmbed(res) {
 	embed.fields = [
 		{
 			name: "Cases",
-			value: res.country.totalCases || 0,
+			value: res.country.totalCases,
 			inline: true,
 		},
 		{
 			name: "New Cases",
-			value: res.country.newCases || 0,
+			value: res.country.newCases,
 			inline: true,
 		},
 		{
 			name: "Deaths",
-			value: res.country.totalDeaths || 0,
+			value: res.country.totalDeaths,
 			inline: true,
 		},
 		{
 			name: "New Deaths",
-			value: res.country.newDeaths || 0,
+			value: res.country.newDeaths,
 			inline: true,
 		},
 		{
 			name: "Recovered",
-			value: res.country.totalRecovered || 0,
+			value: res.country.totalRecovered,
 			inline: true,
 		},
 		{
 			name: "Active Cases",
-			value: res.country.activeCases || 0,
+			value: res.country.activeCases,
 			inline: true,
 		},
 		{
 			name: "Serious Cases",
-			value: res.country.seriousCases || 0,
+			value: res.country.seriousCases,
 			inline: true,
 		},
 		{
 			name: "Cases per 1M",
-			value: res.country.casesPer1M || 0,
+			value: res.country.casesPer1M,
 			inline: true,
 		},
 		{
 			name: "Deaths per 1M",
-			value: res.country.deathsPer1M || 0,
+			value: res.country.deathsPer1M,
 			inline: true,
 		},
 	];
@@ -135,7 +135,7 @@ function createCoronaEmbed(res) {
 		text: `World - Cases : ${res.total[0]} | Deaths: ${res.total[1]} | Recovered: ${res.total[2]} `,
 	};
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function createWeatherEmbed(res) {
@@ -177,7 +177,7 @@ function createWeatherEmbed(res) {
 		},
 	];
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function createSearchEmbed(res) {
@@ -192,7 +192,7 @@ function createSearchEmbed(res) {
 		embed.fields.push({ name: "Description", value: res[i].description });
 	}
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function createDefineEmbed(res) {
@@ -202,7 +202,7 @@ function createDefineEmbed(res) {
 	embed.color = 0x00ae86;
 	embed.fields = [{ name: res.definition, value: res.example }];
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 async function createPollEmbed(msg, res) {
@@ -247,7 +247,7 @@ function createKeyboardEmbed(res) {
 		}`,
 	};
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function createStockEmbed(products) {
@@ -268,7 +268,7 @@ function createStockEmbed(products) {
 		embeds.push({ embed });
 	}
 
-	return embeds;
+	return { embeds };
 }
 
 function createInstaEmbed(res) {
@@ -288,7 +288,7 @@ function createInstaEmbed(res) {
 
 	embed.footer = { text: `Posts: ${res.posts} | Followers: ${res.followers} | Follows: ${res.follows}` };
 
-	return { embed };
+	return { embeds: [embed] };
 }
 
 function createPriceEmbed(res) {
@@ -303,7 +303,7 @@ function createPriceEmbed(res) {
 		embed.fields.push({ name: res[i].price, value: `[${res[i].product}](${res[i].productUrl})` });
 	}
 
-	return embed;
+	return { embeds: [embed] };
 }
 
 module.exports = {

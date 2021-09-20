@@ -30,8 +30,8 @@ function answer(msg) {
 	return num ? "Sim" : "Não";
 }
 
-async function define(msg) {
-	const word = msg.split(" ")[2];
+async function define(options) {
+	const word = options.word;
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
 	const res = await get(url);
@@ -62,8 +62,8 @@ async function define(msg) {
 	return response;
 }
 
-async function search(msg) {
-	const topic = msg.split(" ")[2];
+async function search(options) {
+	const topic = options.topic;
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
@@ -82,32 +82,32 @@ async function search(msg) {
 	return response;
 }
 
-function sort(msg) {
-	let options = msg.split(" ")[2];
-	options = options.split(";");
+function sort(options) {
+	let values = options.values;
+	values = values.split(";");
 	const randomized = [];
-	const times = options.length;
+	const times = values.length;
 
 	for (let i = 0; i < times; i++) {
-		const num = Math.floor(Math.random() * options.length);
-		randomized.push(options[num]);
-		options.splice(num, 1);
+		const num = Math.floor(Math.random() * values.length);
+		randomized.push(values[num]);
+		values.splice(num, 1);
 	}
 
 	return randomized.join(" > ");
 }
 
-async function convert(msg) {
-	const numberToConvert = msg.split(" ")[2];
-	const currencyToConvert = msg.split(" ")[3].toUpperCase();
-	const currencyConverted = msg.split(" ")[5].toUpperCase();
+// FIXME: Change api
+async function convert(options) {
+	const numberToConvert = options.number;
+	const currencyToConvert = options.from;
+	const currencyConverted = options.to;
 	const url = "https://api.exchangeratesapi.io/latest";
 
 	const res = await get(url);
 	const json = res.data;
 
 	let converted = 0;
-
 	if (currencyToConvert === "EUR") {
 		converted = (numberToConvert * json.rates[currencyConverted]).toFixed(2);
 	} else {
@@ -117,11 +117,11 @@ async function convert(msg) {
 	return converted;
 }
 
-function math(msg) {
-	const expression = msg.split("math ")[1];
+function math(options) {
+	const expression = options.expression;
 	const result = evaluate(expression);
 
-	return result;
+	return result.toString();
 }
 
 // FIXME: Not working
@@ -163,13 +163,14 @@ function price() {
 	return "Função em manutenção";
 }
 
-async function weather(msg) {
-	const params = msg.split(" ");
-	const location = params[2];
+async function weather(options) {
+	const location = options.location;
 
 	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${secrets.openWeatherMapKey}`;
 
 	const res = await get(url);
+
+	if (res.status === 404) return "City Not Found";
 
 	const weatherInfo = {
 		forecast: res.data.weather[0].main,
@@ -185,9 +186,8 @@ async function weather(msg) {
 	return weatherInfo;
 }
 
-async function radars(msg, page = 0, data = []) {
-	const params = msg.split(" ");
-	const location = params[2];
+async function radars(options, page = 0, data = []) {
+	const location = options.location;
 
 	const url = `https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=${page}`;
 
@@ -207,7 +207,7 @@ async function radars(msg, page = 0, data = []) {
 	);
 
 	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
-		return radars(msg, page + 1, response);
+		return radars(options, page + 1, response);
 	}
 
 	function sanitizeString(str) {
@@ -229,8 +229,8 @@ async function radars(msg, page = 0, data = []) {
 	return { location: title, radars: radarsByLocation };
 }
 
-async function corona(msg) {
-	const country = msg.split("corona ")[1];
+async function corona(options) {
+	const country = options.country;
 	const url = "https://www.worldometers.info/coronavirus/";
 
 	const res = await get(url);
@@ -244,16 +244,16 @@ async function corona(msg) {
 		.toArray()
 		.map(elem => {
 			return {
-				country: $(elem).children().eq(0).text().trim(),
-				totalCases: $(elem).children().eq(1).text().trim(),
-				newCases: $(elem).children().eq(2).text().trim(),
-				totalDeaths: $(elem).children().eq(3).text().trim(),
-				newDeaths: $(elem).children().eq(4).text().trim(),
-				totalRecovered: $(elem).children().eq(5).text().trim(),
-				activeCases: $(elem).children().eq(6).text().trim(),
-				seriousCases: $(elem).children().eq(7).text().trim(),
-				casesPer1M: $(elem).children().eq(8).text().trim(),
-				deathsPer1M: $(elem).children().eq(9).text().trim(),
+				country: $(elem).children().eq(1).text().trim(),
+				totalCases: $(elem).children().eq(2).text().trim() || "0",
+				newCases: $(elem).children().eq(3).text().trim() || "0",
+				totalDeaths: $(elem).children().eq(4).text().trim() || "0",
+				newDeaths: $(elem).children().eq(5).text().trim() || "0",
+				totalRecovered: $(elem).children().eq(6).text().trim() || "0",
+				activeCases: $(elem).children().eq(7).text().trim() || "0",
+				seriousCases: $(elem).children().eq(8).text().trim() || "0",
+				casesPer1M: $(elem).children().eq(9).text().trim() || "0",
+				deathsPer1M: $(elem).children().eq(10).text().trim() || "0",
 			};
 		});
 

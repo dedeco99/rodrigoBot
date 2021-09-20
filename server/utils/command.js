@@ -11,22 +11,22 @@ let features = [
 	// Utils
 	{ command: "answer", func: utils.answer },
 	{ command: "define", func: utils.define },
-	{ command: ["search", "procura"], func: utils.search },
-	{ command: ["sort", "ordena"], func: utils.sort },
-	{ command: ["convert", "converte"], func: utils.convert },
+	{ command: "search", func: utils.search },
+	{ command: "sort", func: utils.sort },
+	// { command: "convert", func: utils.convert },
 	{ command: "math", func: utils.math },
 	// { command: "price", func: utils.price },
+	{ command: "crypto", func: crypto.getPrice },
 	{ command: "weather", func: utils.weather },
 	{ command: "radar", func: utils.radars },
 	{ command: "corona", func: utils.corona },
 	{ command: "help", func: utils.help },
 
 	// Social Media
-	{ command: "reddit", func: reddit.checkForReddit },
+	{ command: "reddit", func: reddit.getPost },
 	{ command: "youtube", func: youtube.getVideo },
 	{ command: "twitch", func: twitch.getStream },
 	{ command: "insta", func: instagram.getPost },
-	{ command: "crypto", func: crypto.getPrice },
 ];
 
 async function checkForCommand(msg, customCommands) {
@@ -69,4 +69,27 @@ async function checkForCommand(msg, customCommands) {
 	return null;
 }
 
-module.exports = { checkForCommand };
+async function processCommand(command, options) {
+	const feature = features.find(feat => {
+		if (!feat.includes) {
+			if (Array.isArray(feat.command)) return feat.command.includes(command);
+			return feat.command === command;
+		}
+	});
+
+	if (feature) {
+		console.log(command);
+
+		try {
+			return { command, message: await feature.func(options) };
+		} catch (err) {
+			log.error({ status: "command", data: err.stack });
+
+			return null;
+		}
+	}
+
+	return null;
+}
+
+module.exports = { checkForCommand, processCommand };

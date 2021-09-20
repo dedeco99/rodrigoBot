@@ -3,6 +3,8 @@ const { get } = require("../utils/request");
 function scrap(data) {
 	const dirtyJSON = JSON.parse(data.match(/window\._sharedData\s?=\s?(?<a>{.+);<\/script>/)[1]);
 
+	if (!dirtyJSON.entry_data.ProfilePage) return null;
+
 	const user = dirtyJSON.entry_data.ProfilePage[0].graphql.user;
 	const medias = user.edge_owner_to_timeline_media.edges.map(post => {
 		return {
@@ -73,15 +75,19 @@ function formatResponse(url, num, json) {
 	return res;
 }
 
-async function getPost(msg) {
-	const person = msg.split(" ")[2];
-	const num = msg.split(" ").pop();
-	const url = `https://www.instagram.com/${person}/`;
+async function getPost(options) {
+	const user = options.user;
+	const num = options.number ? options.number : 0;
+
+	const url = `https://www.instagram.com/${user}/`;
 
 	try {
 		const res = await get(url);
 
 		const json = scrap(res.data);
+
+		if (!json) return "Instagram is asking for captcha rip";
+
 		const post = formatResponse(url, num, json);
 
 		return post;

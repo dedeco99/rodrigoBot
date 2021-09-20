@@ -2,6 +2,49 @@ const errors = require("../utils/errors");
 const { get, post } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
+async function getRefreshToken() {
+	/* eslint-disable-line no-unused-vars */
+	const url =
+		"https://www.reddit.com/api/v1/access_token?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul";
+
+	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+		"base64",
+	); /* eslint-disable-line no-undef */
+	const auth = `Basic ${encryptedAuth}`;
+
+	const headers = {
+		"User-Agent": "RodrigoBot",
+		Authorization: auth,
+	};
+
+	const res = await post(url, null, headers);
+	const json = res.data;
+
+	console.log(json);
+}
+
+async function getAccessToken() {
+	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`;
+
+	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+		"base64",
+	); /* eslint-disable-line no-undef */
+	const auth = `Basic ${encryptedAuth}`;
+
+	const headers = {
+		"User-Agent": "RodrigoBot",
+		Authorization: auth,
+	};
+
+	const res = await post(url, null, headers);
+
+	if (res.status === 400) throw errors.redditRefreshToken;
+
+	const json = res.data;
+
+	return json.access_token;
+}
+
 function isFile(pathname) {
 	return pathname.split("/").pop().lastIndexOf(".") > -1;
 }
@@ -58,8 +101,12 @@ function formatResponse(json) {
 	return res;
 }
 
-async function getRedditPosts(data, accessToken, retries = 0) {
-	const url = `https://oauth.reddit.com/r/${data.subreddit}?limit=100&sort=hot`;
+async function getPost(options, retries = 0) {
+	const subreddit = options.subreddit;
+
+	const accessToken = await getAccessToken();
+
+	const url = `https://oauth.reddit.com/r/${subreddit}?limit=100&sort=hot`;
 	const headers = {
 		"User-Agent": "Entertainment-Hub by dedeco99",
 		Authorization: `bearer ${accessToken}`,
@@ -75,7 +122,7 @@ async function getRedditPosts(data, accessToken, retries = 0) {
 
 	if (retries < 5 && global.redditPosts.includes(response.id)) {
 		retries++;
-		return getRedditPosts(data, accessToken, retries);
+		return getPost(options, retries);
 	}
 
 	global.redditPosts.push(response.id);
@@ -84,61 +131,4 @@ async function getRedditPosts(data, accessToken, retries = 0) {
 	return response;
 }
 
-async function getAccessToken(data) {
-	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`;
-
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
-		"base64",
-	); /* eslint-disable-line no-undef */
-	const auth = `Basic ${encryptedAuth}`;
-
-	const headers = {
-		"User-Agent": "RodrigoBot",
-		Authorization: auth,
-	};
-
-	const res = await post(url, null, headers);
-
-	if (res.status === 400) throw errors.redditRefreshToken;
-
-	const json = res.data;
-
-	const response = await getRedditPosts(data, json.access_token);
-
-	return response;
-}
-
-async function getRefreshToken() {
-	/* eslint-disable-line no-unused-vars */
-	const url =
-		"https://www.reddit.com/api/v1/access_token?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul";
-
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
-		"base64",
-	); /* eslint-disable-line no-undef */
-	const auth = `Basic ${encryptedAuth}`;
-
-	const headers = {
-		"User-Agent": "RodrigoBot",
-		Authorization: auth,
-	};
-
-	const res = await post(url, null, headers);
-	const json = res.data;
-
-	console.log(json);
-}
-
-async function checkForReddit(msg) {
-	// await getRefreshToken();
-
-	try {
-		const subreddit = msg.split(" ")[2];
-
-		return await getAccessToken({ subreddit });
-	} catch (err) {
-		return err.message;
-	}
-}
-
-module.exports = { checkForReddit };
+module.exports = { getPost };

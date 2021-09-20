@@ -26,10 +26,10 @@ async function getChannelsPlaylist(channel) {
 	return json.items;
 }
 
-async function getVideo(msg) {
-	const channelName = msg.split(" ")[2];
+async function getVideo(options) {
+	const channel = options.channel;
 
-	const channelFound = await checkIfChannelExists(channelName);
+	const channelFound = await checkIfChannelExists(channel);
 
 	if (channelFound) {
 		const playlist = await getChannelsPlaylist(channelFound.id.channelId);

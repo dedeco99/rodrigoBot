@@ -1,4 +1,4 @@
-const { checkForCommand } = require("./utils/command");
+const { checkForCommand, processCommand } = require("./utils/command");
 
 async function handleMessage(msg, customCommands) {
 	const response = await checkForCommand(msg, customCommands);
@@ -6,4 +6,10 @@ async function handleMessage(msg, customCommands) {
 	return response;
 }
 
-module.exports = { handleMessage };
+async function handleCommand(command, options) {
+	const response = await processCommand(command, options);
+
+	return response;
+}
+
+module.exports = { handleMessage, handleCommand };

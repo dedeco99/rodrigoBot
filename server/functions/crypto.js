@@ -1,8 +1,8 @@
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
-async function getPrice(msg) {
-	const data = msg.split(" ")[2];
+async function getPrice(options) {
+	const coinSelected = options.coin;
 	let response = null;
 
 	let url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/map";
@@ -13,7 +13,10 @@ async function getPrice(msg) {
 
 	let coinId = null;
 	for (const coin of json.data) {
-		if (data.charAt(0).toUpperCase() + data.slice(1) === coin.name || data.toUpperCase() === coin.symbol) {
+		if (
+			coinSelected.charAt(0).toUpperCase() + coinSelected.slice(1) === coin.name ||
+			coinSelected.toUpperCase() === coin.symbol
+		) {
 			coinId = coin.id;
 			break;
 		}

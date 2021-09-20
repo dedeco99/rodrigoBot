@@ -61,6 +61,182 @@ const discordFeatures = [
 ];
 
 const commands = [
+	// Utils
+	{
+		name: "define",
+		description: "Returns the urban definition of a word",
+		options: [
+			{
+				name: "word",
+				type: "STRING",
+				description: "The word you want to define",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "search",
+		description: "Returns the first results of a google search",
+		options: [
+			{
+				name: "topic",
+				type: "STRING",
+				description: "The topic you want to search",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "sort",
+		description: "Randomly sorts the values provided",
+		options: [
+			{
+				name: "values",
+				type: "STRING",
+				description: "The values you want to randomly sort separated by ;",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "convert",
+		description: "Converts one currency to another",
+		options: [
+			{
+				name: "number",
+				type: "NUMBER",
+				description: "The number you want to convert",
+				required: true,
+			},
+			{
+				name: "from",
+				type: "STRING",
+				description: "The currency you want to convert",
+				required: true,
+			},
+			{
+				name: "to",
+				type: "STRING",
+				description: "The currency you want to convert to",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "math",
+		description: "Returns the result for the provided mathematical expression",
+		options: [
+			{
+				name: "expression",
+				type: "STRING",
+				description: "The expression you want to resolve",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "crypto",
+		description: "Returns information about a coin",
+		options: [
+			{
+				name: "coin",
+				type: "STRING",
+				description: "The name or symbol of a coin",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "weather",
+		description: "Returns the weather for a specified location",
+		options: [
+			{
+				name: "location",
+				type: "STRING",
+				description: "The location you want the weather from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "radar",
+		description: "Returns radars for a specified location",
+		options: [
+			{
+				name: "location",
+				type: "STRING",
+				description: "The location you want the radars from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "corona",
+		description: "Returns information about corona",
+		options: [
+			{
+				name: "country",
+				type: "STRING",
+				description: "The country you want the information from",
+				required: true,
+			},
+		],
+	},
+	// Social Media
+	{
+		name: "reddit",
+		description: "Returns a random post from the specified subreddit",
+		options: [
+			{
+				name: "subreddit",
+				type: "STRING",
+				description: "The subreddit you want a post from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "youtube",
+		description: "Returns the latest video from the specified channel",
+		options: [
+			{
+				name: "channel",
+				type: "STRING",
+				description: "The channel you want a video from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "twitch",
+		description: "Returns the stream from the specified channel",
+		options: [
+			{
+				name: "channel",
+				type: "STRING",
+				description: "The channel you want the stream from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "insta",
+		description: "Returns a post from the specified user",
+		options: [
+			{
+				name: "user",
+				type: "STRING",
+				description: "The user you want the post from",
+				required: true,
+			},
+			{
+				name: "number",
+				type: "NUMBER",
+				description: "The number of the post (the latest one is 0)",
+			},
+		],
+	},
+	// Music
 	{
 		name: "play",
 		description: "Plays a song",
@@ -68,7 +244,7 @@ const commands = [
 			{
 				name: "song",
 				type: "STRING",
-				description: "The URL of the song to play",
+				description: "The name/URL of the song to play",
 				required: true,
 			},
 		],
@@ -157,7 +333,36 @@ async function handleMessage(msg, room) {
 async function handleInteraction(interaction) {
 	if (!interaction.isCommand() || !interaction.guildId) return;
 
-	await media.music(interaction);
+	await interaction.deferReply();
+
+	if (["play", "pause", "resume", "skip", "queue", "stop"].includes(interaction.commandName)) {
+		await media.music(interaction);
+		return;
+	}
+
+	const command = commands.find(c => c.name === interaction.commandName);
+
+	const options = {};
+	for (const option of command.options.map(o => o.name)) {
+		options[option] = interaction.options.get(option) ? interaction.options.get(option).value : null;
+	}
+
+	const response = await rodrigo.handleCommand(interaction.commandName, options);
+
+	if (!response || !response.command) {
+		await interaction.followUp("Either you or I did something wrong");
+		return;
+	}
+
+	if (embeds[response.command] && typeof response.message !== "string") {
+		response.message = embeds[response.command](response.message);
+	}
+
+	const messages = Array.isArray(response.message) ? response.message : [response.message];
+
+	for (const message of messages) {
+		if (message) await interaction.followUp(message);
+	}
 }
 
 async function run() {

@@ -1,5 +1,6 @@
-function getStream(msg) {
-	const channel = msg.split("twitch ")[1];
+function getStream(options) {
+	const channel = options.channel;
+
 	const url = `https://www.twitch.tv/${channel}`;
 
 	return url;
