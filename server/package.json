@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"main": "app.js",
 	"engines": {
-		"node": "12.13.0"
+		"node": "16.9.1"
 	},
 	"scripts": {
 		"start": "nodemon app",
