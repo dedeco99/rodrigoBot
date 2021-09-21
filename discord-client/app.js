@@ -7,7 +7,6 @@ const embed = require("./utils/embed");
 
 const utils = require("./functions/utils");
 const media = require("./functions/media");
-const tts = require("./functions/tts");
 const system = require("./functions/system");
 
 const embeds = {
@@ -27,14 +26,10 @@ const embeds = {
 const discordFeatures = [
 	// Utils
 	{ command: "remindme", func: utils.remindMe },
-	{ command: "vote", func: utils.vote },
-
-	// TTS
-	{ command: "tts", func: tts.speak },
+	{ command: "vote", func: utils.vote, afterFunc: utils.voteReactions },
 
 	// System
 	{ command: "activity", func: system.activity },
-	// { command: ["delete", "apaga"], func: system.deleteLastMsg },
 ];
 
 const commands = [
@@ -389,6 +384,26 @@ const commands = [
 			},
 		],
 	},
+	/* Discord */
+	// Utils
+	{
+		name: "vote",
+		description: "Returns a poll with the specified options",
+		options: [
+			{
+				name: "title",
+				type: "STRING",
+				description: "The title of the poll",
+				required: true,
+			},
+			{
+				name: "options",
+				type: "STRING",
+				description: "The options for the poll separated by ;",
+				required: true,
+			},
+		],
+	},
 	// Music
 	{
 		name: "play",
@@ -452,13 +467,6 @@ const commands = [
 ];
 
 async function handleMessage(msg) {
-	if (msg.author && msg.author.username === "RodrigoBot") {
-		global.lastMsgs.push(msg);
-		if (global.lastMsgs.length > 10) global.lastMsgs.shift();
-
-		return null;
-	}
-
 	if (msg.content.toLowerCase() === "rodrigo commands") {
 		await msg.guild.commands.set(commands);
 
@@ -508,8 +516,9 @@ async function handleInteraction(interaction) {
 
 	let response = await rodrigo.handleCommand(interaction.commandName, options);
 
+	let discordFeature = null;
 	if (!response) {
-		const discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
+		discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
 
 		if (discordFeature) {
 			response = { command: discordFeature.command, message: await discordFeature.func(options) };
@@ -518,11 +527,15 @@ async function handleInteraction(interaction) {
 		if (!response || !response.message) return interaction.followUp("Either you or I did something wrong");
 	}
 
-	if (embeds[response.command] && typeof response.message !== "string") {
+	if (!discordFeature && embeds[response.command] && typeof response.message !== "string") {
 		response.message = embeds[response.command](response.message);
 	}
 
-	if (response.message) await interaction.followUp(response.message);
+	if (response.message) {
+		const msg = await interaction.followUp(response.message);
+
+		if (discordFeature.afterFunc) await discordFeature.afterFunc(msg, options);
+	}
 }
 
 function handleCronjob(room, message) {
@@ -539,7 +552,6 @@ async function run() {
 	const intents = new Intents(["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]);
 
 	global.client = new Client({ intents });
-	global.lastMsgs = [];
 	global.redditPosts = [];
 
 	global.client.login(secrets.discordKey);

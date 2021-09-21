@@ -11,18 +11,6 @@ function activity(options) {
 	return "Activity changed";
 }
 
-function deleteLastMsg(msg) {
-	if (global.lastMsgs.length) {
-		const lastMessage = global.lastMsgs[global.lastMsgs.length - 1];
-		if (lastMessage.channel.id === msg.channel.id) {
-			lastMessage.delete();
-			global.lastMsgs.pop();
-			msg.delete();
-		}
-	}
-}
-
 module.exports = {
 	activity,
-	deleteLastMsg,
 };

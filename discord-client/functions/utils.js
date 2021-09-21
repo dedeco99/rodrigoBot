@@ -23,9 +23,8 @@ function remindMe(msg) {
 	return "Ja te lembro";
 }
 
-async function vote(msg) {
-	const message = msg.content.split(" ");
-
+function vote(options) {
+	/*
 	if (message[2] === "results") {
 		const poll = message[3];
 
@@ -37,21 +36,21 @@ async function vote(msg) {
 
 			msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
 		});
-	} else {
-		const params = msg.content.split("vote ")[1];
-		const options = params.split(";");
-		const title = options[0];
-		options.splice(0, 1);
+	}
+	*/
 
-		const res = {
-			title,
-			options,
-		};
+	return embed.createPollEmbed({ title: options.title, options: options.options.split(";") });
+}
 
-		return embed.createPollEmbed(msg, res);
+async function voteReactions(msg, options) {
+	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
+
+	const promises = [];
+	for (let i = 0; i < options.options.length; i++) {
+		promises.push(msg.react(reacts[i]));
 	}
 
-	return null;
+	await Promise.all(promises);
 }
 
 async function pin(msg, isMessageToPin) {
@@ -83,4 +82,4 @@ async function pin(msg, isMessageToPin) {
 	return null;
 }
 
-module.exports = { remindMe, vote, pin };
+module.exports = { remindMe, vote, voteReactions, pin };

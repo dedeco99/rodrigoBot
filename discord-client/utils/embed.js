@@ -205,7 +205,7 @@ function createDefineEmbed(res) {
 	return { embeds: [embed] };
 }
 
-async function createPollEmbed(msg, res) {
+function createPollEmbed(res) {
 	const embed = {};
 
 	embed.title = res.title;
@@ -218,14 +218,7 @@ async function createPollEmbed(msg, res) {
 		embed.fields.push({ name: "----------", value: `${reacts[i]} - ${res.options[i]}` });
 	}
 
-	const message = await msg.channel.send({ embed });
-
-	const promises = [];
-	for (let i = 0; i < res.options.length; i++) {
-		promises.push(message.react(reacts[i]));
-	}
-
-	await Promise.all(promises);
+	return { embeds: [embed] };
 }
 
 function createKeyboardEmbed(res) {
