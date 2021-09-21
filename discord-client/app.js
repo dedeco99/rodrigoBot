@@ -534,7 +534,7 @@ async function handleInteraction(interaction) {
 	if (response.message) {
 		const msg = await interaction.followUp(response.message);
 
-		if (discordFeature.afterFunc) await discordFeature.afterFunc(msg, options);
+		if (discordFeature && discordFeature.afterFunc) await discordFeature.afterFunc(msg, options);
 	}
 }
 
