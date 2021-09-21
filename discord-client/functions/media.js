@@ -1,12 +1,9 @@
 const { GuildMember } = require("discord.js");
 const { AudioPlayerStatus, entersState, joinVoiceChannel, VoiceConnectionStatus } = require("@discordjs/voice");
+const { getVideoSearch } = require("rodrigo");
 
 const { Track } = require("./music/track");
 const { MusicSubscription } = require("./music/subscription");
-
-const { updateMeta } = require("../utils/database");
-
-const { getVideoSearch } = require("./youtube");
 
 const subscriptions = new Map();
 
@@ -15,8 +12,6 @@ async function music(interaction) {
 	let subscription = subscriptions.get(interaction.guildId);
 
 	if (interaction.commandName === "play") {
-		await interaction.deferReply();
-
 		const song = interaction.options.get("song").value;
 
 		const url =
@@ -79,14 +74,14 @@ async function music(interaction) {
 	}
 
 	if (!subscription) {
-		await interaction.reply("Not playing in this server");
+		await interaction.followUp("Not playing in this server");
 		return;
 	}
 
 	if (interaction.commandName === "skip") {
 		subscription.audioPlayer.stop();
 
-		await interaction.reply("Get skipped lmao");
+		await interaction.followUp("Get skipped lmao");
 	} else if (interaction.commandName === "queue") {
 		const current =
 			subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
@@ -98,50 +93,26 @@ async function music(interaction) {
 			.map((track, index) => `${index + 1}) ${track.title}`)
 			.join("\n");
 
-		await interaction.reply(`${current}\n\n${queue}`);
+		await interaction.followUp(`${current}\n\n${queue}`);
 	} else if (interaction.commandName === "pause") {
 		subscription.audioPlayer.pause();
 
-		await interaction.reply(":pause_button: Paused!");
+		await interaction.followUp(":pause_button: Paused!");
 	} else if (interaction.commandName === "resume") {
 		subscription.audioPlayer.unpause();
 
-		await interaction.reply(":arrow_forward: Unpaused!");
+		await interaction.followUp(":arrow_forward: Unpaused!");
 	} else if (interaction.commandName === "stop") {
 		subscription.voiceConnection.destroy();
 
 		subscriptions.delete(interaction.guildId);
 
-		await interaction.reply("Left channel :wave:");
+		await interaction.followUp("Left channel :wave:");
 	} else {
-		await interaction.reply("Unknown command");
+		await interaction.followUp("Unknown command");
 	}
-}
-
-function play(msg) {
-	const action = msg.content.split("play")[1];
-	global.client.user.setActivity(action, { type: "PLAYING" });
-
-	updateMeta({ action: { message: action, type: "PLAYING" } });
-}
-
-function watch(msg) {
-	const action = msg.content.split("watch")[1];
-	global.client.user.setActivity(action, { type: "WATCHING" });
-
-	updateMeta({ action: { message: action, type: "WATCHING" } });
-}
-
-function listen(msg) {
-	const action = msg.content.split("listen")[1];
-	global.client.user.setActivity(action, { type: "LISTENING" });
-
-	updateMeta({ action: { message: action, type: "LISTENING" } });
 }
 
 module.exports = {
 	music,
-	play,
-	watch,
-	listen,
 };

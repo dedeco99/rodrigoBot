@@ -1,11 +1,4 @@
-const moment = require("moment");
-const cheerio = require("cheerio");
-
-const { get } = require("../utils/request");
 const embed = require("../utils/embed");
-
-const GroupBuy = require("../../discord-client/models/groupBuy");
-const Stock = require("../../discord-client/models/stock");
 
 function remindMe(msg) {
 	const params = msg.content.split(" ");
@@ -30,9 +23,8 @@ function remindMe(msg) {
 	return "Ja te lembro";
 }
 
-async function vote(msg) {
-	const message = msg.content.split(" ");
-
+function vote(options) {
+	/*
 	if (message[2] === "results") {
 		const poll = message[3];
 
@@ -44,21 +36,21 @@ async function vote(msg) {
 
 			msg.channel.send(`${reaction._emoji.name}: ${reaction.count} votos (${userRes})`);
 		});
-	} else {
-		const params = msg.content.split("vote ")[1];
-		const options = params.split(";");
-		const title = options[0];
-		options.splice(0, 1);
+	}
+	*/
 
-		const res = {
-			title,
-			options,
-		};
+	return embed.createPollEmbed({ title: options.title, options: options.options.split(";") });
+}
 
-		return embed.createPollEmbed(msg, res);
+async function voteReactions(msg, options) {
+	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
+
+	const promises = [];
+	for (let i = 0; i < options.options.length; i++) {
+		promises.push(msg.react(reacts[i]));
 	}
 
-	return null;
+	await Promise.all(promises);
 }
 
 async function pin(msg, isMessageToPin) {
@@ -90,136 +82,4 @@ async function pin(msg, isMessageToPin) {
 	return null;
 }
 
-async function keyboardGroupBuys() {
-	const res = await get("https://mechgroupbuys.com/gb-data");
-	const json = res.data;
-
-	const liveGroupBuys = json
-		.filter(i => {
-			return (
-				(i.type === "keyboards" || i.type === "keycaps" || i.type === "switches") &&
-				i.startDate &&
-				moment(i.startDate, "M/D/YY").diff(moment(), "days") <= 0 &&
-				(!i.endDate || moment(i.endDate, "M/D/YY").diff(moment(), "days") >= 0)
-			);
-		})
-		.map(i => ({
-			name: i.name,
-			type: i.type,
-			image: i.mainImage,
-			startDate: moment(i.startDate, "M/D/YY").format("DD/MM/YYYY"),
-			endDate: moment(i.endDate, "M/D/YY").format("DD/MM/YYYY"),
-			pricing: i.pricing,
-			saleType: i.saleType,
-			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),
-		}));
-
-	for (const groupBuy of liveGroupBuys) {
-		const groupBuyExists = await GroupBuy.findOne({ name: groupBuy.name });
-
-		if (!groupBuyExists) {
-			const newGroupBuy = new GroupBuy(groupBuy);
-
-			await newGroupBuy.save();
-
-			return groupBuy;
-		}
-	}
-
-	return null;
-}
-
-// eslint-disable-next-line max-lines-per-function
-async function stockTracker(msg) {
-	const message = msg.content.split(" ");
-
-	if (message[2]) {
-		if (message[2].includes("globaldata") || message[2].includes("chiptec") || message[2].includes("pcdiga")) {
-			const stockExists = await Stock.findOne({ link: message[2] }).lean();
-
-			if (stockExists) return "Já existe";
-
-			const stock = new Stock({ link: message[2] });
-
-			await stock.save();
-
-			return "Link adicionado com sucesso";
-		}
-
-		return "Loja não é válida";
-	}
-
-	const stocks = await Stock.find({}).lean();
-
-	const products = [];
-	for (const stock of stocks) {
-		const url = stock.link;
-
-		const res = await get(url);
-		const $ = cheerio.load(res.data);
-
-		let shop = null;
-		let title = null;
-		let image = null;
-		let stockMessage = null;
-		let inStock = null;
-		if (url.includes("globaldata")) {
-			shop = "Globaldata";
-			title = $(".page-title")
-				.toArray()
-				.map(elem => $(elem).find("span").text());
-			title = title[0];
-			image = $("#mtImageContainer")
-				.toArray()
-				.map(elem => $(elem).find("img").attr("src"));
-			image = image[0];
-
-			stockMessage = $(".stock-shops")
-				.toArray()
-				.map(elem => $(elem).find("span").first().text());
-			stockMessage = stockMessage[0].trim();
-			inStock = stockMessage !== "Esgotado";
-		} else if (url.includes("chiptec")) {
-			shop = "Chiptec";
-			title = $(".prod_tit")
-				.toArray()
-				.map(elem => $(elem).find("h1").text());
-			title = title[0];
-			image = $(".product-image")
-				.toArray()
-				.map(elem => $(elem).find("img").attr("src"));
-			image = image[0];
-
-			stockMessage = $(".amstockstatus")
-				.toArray()
-				.map(elem => $(elem).text());
-			stockMessage = stockMessage[0].trim();
-			inStock = stockMessage === "Disponível";
-		} else if (url.includes("pcdiga")) {
-			shop = "PCDiga";
-			title = $(".item.product")
-				.toArray()
-				.map(elem => $(elem).find("strong").text());
-			title = title[0];
-			image = $(".gallery-placeholder__image")
-				.toArray()
-				.map(elem => $(elem).attr("src"));
-			image = image[0];
-
-			const index = res.data.indexOf("'is_in_stock': ");
-			stockMessage = res.data.substring(index + 15, index + 16);
-			inStock = stockMessage === "1";
-			stockMessage = inStock ? "Em Stock" : "Esgotado";
-		}
-
-		if (stock.stock !== stockMessage) {
-			await Stock.updateOne({ _id: stock._id }, { stock: stockMessage });
-
-			if (inStock) products.push({ shop, title, url, image, stockMessage });
-		}
-	}
-
-	return products.length ? products : null;
-}
-
-module.exports = { remindMe, vote, pin, keyboardGroupBuys, stockTracker };
+module.exports = { remindMe, vote, voteReactions, pin };

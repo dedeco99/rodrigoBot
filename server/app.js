@@ -1,9 +1,12 @@
-const { checkForCommand } = require("./utils/command");
+const database = require("./utils/database");
+const { handleCommand } = require("./utils/command");
+const { handleCronjobs } = require("./functions/cronjobs");
+const { getVideoSearch } = require("./functions/youtube");
 
-async function handleMessage(msg, customCommands) {
-	const response = await checkForCommand(msg, customCommands);
-
-	return response;
-}
-
-module.exports = { handleMessage };
+module.exports = {
+	handleCommand,
+	handleCronjobs,
+	getMetadata: database.getMetadata,
+	updateMetadata: database.updateMetadata,
+	getVideoSearch,
+};

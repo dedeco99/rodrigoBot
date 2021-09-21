@@ -5,16 +5,19 @@ const { evaluate } = require("mathjs");
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
-function answer(msg) {
-	const question = msg.split("rodrigo ")[1];
+const GroupBuy = require("../models/groupBuy");
+const Stock = require("../models/stock");
+
+function answer(options) {
+	const question = options.question;
 	const phrase = question.substring(0, question.length - 1);
 	let num = Math.floor(Math.random() >= 0.5);
 
 	if (!phrase) {
 		return "Sim, estou vivo";
 	} else if (phrase.includes(" ou ")) {
-		const option1 = msg.split(" ou ")[0].slice(8);
-		const option2 = msg.split(" ou ")[1].slice(0, -1);
+		const option1 = phrase.split(" ou ")[0];
+		const option2 = phrase.split(" ou ")[1];
 
 		return num ? option1 : option2;
 	} else if (phrase.includes(" probabilidade ")) {
@@ -30,8 +33,8 @@ function answer(msg) {
 	return num ? "Sim" : "Não";
 }
 
-async function define(msg) {
-	const word = msg.split(" ")[2];
+async function define(options) {
+	const word = options.word;
 	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
 
 	const res = await get(url);
@@ -62,8 +65,8 @@ async function define(msg) {
 	return response;
 }
 
-async function search(msg) {
-	const topic = msg.split(" ")[2];
+async function search(options) {
+	const topic = options.topic;
 	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
 
 	const res = await get(url);
@@ -82,46 +85,38 @@ async function search(msg) {
 	return response;
 }
 
-function sort(msg) {
-	let options = msg.split(" ")[2];
-	options = options.split(";");
+function sort(options) {
+	let values = options.values;
+	values = values.split(";");
 	const randomized = [];
-	const times = options.length;
+	const times = values.length;
 
 	for (let i = 0; i < times; i++) {
-		const num = Math.floor(Math.random() * options.length);
-		randomized.push(options[num]);
-		options.splice(num, 1);
+		const num = Math.floor(Math.random() * values.length);
+		randomized.push(values[num]);
+		values.splice(num, 1);
 	}
 
 	return randomized.join(" > ");
 }
 
-async function convert(msg) {
-	const numberToConvert = msg.split(" ")[2];
-	const currencyToConvert = msg.split(" ")[3].toUpperCase();
-	const currencyConverted = msg.split(" ")[5].toUpperCase();
-	const url = "https://api.exchangeratesapi.io/latest";
+// FIXME: Change api
+async function convert(options) {
+	const url = `https://api.exchangerate.host/latest?base=${options.from}`;
 
 	const res = await get(url);
 	const json = res.data;
 
-	let converted = 0;
-
-	if (currencyToConvert === "EUR") {
-		converted = (numberToConvert * json.rates[currencyConverted]).toFixed(2);
-	} else {
-		converted = (numberToConvert / json.rates[currencyToConvert]).toFixed(2);
-	}
-
-	return converted;
+	return `${options.number} ${options.from} = ${(options.number * json.rates[options.to]).toFixed(2)} ${
+		options.to
+	}`;
 }
 
-function math(msg) {
-	const expression = msg.split("math ")[1];
+function math(options) {
+	const expression = options.expression;
 	const result = evaluate(expression);
 
-	return result;
+	return result.toString();
 }
 
 // FIXME: Not working
@@ -163,13 +158,14 @@ function price() {
 	return "Função em manutenção";
 }
 
-async function weather(msg) {
-	const params = msg.split(" ");
-	const location = params[2];
+async function weather(options) {
+	const location = options.location;
 
 	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${secrets.openWeatherMapKey}`;
 
 	const res = await get(url);
+
+	if (res.status === 404) return "City Not Found";
 
 	const weatherInfo = {
 		forecast: res.data.weather[0].main,
@@ -185,9 +181,8 @@ async function weather(msg) {
 	return weatherInfo;
 }
 
-async function radars(msg, page = 0, data = []) {
-	const params = msg.split(" ");
-	const location = params[2];
+async function radars(options, page = 0, data = []) {
+	const location = options.location;
 
 	const url = `https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=${page}`;
 
@@ -207,7 +202,7 @@ async function radars(msg, page = 0, data = []) {
 	);
 
 	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
-		return radars(msg, page + 1, response);
+		return radars(options, page + 1, response);
 	}
 
 	function sanitizeString(str) {
@@ -229,8 +224,8 @@ async function radars(msg, page = 0, data = []) {
 	return { location: title, radars: radarsByLocation };
 }
 
-async function corona(msg) {
-	const country = msg.split("corona ")[1];
+async function corona(options) {
+	const country = options.country;
 	const url = "https://www.worldometers.info/coronavirus/";
 
 	const res = await get(url);
@@ -244,16 +239,16 @@ async function corona(msg) {
 		.toArray()
 		.map(elem => {
 			return {
-				country: $(elem).children().eq(0).text().trim(),
-				totalCases: $(elem).children().eq(1).text().trim(),
-				newCases: $(elem).children().eq(2).text().trim(),
-				totalDeaths: $(elem).children().eq(3).text().trim(),
-				newDeaths: $(elem).children().eq(4).text().trim(),
-				totalRecovered: $(elem).children().eq(5).text().trim(),
-				activeCases: $(elem).children().eq(6).text().trim(),
-				seriousCases: $(elem).children().eq(7).text().trim(),
-				casesPer1M: $(elem).children().eq(8).text().trim(),
-				deathsPer1M: $(elem).children().eq(9).text().trim(),
+				country: $(elem).children().eq(1).text().trim(),
+				totalCases: $(elem).children().eq(2).text().trim() || "0",
+				newCases: $(elem).children().eq(3).text().trim() || "0",
+				totalDeaths: $(elem).children().eq(4).text().trim() || "0",
+				newDeaths: $(elem).children().eq(5).text().trim() || "0",
+				totalRecovered: $(elem).children().eq(6).text().trim() || "0",
+				activeCases: $(elem).children().eq(7).text().trim() || "0",
+				seriousCases: $(elem).children().eq(8).text().trim() || "0",
+				casesPer1M: $(elem).children().eq(9).text().trim() || "0",
+				deathsPer1M: $(elem).children().eq(10).text().trim() || "0",
 			};
 		});
 
@@ -269,8 +264,136 @@ async function corona(msg) {
 	return response;
 }
 
-function help() {
-	return "https://dedeco99.github.io/rodrigoBot/";
+async function keyboards() {
+	const res = await get("https://mechgroupbuys.com/gb-data");
+	const json = res.data;
+
+	const liveGroupBuys = json
+		.filter(i => {
+			return (
+				(i.type === "keyboards" || i.type === "keycaps" || i.type === "switches") &&
+				i.startDate &&
+				moment(i.startDate, "M/D/YY").diff(moment(), "days") <= 0 &&
+				(!i.endDate || moment(i.endDate, "M/D/YY").diff(moment(), "days") >= 0)
+			);
+		})
+		.map(i => ({
+			name: i.name,
+			type: i.type,
+			image: i.mainImage,
+			startDate: moment(i.startDate, "M/D/YY").format("DD/MM/YYYY"),
+			endDate: moment(i.endDate, "M/D/YY").format("DD/MM/YYYY"),
+			pricing: i.pricing,
+			saleType: i.saleType,
+			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),
+		}));
+
+	for (const groupBuy of liveGroupBuys) {
+		const groupBuyExists = await GroupBuy.findOne({ name: groupBuy.name });
+
+		if (!groupBuyExists) {
+			const newGroupBuy = new GroupBuy(groupBuy);
+
+			await newGroupBuy.save();
+
+			return groupBuy;
+		}
+	}
+
+	return null;
+}
+
+// eslint-disable-next-line max-lines-per-function
+async function stock(options) {
+	const link = options.link;
+
+	if (link) {
+		if (link.includes("globaldata") || link.includes("chiptec") || link.includes("pcdiga")) {
+			const stockExists = await Stock.findOne({ link }).lean();
+
+			if (stockExists) return "Já existe";
+
+			const stock = new Stock({ link });
+
+			await stock.save();
+
+			return "Link adicionado com sucesso";
+		}
+
+		return "Loja não é válida";
+	}
+
+	const stocks = await Stock.find({}).lean();
+
+	const products = [];
+	for (const stock of stocks) {
+		const url = stock.link;
+
+		const res = await get(url);
+		const $ = cheerio.load(res.data);
+
+		let shop = null;
+		let title = null;
+		let image = null;
+		let stockMessage = null;
+		let inStock = null;
+		if (url.includes("globaldata")) {
+			shop = "Globaldata";
+			title = $(".page-title")
+				.toArray()
+				.map(elem => $(elem).find("span").text());
+			title = title[0];
+			image = $("#mtImageContainer")
+				.toArray()
+				.map(elem => $(elem).find("img").attr("src"));
+			image = image[0];
+
+			stockMessage = $(".stock-shops")
+				.toArray()
+				.map(elem => $(elem).find("span").first().text());
+			stockMessage = stockMessage[0].trim();
+			inStock = stockMessage !== "Esgotado";
+		} else if (url.includes("chiptec")) {
+			shop = "Chiptec";
+			title = $(".prod_tit")
+				.toArray()
+				.map(elem => $(elem).find("h1").text());
+			title = title[0];
+			image = $(".product-image")
+				.toArray()
+				.map(elem => $(elem).find("img").attr("src"));
+			image = image[0];
+
+			stockMessage = $(".amstockstatus")
+				.toArray()
+				.map(elem => $(elem).text());
+			stockMessage = stockMessage[0].trim();
+			inStock = stockMessage === "Disponível";
+		} else if (url.includes("pcdiga")) {
+			shop = "PCDiga";
+			title = $(".item.product")
+				.toArray()
+				.map(elem => $(elem).find("strong").text());
+			title = title[0];
+			image = $(".gallery-placeholder__image")
+				.toArray()
+				.map(elem => $(elem).attr("src"));
+			image = image[0];
+
+			const index = res.data.indexOf("'is_in_stock': ");
+			stockMessage = res.data.substring(index + 15, index + 16);
+			inStock = stockMessage === "1";
+			stockMessage = inStock ? "Em Stock" : "Esgotado";
+		}
+
+		if (stock.stock !== stockMessage) {
+			await Stock.updateOne({ _id: stock._id }, { stock: stockMessage });
+
+			if (inStock) products.push({ shop, title, url, image, stockMessage });
+		}
+	}
+
+	return products.length ? products : null;
 }
 
 module.exports = {
@@ -284,5 +407,6 @@ module.exports = {
 	weather,
 	radars,
 	corona,
-	help,
+	keyboards,
+	stock,
 };

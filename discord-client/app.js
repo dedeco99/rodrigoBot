@@ -1,21 +1,13 @@
+/* eslint-disable max-lines */
 const { Intents, Client } = require("discord.js");
 const rodrigo = require("rodrigo");
 
-const secrets = require("./utils/secrets");
-const database = require("./utils/database");
+const secrets = require("../server/utils/secrets");
 const embed = require("./utils/embed");
 
 const utils = require("./functions/utils");
-const memes = require("./functions/memes");
 const media = require("./functions/media");
-const tts = require("./functions/tts");
-const custom = require("./functions/custom");
-const birthday = require("./functions/birthdays");
-const cronjob = require("./functions/cronjobs");
 const system = require("./functions/system");
-
-const Meta = require("./models/meta");
-const CustomCommand = require("./models/customCommand");
 
 const embeds = {
 	define: embed.createDefineEmbed,
@@ -27,40 +19,392 @@ const embeds = {
 	insta: embed.createInstaEmbed,
 	crypto: embed.createCryptoEmbed,
 	vote: embed.createPollEmbed,
-	keyboardGroupBuys: embed.createKeyboardEmbed,
-	stockTracker: embed.createStockEmbed,
+	keyboards: embed.createKeyboardEmbed,
+	stock: embed.createStockEmbed,
 };
 
 const discordFeatures = [
 	// Utils
 	{ command: "remindme", func: utils.remindMe },
-	{ command: "vote", func: utils.vote },
-	{ command: "keyboardGroupBuys", func: utils.keyboardGroupBuys },
-	{ command: "stockTracker", func: utils.stockTracker },
-
-	// Meme Creation
-	{ command: "meme", func: memes.checkForMemes },
-
-	// Media
-	{ command: "play", func: media.play },
-	{ command: "watch", func: media.watch },
-	{ command: "listen", func: media.listen },
-
-	// TTS
-	{ command: "tts", func: tts.speak },
-
-	// Custom
-	{ command: "custom", func: custom.checkForCommand },
-	{ command: "birthday", func: birthday.checkForBirthday },
-	{ command: "cronjob", func: cronjob.checkForCronjob },
+	{ command: "vote", func: utils.vote, afterFunc: utils.voteReactions },
 
 	// System
-	{ command: ["delete", "apaga"], func: system.deleteLastMsg },
-	{ command: ["good", "nice", "best", "bom", "bem", "grande"], includes: true, func: system.compliment },
-	{ command: ["bad", "worst", "autistic", "mau", "mal", "lixo", "autista"], includes: true, func: system.insult },
+	{ command: "activity", func: system.activity },
 ];
 
 const commands = [
+	// Utils
+	{
+		name: "answer",
+		description: "Answers a question",
+		options: [
+			{
+				name: "question",
+				type: "STRING",
+				description: "The question you want to ask",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "define",
+		description: "Returns the urban definition of a word",
+		options: [
+			{
+				name: "word",
+				type: "STRING",
+				description: "The word you want to define",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "search",
+		description: "Returns the first results of a google search",
+		options: [
+			{
+				name: "topic",
+				type: "STRING",
+				description: "The topic you want to search",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "sort",
+		description: "Randomly sorts the values provided",
+		options: [
+			{
+				name: "values",
+				type: "STRING",
+				description: "The values you want to randomly sort separated by ;",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "convert",
+		description: "Converts one currency to another",
+		options: [
+			{
+				name: "number",
+				type: "NUMBER",
+				description: "The number you want to convert",
+				required: true,
+			},
+			{
+				name: "from",
+				type: "STRING",
+				description: "The currency you want to convert",
+				required: true,
+			},
+			{
+				name: "to",
+				type: "STRING",
+				description: "The currency you want to convert to",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "math",
+		description: "Returns the result for the provided mathematical expression",
+		options: [
+			{
+				name: "expression",
+				type: "STRING",
+				description: "The expression you want to resolve",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "crypto",
+		description: "Returns information about a coin",
+		options: [
+			{
+				name: "coin",
+				type: "STRING",
+				description: "The name or symbol of a coin",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "weather",
+		description: "Returns the weather for a specified location",
+		options: [
+			{
+				name: "location",
+				type: "STRING",
+				description: "The location you want the weather from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "radar",
+		description: "Returns radars for a specified location",
+		options: [
+			{
+				name: "location",
+				type: "STRING",
+				description: "The location you want the radars from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "corona",
+		description: "Returns information about corona",
+		options: [
+			{
+				name: "country",
+				type: "STRING",
+				description: "The country you want the information from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "keyboards",
+		description: "Returns information about a keyboard group buy",
+	},
+	/*
+	{
+		name: "stock",
+		description: "Returns information about stock of added products",
+		options: [
+			{
+				name: "link",
+				type: "STRING",
+				description: "The link for the product you want to track",
+			},
+		],
+	},
+	*/
+	// Social Media
+	{
+		name: "reddit",
+		description: "Returns a random post from the specified subreddit",
+		options: [
+			{
+				name: "subreddit",
+				type: "STRING",
+				description: "The subreddit you want a post from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "youtube",
+		description: "Returns the latest video from the specified channel",
+		options: [
+			{
+				name: "channel",
+				type: "STRING",
+				description: "The channel you want a video from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "twitch",
+		description: "Returns the stream from the specified channel",
+		options: [
+			{
+				name: "channel",
+				type: "STRING",
+				description: "The channel you want the stream from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "insta",
+		description: "Returns a post from the specified user",
+		options: [
+			{
+				name: "user",
+				type: "STRING",
+				description: "The user you want the post from",
+				required: true,
+			},
+			{
+				name: "number",
+				type: "NUMBER",
+				description: "The number of the post (the latest one is 0)",
+			},
+		],
+	},
+	// Memes
+	{
+		name: "meme",
+		description: "Create a meme",
+		options: [
+			{
+				name: "truth",
+				type: "SUB_COMMAND",
+				description: "Truth meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "safe",
+				type: "SUB_COMMAND",
+				description: "Safe meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "drake",
+				type: "SUB_COMMAND",
+				description: "Drake meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "First phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "facts",
+				type: "SUB_COMMAND",
+				description: "Facts meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "button",
+				type: "SUB_COMMAND",
+				description: "Button meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "choice",
+				type: "SUB_COMMAND",
+				description: "Choice meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "marioluigi",
+				type: "SUB_COMMAND",
+				description: "Mario Luigi meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+					{
+						name: "phrase3",
+						type: "STRING",
+						description: "Third phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "pikachu",
+				type: "SUB_COMMAND",
+				description: "Pikachu meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Second phrase",
+						required: true,
+					},
+					{
+						name: "phrase3",
+						type: "STRING",
+						description: "Third phrase",
+						required: true,
+					},
+				],
+			},
+		],
+	},
+	/* Discord */
+	// Utils
+	{
+		name: "vote",
+		description: "Returns a poll with the specified options",
+		options: [
+			{
+				name: "title",
+				type: "STRING",
+				description: "The title of the poll",
+				required: true,
+			},
+			{
+				name: "options",
+				type: "STRING",
+				description: "The options for the poll separated by ;",
+				required: true,
+			},
+		],
+	},
+	// Music
 	{
 		name: "play",
 		description: "Plays a song",
@@ -68,7 +412,7 @@ const commands = [
 			{
 				name: "song",
 				type: "STRING",
-				description: "The URL of the song to play",
+				description: "The name/URL of the song to play",
 				required: true,
 			},
 		],
@@ -93,90 +437,131 @@ const commands = [
 		name: "stop",
 		description: "Leave the voice channel",
 	},
+	// System
+	{
+		name: "activity",
+		description: "Change the current activity of the bot",
+		options: [
+			{
+				name: "type",
+				type: "STRING",
+				description: "The type of activity",
+				required: true,
+				choices: [
+					{ name: "Playing", value: "PLAYING" },
+					{ name: "Watching", value: "WATCHING" },
+					{ name: "Listening", value: "LISTENING" },
+					{ name: "Streaming", value: "STREAMING" },
+					{ name: "Competing", value: "COMPETING" },
+					{ name: "Custom", value: "CUSTOM" },
+				],
+			},
+			{
+				name: "activity",
+				type: "STRING",
+				description: "The  activity",
+				required: true,
+			},
+		],
+	},
 ];
 
-// eslint-disable-next-line complexity
-async function handleMessage(msg, room) {
+async function handleMessage(msg) {
 	if (msg.content.toLowerCase() === "rodrigo commands") {
 		await msg.guild.commands.set(commands);
 
 		await msg.reply("Deployed!");
 	}
 
-	if (msg.author && msg.author.username === "RodrigoBot") {
-		global.lastMsgs.push(msg);
-		if (global.lastMsgs.length > 10) global.lastMsgs.shift();
+	return null;
+}
 
-		return null;
+// eslint-disable-next-line complexity
+async function handleInteraction(interaction) {
+	if (!interaction.isCommand() || !interaction.guildId) return;
+
+	await interaction.deferReply();
+
+	if (["play", "pause", "resume", "skip", "queue", "stop"].includes(interaction.commandName)) {
+		await media.music(interaction);
+		return;
 	}
 
-	let customCommands = room ? [] : await CustomCommand.find({ guild: msg.guild.id });
+	const command = commands.find(c => c.name === interaction.commandName);
 
-	customCommands = customCommands.map(customCommand => ({
-		command: customCommand.word,
-		func: () => customCommand.message,
-	}));
+	let subCommand = null;
+	try {
+		subCommand = interaction.options.getSubcommand();
+		// eslint-disable-next-line no-empty
+	} catch (err) {}
 
-	customCommands = customCommands.concat(
-		discordFeatures.map(feat => ({ command: feat.command, includes: feat.includes, func: () => null })),
-	);
+	const options = {};
+	if (command.options) {
+		for (const option of command.options.map(o => o.name)) {
+			if (subCommand) {
+				options[interaction.commandName] = subCommand;
 
-	let response = await rodrigo.handleMessage(msg.content, customCommands);
+				const subCommandOptions = command.options.find(o => o.name === subCommand).options;
 
-	if (!response || !response.command) return null;
-
-	const discordFeature = discordFeatures.find(
-		feat => (Array.isArray(feat.command) ? feat.command[0] : feat.command) === response.command,
-	);
-
-	if (discordFeature) {
-		response = { command: discordFeature.command, message: await discordFeature.func(msg) };
-	}
-
-	if (!response.message) return null;
-
-	if (embeds[response.command] && typeof response.message !== "string") {
-		response.message = embeds[response.command](response.message);
-	}
-
-	const messages = Array.isArray(response.message) ? response.message : [response.message];
-
-	for (const message of messages) {
-		if (message) {
-			if (room) {
-				global.client.channels.cache.get(room).send(message);
+				for (const subOption of subCommandOptions.map(o => o.name)) {
+					options[subOption] = interaction.options.get(subOption)
+						? interaction.options.get(subOption).value
+						: null;
+				}
 			} else {
-				msg.channel.send(message);
+				options[option] = interaction.options.get(option) ? interaction.options.get(option).value : null;
 			}
 		}
 	}
 
-	return null;
+	let response = await rodrigo.handleCommand(interaction.commandName, options);
+
+	let discordFeature = null;
+	if (!response) {
+		discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
+
+		if (discordFeature) {
+			response = { command: discordFeature.command, message: await discordFeature.func(options) };
+		}
+
+		if (!response || !response.message) return interaction.followUp("Either you or I did something wrong");
+	}
+
+	if (!discordFeature && embeds[response.command] && typeof response.message !== "string") {
+		response.message = embeds[response.command](response.message);
+	}
+
+	if (response.message) {
+		const msg = await interaction.followUp(response.message);
+
+		if (discordFeature.afterFunc) await discordFeature.afterFunc(msg, options);
+	}
 }
 
-async function handleInteraction(interaction) {
-	if (!interaction.isCommand() || !interaction.guildId) return;
+function handleCronjob(room, message) {
+	if (typeof message === "string") {
+		global.client.channels.cache.get(room).send(message);
+	} else if (embeds[message.command]) {
+		const response = embeds[message.command](message.message);
 
-	await media.music(interaction);
+		if (response) global.client.channels.cache.get(room).send(response);
+	}
 }
 
 async function run() {
 	const intents = new Intents(["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]);
 
 	global.client = new Client({ intents });
-	global.lastMsgs = [];
-	global.musicPlayers = {};
 	global.redditPosts = [];
 
 	global.client.login(secrets.discordKey);
 
-	database.initialize();
-
-	const meta = await Meta.findOne();
+	const meta = await rodrigo.getMetadata();
 
 	global.client.on("ready", () => {
 		console.log(`Logged in as ${global.client.user.tag}!`);
-		global.client.user.setActivity(meta.action.message, { type: meta.action.type });
+
+		system.activity({ type: meta.action.type, activity: meta.action.message });
 	});
 
 	global.client.on("messageCreate", handleMessage);
@@ -191,7 +576,7 @@ async function run() {
 		}
 	});
 
-	await cronjob.runCronjobs(handleMessage);
+	rodrigo.handleCronjobs(handleCronjob);
 }
 
 run();
