@@ -175,6 +175,7 @@ const commands = [
 		name: "keyboards",
 		description: "Returns information about a keyboard group buy",
 	},
+	/*
 	{
 		name: "stock",
 		description: "Returns information about stock of added products",
@@ -186,6 +187,7 @@ const commands = [
 			},
 		],
 	},
+	*/
 	// Social Media
 	{
 		name: "reddit",
@@ -449,14 +451,7 @@ const commands = [
 	},
 ];
 
-// eslint-disable-next-line complexity
-async function handleMessage(msg, room) {
-	if (msg.content.toLowerCase() === "rodrigo commands") {
-		await msg.guild.commands.set(commands);
-
-		await msg.reply("Deployed!");
-	}
-
+async function handleMessage(msg) {
 	if (msg.author && msg.author.username === "RodrigoBot") {
 		global.lastMsgs.push(msg);
 		if (global.lastMsgs.length > 10) global.lastMsgs.shift();
@@ -464,49 +459,10 @@ async function handleMessage(msg, room) {
 		return null;
 	}
 
-	/*
-	let customCommands = room ? [] : await CustomCommand.find({ guild: msg.guild.id });
+	if (msg.content.toLowerCase() === "rodrigo commands") {
+		await msg.guild.commands.set(commands);
 
-	customCommands = customCommands.map(customCommand => ({
-		command: customCommand.word,
-		func: () => customCommand.message,
-	}));
-
-	customCommands = customCommands.concat(
-		discordFeatures.map(feat => ({ command: feat.command, includes: feat.includes, func: () => null })),
-	);
-	*/
-
-	let response = await rodrigo.handleMessage(msg.content, []);
-
-	console.log(response);
-
-	if (!response || !response.command) return null;
-
-	const discordFeature = discordFeatures.find(
-		feat => (Array.isArray(feat.command) ? feat.command[0] : feat.command) === response.command,
-	);
-
-	if (discordFeature) {
-		response = { command: discordFeature.command, message: await discordFeature.func(msg) };
-	}
-
-	if (!response.message) return null;
-
-	if (embeds[response.command] && typeof response.message !== "string") {
-		response.message = embeds[response.command](response.message);
-	}
-
-	const messages = Array.isArray(response.message) ? response.message : [response.message];
-
-	for (const message of messages) {
-		if (message) {
-			if (room) {
-				global.client.channels.cache.get(room).send(message);
-			} else {
-				msg.channel.send(message);
-			}
-		}
+		await msg.reply("Deployed!");
 	}
 
 	return null;
@@ -552,8 +508,6 @@ async function handleInteraction(interaction) {
 
 	let response = await rodrigo.handleCommand(interaction.commandName, options);
 
-	console.log(response);
-
 	if (!response) {
 		const discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
 
@@ -568,10 +522,16 @@ async function handleInteraction(interaction) {
 		response.message = embeds[response.command](response.message);
 	}
 
-	const messages = Array.isArray(response.message) ? response.message : [response.message];
+	if (response.message) await interaction.followUp(response.message);
+}
 
-	for (const message of messages) {
-		if (message) await interaction.followUp(message);
+function handleCronjob(room, message) {
+	if (typeof message === "string") {
+		global.client.channels.cache.get(room).send(message);
+	} else if (embeds[message.command]) {
+		const response = embeds[message.command](message.message);
+
+		if (response) global.client.channels.cache.get(room).send(response);
 	}
 }
 
@@ -604,7 +564,7 @@ async function run() {
 		}
 	});
 
-	// await cronjob.runCronjobs(handleMessage);
+	rodrigo.handleCronjobs(handleCronjob);
 }
 
 run();

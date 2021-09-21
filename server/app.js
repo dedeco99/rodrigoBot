@@ -1,10 +1,11 @@
 const database = require("./utils/database");
-const { handleMessage, handleCommand } = require("./utils/command");
+const { handleCommand } = require("./utils/command");
+const { handleCronjobs } = require("./functions/cronjobs");
 const { getVideoSearch } = require("./functions/youtube");
 
 module.exports = {
-	handleMessage,
 	handleCommand,
+	handleCronjobs,
 	getMetadata: database.getMetadata,
 	updateMetadata: database.updateMetadata,
 	getVideoSearch,

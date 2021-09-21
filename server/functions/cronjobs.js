@@ -1,5 +1,6 @@
 const cron = require("node-cron");
 
+const { handleCommand } = require("../utils/command");
 const youtube = require("./youtube");
 // const twitch = require("./twitch");
 
@@ -51,7 +52,7 @@ async function getCronjobs(msg) {
 	return cronjobs;
 }
 
-async function runCronjobs(checkForCommand, customCommands) {
+async function handleCronjobs(callback) {
 	cron.schedule("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
 			$expr: {
@@ -63,53 +64,36 @@ async function runCronjobs(checkForCommand, customCommands) {
 		});
 
 		for (const birthday of birthdays) {
-			global.client.channels.cache.get(birthday.room).send(`Parabéns ${birthday.person}`);
+			return callback(birthday.room, `Parabéns ${birthday.person}`);
 		}
+
+		return null;
 	});
 
 	cron.schedule("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
-		if (notification) global.client.channels.cache.get("525343734746054657").send(notification);
+		if (notification) return callback("525343734746054657", notification);
 
 		/*
 		notification = await twitch.fetchNotifications();
 		if (notification) client.channels.cache.get("525343734746054657").send(notification);
 		*/
+
+		return null;
 	});
 
 	const cronjobs = await Cronjob.find({}).lean();
 
 	for (const cronjob of cronjobs) {
 		cron.schedule(cronjob.cron, async () => {
-			if (cronjob.message.toLowerCase().includes("rodrigo")) {
-				await checkForCommand({ content: cronjob.message }, cronjob.room);
-			} else {
-				global.client.channels.cache.get(cronjob.room).send(cronjob.message);
-			}
+			callback(
+				cronjob.room,
+				cronjob.command ? await handleCommand(cronjob.command, cronjob.options) : cronjob.message,
+			);
 		});
 	}
 }
 
-function checkForCronjob(msg) {
-	const features = [
-		{ command: "add", func: addCronjob },
-		{ command: "remove", func: removeCronjob },
-		{ command: "get", func: getCronjobs },
-	];
-
-	const command = msg.content.split(" ")[2];
-	const feature = features.find(f => f.command === command);
-
-	try {
-		if (feature) return feature.func(msg);
-	} catch (err) {
-		return err.message;
-	}
-
-	return null;
-}
-
 module.exports = {
-	runCronjobs,
-	checkForCronjob,
+	handleCronjobs,
 };
