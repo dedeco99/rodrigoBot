@@ -24,6 +24,8 @@ let features = [
 	{ command: "corona", func: utils.corona },
 	{ command: "keyboards", func: utils.keyboards },
 	// { command: "stock", func: utils.stock },
+	{ command: "reminder", func: utils.reminder },
+	{ command: "birthday", func: utils.birthday },
 
 	// Memes
 	{ command: "meme", func: memes.createMeme },

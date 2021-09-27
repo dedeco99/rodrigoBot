@@ -25,7 +25,6 @@ const embeds = {
 
 const discordFeatures = [
 	// Utils
-	{ command: "remindme", func: utils.remindMe },
 	{ command: "vote", func: utils.vote, afterFunc: utils.voteReactions },
 
 	// System
@@ -387,6 +386,48 @@ const commands = [
 	/* Discord */
 	// Utils
 	{
+		name: "reminder",
+		description: "Creates a reminder for a specific date and time",
+		options: [
+			{
+				name: "reminder",
+				type: "STRING",
+				description: "What you want to be reminded of",
+				required: true,
+			},
+			{
+				name: "date",
+				type: "STRING",
+				description: "The date to be reminded at (DD-MM-YYYY)",
+				required: true,
+			},
+			{
+				name: "time",
+				type: "STRING",
+				description: "The time to be reminded at (HH:mm)",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "birthday",
+		description: "Creates a birthday reminder for a specific user",
+		options: [
+			{
+				name: "user",
+				type: "USER",
+				description: "The user to whom the birthday concerns",
+				required: true,
+			},
+			{
+				name: "date",
+				type: "STRING",
+				description: "The date to be reminded at (DD-MM)",
+				required: true,
+			},
+		],
+	},
+	{
 		name: "vote",
 		description: "Returns a poll with the specified options",
 		options: [
@@ -495,7 +536,7 @@ async function handleInteraction(interaction) {
 		// eslint-disable-next-line no-empty
 	} catch (err) {}
 
-	const options = {};
+	const options = { room: interaction.channelId, user: interaction.user.id };
 	if (command.options) {
 		for (const option of command.options.map(o => o.name)) {
 			if (subCommand) {
@@ -538,13 +579,17 @@ async function handleInteraction(interaction) {
 	}
 }
 
-function handleCronjob(room, message) {
+async function handleCronjob(room, message) {
 	if (typeof message === "string") {
 		global.client.channels.cache.get(room).send(message);
-	} else if (embeds[message.command]) {
-		const response = embeds[message.command](message.message);
+	} else {
+		let response = await rodrigo.handleCommand(message.command, message.options);
 
-		if (response) global.client.channels.cache.get(room).send(response);
+		if (embeds[response.command]) {
+			response = embeds[response.command](response.message);
+
+			if (response) global.client.channels.cache.get(room).send(response);
+		}
 	}
 }
 
@@ -552,6 +597,8 @@ async function run() {
 	const intents = new Intents(["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]);
 
 	global.client = new Client({ intents });
+	global.callback = null;
+	global.cronjobs = [];
 	global.redditPosts = [];
 
 	global.client.login(secrets.discordKey);
