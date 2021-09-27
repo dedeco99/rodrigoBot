@@ -14,22 +14,26 @@ async function cronjobScheduler(toSchedule) {
 	}
 
 	for (const cronjob of scheduledCronjobs) {
-		const task = nodeCron.schedule(cronjob.cron, async () => {
-			global.callback(
-				cronjob.room,
-				cronjob.command
-					? { command: cronjob.command, options: cronjob.options }
-					: ["reminder", "birthday"].includes(cronjob.type)
-					? `<@${cronjob.user}> ${cronjob.message}`
-					: cronjob.message,
-			);
+		const task = nodeCron.schedule(
+			cronjob.cron,
+			async () => {
+				global.callback(
+					cronjob.room,
+					cronjob.command
+						? { command: cronjob.command, options: cronjob.options }
+						: ["reminder", "birthday"].includes(cronjob.type)
+						? `<@${cronjob.user}> ${cronjob.message}`
+						: cronjob.message,
+				);
 
-			if (cronjob.type === "reminder") {
-				await Cronjob.updateOne({ _id: cronjob._id }, { active: false });
+				if (cronjob.type === "reminder") {
+					await Cronjob.updateOne({ _id: cronjob._id }, { active: false });
 
-				task.stop();
-			}
-		});
+					task.stop();
+				}
+			},
+			{ timezone: "Europe/Lisbon" },
+		);
 
 		global.cronjobs.push({ _id: cronjob._id, task });
 	}
