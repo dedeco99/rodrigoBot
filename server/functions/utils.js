@@ -4,6 +4,8 @@ const customParseFormat = require("dayjs/plugin/customParseFormat");
 dayjs.extend(customParseFormat);
 const { evaluate } = require("mathjs");
 
+const { addCronjob } = require("./cronjobs");
+
 const { get } = require("../utils/request");
 const secrets = require("../utils/secrets");
 
@@ -398,6 +400,20 @@ async function stock(options) {
 	return products.length ? products : null;
 }
 
+async function reminder(options) {
+	const { reminder, room, user } = options;
+	const date = dayjs(`${options.date} ${options.time}`, "DD-MM-YYYY HH:mm");
+
+	if (!date.isValid()) return "The date and time are not valid";
+	if (date.diff(dayjs(), "minutes") < 0) return "Can't remind in the past";
+
+	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
+
+	const response = await addCronjob({ type: "reminder", cron, message: reminder, room, user });
+
+	return response.replace("Cronjob", "Reminder");
+}
+
 module.exports = {
 	answer,
 	define,
@@ -411,4 +427,5 @@ module.exports = {
 	corona,
 	keyboards,
 	stock,
+	reminder,
 };

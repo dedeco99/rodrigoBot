@@ -1,37 +1,67 @@
-const cron = require("node-cron");
+const nodeCron = require("node-cron");
 
-const { handleCommand } = require("../utils/command");
 const youtube = require("./youtube");
 // const twitch = require("./twitch");
 
 const Birthday = require("../models/birthday");
 const Cronjob = require("../models/cronjob");
 
-async function addCronjob(msg) {
-	const message = msg.content.split("add ")[1];
-	const [name, cronString, command] = message.split(";");
+async function cronjobScheduler(toSchedule) {
+	let scheduledCronjobs = toSchedule;
+	if (!scheduledCronjobs) {
+		global.cronjobs = [];
 
-	// TODO: validate cron string (cron.validate(cron);)
+		scheduledCronjobs = await Cronjob.find({ active: true }).lean();
+	}
+
+	for (const cronjob of scheduledCronjobs) {
+		const task = nodeCron.schedule(cronjob.cron, async () => {
+			global.callback(
+				cronjob.room,
+				cronjob.command
+					? { command: cronjob.command, options: cronjob.options }
+					: cronjob.type === "reminder"
+					? `<@${cronjob.user}> ${cronjob.message}`
+					: cronjob.message,
+			);
+
+			if (cronjob.type === "reminder") {
+				await Cronjob.updateOne({ _id: cronjob._id }, { active: false });
+
+				task.stop();
+			}
+		});
+
+		global.cronjobs.push({ _id: cronjob._id, task });
+	}
+}
+
+async function addCronjob(options) {
+	const { type, cron, message, room, user } = options;
+
+	if (!nodeCron.validate(cron)) return "Cronjob inválido";
 
 	const cronjob = await Cronjob.findOne({
-		name,
-		cron: cronString,
-		message: command,
-		room: msg.channel.id,
+		type,
+		cron,
+		message,
+		room,
+		user,
 	});
 
-	if (cronjob) return "Esse cronjob já existe seu lixo";
+	if (cronjob) return "Cronjob já existe seu lixo";
 
 	const newCronjob = new Cronjob({
-		name,
-		cron: cronString,
-		message: command,
-		room: msg.channel.id,
+		type,
+		cron,
+		message,
+		room,
+		user,
 	});
 
 	await newCronjob.save();
 
-	// TODO: start cronjob
+	await cronjobScheduler([newCronjob]);
 
 	return "Cronjob adicionado com sucesso";
 }
@@ -53,7 +83,9 @@ async function getCronjobs(msg) {
 }
 
 async function handleCronjobs(callback) {
-	cron.schedule("0 8 * * *", async () => {
+	global.callback = callback;
+
+	nodeCron.schedule("0 8 * * *", async () => {
 		const birthdays = await Birthday.find({
 			$expr: {
 				$and: [
@@ -64,15 +96,15 @@ async function handleCronjobs(callback) {
 		});
 
 		for (const birthday of birthdays) {
-			return callback(birthday.room, `Parabéns ${birthday.person}`);
+			return global.callback(birthday.room, `Parabéns ${birthday.person}`);
 		}
 
 		return null;
 	});
 
-	cron.schedule("0/20 * * * *", async () => {
+	nodeCron.schedule("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
-		if (notification) return callback("525343734746054657", notification);
+		if (notification) return global.callback("525343734746054657", notification);
 
 		/*
 		notification = await twitch.fetchNotifications();
@@ -82,18 +114,10 @@ async function handleCronjobs(callback) {
 		return null;
 	});
 
-	const cronjobs = await Cronjob.find({}).lean();
-
-	for (const cronjob of cronjobs) {
-		cron.schedule(cronjob.cron, async () => {
-			callback(
-				cronjob.room,
-				cronjob.command ? await handleCommand(cronjob.command, cronjob.options) : cronjob.message,
-			);
-		});
-	}
+	await cronjobScheduler();
 }
 
 module.exports = {
+	addCronjob,
 	handleCronjobs,
 };
