@@ -1,5 +1,7 @@
 const cheerio = require("cheerio");
-const moment = require("moment");
+const dayjs = require("dayjs");
+const customParseFormat = require("dayjs/plugin/customParseFormat");
+dayjs.extend(customParseFormat);
 const { evaluate } = require("mathjs");
 
 const { get } = require("../utils/request");
@@ -174,8 +176,8 @@ async function weather(options) {
 		minTemp: res.data.main.temp_min.toFixed(0).toString(),
 		maxTemp: res.data.main.temp_max.toFixed(0).toString(),
 		wind: res.data.wind.speed,
-		sunrise: moment(res.data.sys.sunrise * 1000).format("HH:mm"),
-		sunset: moment(res.data.sys.sunset * 1000).format("HH:mm"),
+		sunrise: dayjs(res.data.sys.sunrise * 1000).format("HH:mm"),
+		sunset: dayjs(res.data.sys.sunset * 1000).format("HH:mm"),
 	};
 
 	return weatherInfo;
@@ -201,7 +203,7 @@ async function radars(options, page = 0, data = []) {
 			}),
 	);
 
-	if (moment(response[response.length - 1].date, "DD/MM/YYYY").diff(moment(), "days") === 0) {
+	if (dayjs(response[response.length - 1].date, "DD/MM/YYYY").diff(dayjs(), "days") === 0) {
 		return radars(options, page + 1, response);
 	}
 
@@ -212,7 +214,7 @@ async function radars(options, page = 0, data = []) {
 
 	const radarsByLocation = response.filter(radar => {
 		return (
-			moment(radar.date, "DD/MM/YYYY").diff(moment(), "days") === 0 &&
+			dayjs(radar.date, "DD/MM/YYYY").diff(dayjs(), "days") === 0 &&
 			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase()
 		);
 	});
@@ -273,16 +275,16 @@ async function keyboards() {
 			return (
 				(i.type === "keyboards" || i.type === "keycaps" || i.type === "switches") &&
 				i.startDate &&
-				moment(i.startDate, "M/D/YY").diff(moment(), "days") <= 0 &&
-				(!i.endDate || moment(i.endDate, "M/D/YY").diff(moment(), "days") >= 0)
+				dayjs(i.startDate, "M/D/YY").diff(dayjs(), "days") <= 0 &&
+				(!i.endDate || dayjs(i.endDate, "M/D/YY").diff(dayjs(), "days") >= 0)
 			);
 		})
 		.map(i => ({
 			name: i.name,
 			type: i.type,
 			image: i.mainImage,
-			startDate: moment(i.startDate, "M/D/YY").format("DD/MM/YYYY"),
-			endDate: moment(i.endDate, "M/D/YY").format("DD/MM/YYYY"),
+			startDate: dayjs(i.startDate, "M/D/YY").format("DD/MM/YYYY"),
+			endDate: dayjs(i.endDate, "M/D/YY").format("DD/MM/YYYY"),
 			pricing: i.pricing,
 			saleType: i.saleType,
 			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),

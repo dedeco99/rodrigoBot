@@ -1,4 +1,4 @@
-const moment = require("moment");
+const dayjs = require("dayjs");
 
 const Birthday = require("../models/birthday");
 
@@ -12,7 +12,7 @@ async function addBirthday(msg) {
 
 	const newBirthday = new Birthday({
 		person,
-		date: moment(date, "DD-MM-YYYY"),
+		date: dayjs(date, "DD-MM-YYYY"),
 		room: msg.channel.id,
 	});
 
@@ -34,7 +34,7 @@ async function getBirthdays(msg) {
 
 	birthdays = birthdays
 		.map(birthday => {
-			return `${birthday.person} (${moment(birthday.date).format("DD-MM-YYYY")})`;
+			return `${birthday.person} (${dayjs(birthday.date).format("DD-MM-YYYY")})`;
 		})
 		.join(" | ");
 
