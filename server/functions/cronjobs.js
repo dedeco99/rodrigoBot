@@ -3,7 +3,6 @@ const nodeCron = require("node-cron");
 const youtube = require("./youtube");
 // const twitch = require("./twitch");
 
-const Birthday = require("../models/birthday");
 const Cronjob = require("../models/cronjob");
 
 async function cronjobScheduler(toSchedule) {
@@ -20,7 +19,7 @@ async function cronjobScheduler(toSchedule) {
 				cronjob.room,
 				cronjob.command
 					? { command: cronjob.command, options: cronjob.options }
-					: cronjob.type === "reminder"
+					: ["reminder", "birthday"].includes(cronjob.type)
 					? `<@${cronjob.user}> ${cronjob.message}`
 					: cronjob.message,
 			);
@@ -84,23 +83,6 @@ async function getCronjobs(msg) {
 
 async function handleCronjobs(callback) {
 	global.callback = callback;
-
-	nodeCron.schedule("0 8 * * *", async () => {
-		const birthdays = await Birthday.find({
-			$expr: {
-				$and: [
-					{ $eq: [{ $dayOfMonth: "$date" }, { $dayOfMonth: new Date() }] },
-					{ $eq: [{ $month: "$date" }, { $month: new Date() }] },
-				],
-			},
-		});
-
-		for (const birthday of birthdays) {
-			return global.callback(birthday.room, `Parabéns ${birthday.person}`);
-		}
-
-		return null;
-	});
 
 	nodeCron.schedule("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();

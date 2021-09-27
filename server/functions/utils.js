@@ -414,6 +414,19 @@ async function reminder(options) {
 	return response.replace("Cronjob", "Reminder");
 }
 
+async function birthday(options) {
+	const { user, room } = options;
+	const date = dayjs(`${options.date} 08:00`, "DD-MM HH:mm");
+
+	if (!date.isValid()) return "The date is not valid";
+
+	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
+
+	const response = await addCronjob({ type: "birthday", cron, message: "Parabéns :partying_face:", room, user });
+
+	return response.replace("Cronjob", "Birthday");
+}
+
 module.exports = {
 	answer,
 	define,
@@ -428,4 +441,5 @@ module.exports = {
 	keyboards,
 	stock,
 	reminder,
+	birthday,
 };

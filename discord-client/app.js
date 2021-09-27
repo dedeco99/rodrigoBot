@@ -410,6 +410,24 @@ const commands = [
 		],
 	},
 	{
+		name: "birthday",
+		description: "Creates a birthday reminder for a specific user",
+		options: [
+			{
+				name: "user",
+				type: "USER",
+				description: "The user to whom the birthday concerns",
+				required: true,
+			},
+			{
+				name: "date",
+				type: "STRING",
+				description: "The date to be reminded at (DD-MM)",
+				required: true,
+			},
+		],
+	},
+	{
 		name: "vote",
 		description: "Returns a poll with the specified options",
 		options: [
