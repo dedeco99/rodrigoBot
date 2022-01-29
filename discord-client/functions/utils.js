@@ -46,7 +46,7 @@ async function voteReactions(msg, options) {
 	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
 
 	const promises = [];
-	for (let i = 0; i < options.options.length; i++) {
+	for (let i = 0; i < options.options.split(";").length; i++) {
 		promises.push(msg.react(reacts[i]));
 	}
 
