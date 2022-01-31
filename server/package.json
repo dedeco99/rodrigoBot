@@ -9,10 +9,12 @@
 	},
 	"scripts": {
 		"start": "nodemon app",
-		"lint": "eslint '**/*.js' --ignore-pattern node_modules/ --ignore-pattern build/ --ignore-pattern public/"
+		"lint": "eslint '**/*.js' --ignore-pattern node_modules/ --ignore-pattern build/ --ignore-pattern public/",
+		"test": "jest --coverage"
 	},
 	"devDependencies": {
 		"eslint": "^7.32.0",
+		"jest": "^27.4.7",
 		"nodemon": "^2.0.12"
 	},
 	"dependencies": {
