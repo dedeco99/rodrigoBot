@@ -1,5 +1,4 @@
 const { get } = require("../utils/request");
-const secrets = require("../utils/secrets");
 
 const Channel = require("../models/channel");
 const Notification = require("../models/notification");
@@ -9,7 +8,7 @@ async function checkIfChannelExists(channel) {
 
 	const headers = {
 		Accept: "application/vnd.twitchtv.v5+json",
-		"Client-ID": secrets.twitchClientId,
+		"Client-ID": process.env.twitchClientId,
 	};
 
 	const res = await get(url, headers);
@@ -96,7 +95,7 @@ async function fetchNotifications() {
 
 	const headers = {
 		Accept: "application/vnd.twitchtv.v5+json",
-		"Client-ID": secrets.twitchClientId,
+		"Client-ID": process.env.twitchClientId,
 	};
 
 	const res = await get(url, headers);

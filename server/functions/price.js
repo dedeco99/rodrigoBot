@@ -1,6 +1,45 @@
 const { get } = require("../utils/request");
 
-async function getPrice(options) {
+// FIXME: Not working
+async function getAmazonPrice() {
+	/*
+	let thing = msg.split("price ")[1];
+	thing = thing.replace(/ /g, "%20");
+	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
+
+	const res = await get(url);
+	const $ = cheerio.load(res.data);
+	const response = [];
+	thing = thing.replace(/%20/g, " ");
+
+	$("html").find(".a-link-normal.s-access-detail-page.s-color-twister-title-link.a-text-normal")
+		.each((index) => {
+			if (index !== 0 && index !== 1 && index < 7) {
+				const productUrl = $(this)[0].attribs.href;
+				const product = `${$(this)[0].attribs.title.substring(0, 50)}...`;
+				response.push({ search: thing, url, productUrl, product });
+			}
+		});
+
+	$("html").find(".a-size-base.a-color-price.a-text-bold")
+		.each((index) => {
+			if (index < 5) {
+				const price = $(this)[0].children[0].data;
+				if (response[index]) response[index].price = price;
+			}
+		});
+
+	if (response.length > 0) {
+		return embed.createPriceEmbed(response);
+	}
+
+	return "Não existe esse produto do xixo";
+	*/
+
+	return "Função em manutenção";
+}
+
+async function getCryptoPrice(options) {
 	const coinSelected = options.coin;
 	let response = null;
 
@@ -50,5 +89,6 @@ async function getPrice(options) {
 }
 
 module.exports = {
-	getPrice,
+	getAmazonPrice,
+	getCryptoPrice,
 };

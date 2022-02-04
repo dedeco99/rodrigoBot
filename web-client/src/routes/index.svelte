@@ -2,10 +2,18 @@
 	let prompt = "";
 	let chat = [];
 
-	function sendCommand(e) {
+	async function sendCommand(e) {
 		e.preventDefault();
 
-		chat = [...chat, prompt];
+		const res = await fetch("http://localhost:5000/api/commands/define", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ word: prompt }),
+		});
+
+		const json = await res.json();
+
+		chat = [...chat, json.definition];
 
 		prompt = "";
 	}

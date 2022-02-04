@@ -1,15 +1,20 @@
-const log = require("../utils/log");
+const express = require("express");
+const morgan = require("morgan");
+const cors = require("cors");
 
 const utils = require("../functions/utils");
+const specific = require("../functions/specific");
 const memes = require("../functions/memes");
 const reddit = require("../functions/reddit");
 const youtube = require("../functions/youtube");
 const twitch = require("../functions/twitch");
 const instagram = require("../functions/instagram");
-const crypto = require("../functions/crypto");
+const price = require("../functions/price");
 const personality = require("../functions/personality");
 
-let features = [
+const log = require("../utils/log");
+
+const features = [
 	// Utils
 	{ command: "answer", func: utils.answer },
 	{ command: "define", func: utils.define },
@@ -17,15 +22,17 @@ let features = [
 	{ command: "sort", func: utils.sort },
 	{ command: "convert", func: utils.convert },
 	{ command: "math", func: utils.math },
-	// { command: "price", func: utils.price },
-	{ command: "crypto", func: crypto.getPrice },
 	{ command: "weather", func: utils.weather },
-	{ command: "radar", func: utils.radars },
-	{ command: "corona", func: utils.corona },
-	{ command: "keyboards", func: utils.keyboards },
-	// { command: "stock", func: utils.stock },
-	{ command: "reminder", func: utils.reminder },
-	{ command: "birthday", func: utils.birthday },
+
+	// { command: "price", func: utils.getAmazonPrice },
+	{ command: "crypto", func: price.getCryptoPrice },
+
+	{ command: "radar", func: specific.radars },
+	{ command: "corona", func: specific.corona },
+	{ command: "keyboards", func: specific.keyboards },
+	// { command: "stock", func: specific.stock },
+	{ command: "reminder", func: specific.reminder },
+	{ command: "birthday", func: specific.birthday },
 
 	// Memes
 	{ command: "meme", func: memes.createMeme },
@@ -70,4 +77,30 @@ async function handleCommand(command, options) {
 	}
 }
 
-module.exports = { handleCommand };
+function setupCommandApi() {
+	const commands = [{ name: "define", func: utils.define }];
+
+	const app = express();
+
+	app.set("port", process.env.PORT || 5000);
+
+	app.use(morgan(":date :status :method :url :response-time ms"));
+
+	app.use(express.json());
+
+	app.use(cors());
+
+	for (const command of commands) {
+		app.post(`/api/commands/${command.name}`, async (req, res) => {
+			const response = await command.func(req.body);
+
+			return res.status(200).send(response);
+		});
+	}
+
+	app.listen(app.get("port"), () => {
+		console.log("Listening on port", app.get("port"));
+	});
+}
+
+module.exports = { handleCommand, setupCommandApi };

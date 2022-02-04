@@ -1,12 +1,11 @@
 const errors = require("../utils/errors");
 const { get } = require("../utils/request");
-const secrets = require("../utils/secrets");
 
 const Channel = require("../models/channel");
 const Notification = require("../models/notification");
 
 async function checkIfChannelExists(channel) {
-	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
+	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${process.env.youtubeKey}`;
 
 	const res = await get(url);
 
@@ -18,7 +17,7 @@ async function checkIfChannelExists(channel) {
 }
 
 async function getChannelsPlaylist(channel) {
-	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channel}&maxResults=50&key=${secrets.youtubeKey}`;
+	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channel}&maxResults=50&key=${process.env.youtubeKey}`;
 
 	const res = await get(url);
 
@@ -37,7 +36,7 @@ async function getVideo(options) {
 	if (channelFound) {
 		const playlist = await getChannelsPlaylist(channelFound.id.channelId);
 
-		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist[0].contentDetails.relatedPlaylists.uploads}&maxResults=5&key=${secrets.youtubeKey}`;
+		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist[0].contentDetails.relatedPlaylists.uploads}&maxResults=5&key=${process.env.youtubeKey}`;
 
 		const res = await get(url);
 
@@ -52,7 +51,7 @@ async function getVideo(options) {
 }
 
 async function getVideoSearch(search) {
-	const url = `https://www.googleapis.com/youtube/v3/search?q=${search}&maxResults=1&key=${secrets.youtubeKey}`;
+	const url = `https://www.googleapis.com/youtube/v3/search?q=${search}&maxResults=1&key=${process.env.youtubeKey}`;
 
 	const res = await get(url);
 
@@ -134,7 +133,7 @@ async function fetchNotifications() {
 	const playlists = await getChannelsPlaylist(channels);
 
 	for (const playlist of playlists) {
-		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist.contentDetails.relatedPlaylists.uploads}&maxResults=1&key=${secrets.youtubeKey}`;
+		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist.contentDetails.relatedPlaylists.uploads}&maxResults=1&key=${process.env.youtubeKey}`;
 
 		const res = await get(url);
 

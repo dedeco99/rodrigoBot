@@ -1,12 +1,16 @@
-const database = require("./utils/database");
-const { handleCommand } = require("./utils/command");
+if (!process.env.ENV) require("./utils/secrets");
+
+const { getMetadata, updateMetadata } = require("./utils/database");
+const { handleCommand, setupCommandApi } = require("./utils/command");
 const { handleCronjobs } = require("./functions/cronjobs");
 const { getVideoSearch } = require("./functions/youtube");
+
+if (process.env.API) setupCommandApi();
 
 module.exports = {
 	handleCommand,
 	handleCronjobs,
-	getMetadata: database.getMetadata,
-	updateMetadata: database.updateMetadata,
+	getMetadata,
+	updateMetadata,
 	getVideoSearch,
 };

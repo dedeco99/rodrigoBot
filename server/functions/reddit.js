@@ -1,13 +1,12 @@
 const errors = require("../utils/errors");
 const { get, post } = require("../utils/request");
-const secrets = require("../utils/secrets");
 
 async function getRefreshToken() {
 	/* eslint-disable-line no-unused-vars */
 	const url =
 		"https://www.reddit.com/api/v1/access_token?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul";
 
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+	const encryptedAuth = new Buffer.from(`${process.env.redditClientId}:${process.env.redditSecret}`).toString(
 		"base64",
 	); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
@@ -24,9 +23,9 @@ async function getRefreshToken() {
 }
 
 async function getAccessToken() {
-	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`;
+	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${process.env.redditRefreshToken}&grant_type=refresh_token`;
 
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+	const encryptedAuth = new Buffer.from(`${process.env.redditClientId}:${process.env.redditSecret}`).toString(
 		"base64",
 	); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;

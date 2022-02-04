@@ -2,7 +2,8 @@
 const { Intents, Client } = require("discord.js");
 const rodrigo = require("rodrigo");
 
-const secrets = require("../server/utils/secrets");
+if (!process.env.ENV) require("../server/utils/secrets");
+
 const embed = require("./utils/embed");
 
 const utils = require("./functions/utils");
@@ -601,7 +602,7 @@ async function run() {
 	global.cronjobs = [];
 	global.redditPosts = [];
 
-	global.client.login(secrets.discordKey);
+	global.client.login(process.env.discordKey);
 
 	const meta = await rodrigo.getMetadata();
 
