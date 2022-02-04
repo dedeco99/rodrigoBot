@@ -78,7 +78,15 @@ async function handleCommand(command, options) {
 }
 
 function setupCommandApi() {
-	const commands = [{ name: "define", func: utils.define }];
+	const commands = [
+		{ name: "answer", func: utils.answer },
+		{ name: "define", func: utils.define },
+		{ name: "search", func: utils.search },
+		{ name: "sort", func: utils.sort },
+		{ name: "convert", func: utils.convert },
+		{ name: "math", func: utils.math },
+		{ name: "weather", func: utils.weather },
+	];
 
 	const app = express();
 
@@ -94,7 +102,7 @@ function setupCommandApi() {
 		app.post(`/api/commands/${command.name}`, async (req, res) => {
 			const response = await command.func(req.body);
 
-			return res.status(200).send(response);
+			return res.status(response.status).send(response.body);
 		});
 	}
 

@@ -5,15 +5,20 @@
 	async function sendCommand(e) {
 		e.preventDefault();
 
-		const res = await fetch("http://localhost:5000/api/commands/define", {
+		const res = await fetch("http://localhost:5000/api/commands/convert", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ word: prompt }),
+			body: JSON.stringify({ number: 50, from: "EUR", to: "USD" }),
 		});
 
 		const json = await res.json();
 
-		chat = [...chat, json.definition];
+		if (res.status === 200) {
+			chat = [...chat, JSON.stringify(json.data)];
+		} else {
+			// TODO: translate message
+			chat = [...chat, json.message];
+		}
 
 		prompt = "";
 	}
@@ -45,6 +50,7 @@
 	}
 
 	.chat {
+		width: 500px;
 		background: #444;
 		border-radius: 5px;
 		padding: 10px;
