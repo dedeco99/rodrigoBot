@@ -11,6 +11,7 @@ global.cache = {
 		coins: [],
 		lastUpdate: Date.now(),
 	},
+	reddit: { posts: [] },
 };
 
 if (process.env.API) setupCommandApi();
