@@ -26,6 +26,7 @@
 		"mongoose": "^6.0.7",
 		"morgan": "^1.10.0",
 		"node-cron": "^3.0.0",
+		"rss-converter": "^1.1.6",
 		"yahoo-finance2": "^2.1.2"
 	}
 }

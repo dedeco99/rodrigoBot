@@ -6,10 +6,9 @@ const utils = require("../functions/utils");
 const price = require("../functions/price");
 const instagram = require("../functions/instagram");
 const reddit = require("../functions/reddit");
+const youtube = require("../functions/youtube");
 /*const specific = require("../functions/specific");
 const memes = require("../functions/memes");
-const youtube = require("../functions/youtube");
-const twitch = require("../functions/twitch");
 const personality = require("../functions/personality");
 */
 
@@ -94,6 +93,8 @@ function setupCommandApi() {
 
 		{ name: "instagram", func: instagram.getPost },
 		{ name: "reddit", func: reddit.getPost },
+		{ name: "youtube", func: youtube.getVideo },
+		{ name: "youtube/search", func: youtube.getVideoSearch },
 	];
 
 	const app = express();
