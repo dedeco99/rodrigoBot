@@ -5,10 +5,10 @@
 	async function sendCommand(e) {
 		e.preventDefault();
 
-		const res = await fetch("http://localhost:5000/api/commands/convert", {
+		const res = await fetch("http://localhost:5000/api/commands/stock", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ number: 50, from: "EUR", to: "USD" }),
+			body: JSON.stringify({ symbol: prompt }),
 		});
 
 		const json = await res.json();

@@ -3,14 +3,15 @@ const morgan = require("morgan");
 const cors = require("cors");
 
 const utils = require("../functions/utils");
-const specific = require("../functions/specific");
+const price = require("../functions/price");
+/*const specific = require("../functions/specific");
 const memes = require("../functions/memes");
 const reddit = require("../functions/reddit");
 const youtube = require("../functions/youtube");
 const twitch = require("../functions/twitch");
 const instagram = require("../functions/instagram");
-const price = require("../functions/price");
 const personality = require("../functions/personality");
+*/
 
 const log = require("../utils/log");
 
@@ -26,7 +27,7 @@ const features = [
 
 	// { command: "price", func: utils.getAmazonPrice },
 	{ command: "crypto", func: price.getCryptoPrice },
-
+	/*
 	{ command: "radar", func: specific.radars },
 	{ command: "corona", func: specific.corona },
 	{ command: "keyboards", func: specific.keyboards },
@@ -46,6 +47,7 @@ const features = [
 	// Personality
 	{ command: "compliment", func: personality.compliment },
 	{ command: "insult", func: personality.insult },
+	*/
 ];
 
 async function handleCommand(command, options) {
@@ -83,9 +85,12 @@ function setupCommandApi() {
 		{ name: "define", func: utils.define },
 		{ name: "search", func: utils.search },
 		{ name: "sort", func: utils.sort },
-		{ name: "convert", func: utils.convert },
 		{ name: "math", func: utils.math },
 		{ name: "weather", func: utils.weather },
+
+		{ name: "convert", func: price.convert },
+		{ name: "crypto", func: price.getCryptoPrice },
+		{ name: "stock", func: price.getStockPrice },
 	];
 
 	const app = express();

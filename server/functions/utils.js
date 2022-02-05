@@ -1,9 +1,7 @@
-const dayjs = require("dayjs");
-const customParseFormat = require("dayjs/plugin/customParseFormat");
-dayjs.extend(customParseFormat);
 const { evaluate } = require("mathjs");
 
-const { get } = require("../utils/request");
+const { api } = require("../utils/request");
+const { formatDate } = require("../utils/utils");
 
 function answer(options) {
 	const { question } = options;
@@ -35,7 +33,7 @@ function answer(options) {
 async function define(options) {
 	const { word } = options;
 
-	const res = await get(`http://api.urbandictionary.com/v0/define?term=${word}`);
+	const res = await api({ method: "get", url: `http://api.urbandictionary.com/v0/define?term=${word}` });
 	const json = res.data;
 
 	if (!json.list.length) return { status: 404, body: { message: "DEFINE_NOT_FOUND" } };
@@ -59,9 +57,11 @@ async function define(options) {
 
 async function search(options) {
 	const { word } = options;
-	const url = `https://www.googleapis.com/customsearch/v1?q=${word}&cx=007153606045358422053:uw-koc4dhb8&key=${process.env.youtubeKey}`;
 
-	const res = await get(url);
+	const res = await api({
+		method: "get",
+		url: `https://www.googleapis.com/customsearch/v1?q=${word}&cx=007153606045358422053:uw-koc4dhb8&key=${process.env.youtubeKey}`,
+	});
 	const json = res.data;
 
 	const data = { word, results: [] };
@@ -92,23 +92,6 @@ function sort(options) {
 	return { status: 200, body: { message: "SORT_SUCCESS", data: { list: randomized } } };
 }
 
-async function convert(options) {
-	const { number, from, to } = options;
-
-	const url = `https://api.exchangerate.host/latest?base=${from}`;
-
-	const res = await get(url);
-	const json = res.data;
-
-	return {
-		status: 200,
-		body: {
-			message: "CONVERT_SUCCESS",
-			data: { number, from, to, convertedNumber: number * json.rates[to] },
-		},
-	};
-}
-
 function math(options) {
 	const { expression } = options;
 
@@ -120,9 +103,10 @@ function math(options) {
 async function weather(options) {
 	const { location } = options;
 
-	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${process.env.openWeatherMapKey}`;
-
-	const res = await get(url);
+	const res = await api({
+		method: "get",
+		url: `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${process.env.openWeatherMapKey}`,
+	});
 
 	if (res.status === 404) return { status: 200, body: { message: "WEATHER_CITY_NOT_FOUND" } };
 
@@ -137,8 +121,8 @@ async function weather(options) {
 				minTemp: res.data.main.temp_min.toFixed(0).toString(),
 				maxTemp: res.data.main.temp_max.toFixed(0).toString(),
 				wind: res.data.wind.speed,
-				sunrise: dayjs(res.data.sys.sunrise * 1000).format("HH:mm"),
-				sunset: dayjs(res.data.sys.sunset * 1000).format("HH:mm"),
+				sunrise: formatDate(res.data.sys.sunrise * 1000, "HH:mm"),
+				sunset: formatDate(res.data.sys.sunset * 1000, "HH:mm"),
 			},
 		},
 	};
@@ -149,7 +133,6 @@ module.exports = {
 	define,
 	search,
 	sort,
-	convert,
 	math,
 	weather,
 };

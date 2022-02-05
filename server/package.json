@@ -25,6 +25,7 @@
 		"mathjs": "^9.4.5",
 		"mongoose": "^6.0.7",
 		"morgan": "^1.10.0",
-		"node-cron": "^3.0.0"
+		"node-cron": "^3.0.0",
+		"yahoo-finance2": "^2.1.2"
 	}
 }
