@@ -4,12 +4,12 @@ const cors = require("cors");
 
 const utils = require("../functions/utils");
 const price = require("../functions/price");
+const instagram = require("../functions/instagram");
 /*const specific = require("../functions/specific");
 const memes = require("../functions/memes");
 const reddit = require("../functions/reddit");
 const youtube = require("../functions/youtube");
 const twitch = require("../functions/twitch");
-const instagram = require("../functions/instagram");
 const personality = require("../functions/personality");
 */
 
@@ -91,6 +91,8 @@ function setupCommandApi() {
 		{ name: "convert", func: price.convert },
 		{ name: "crypto", func: price.getCryptoPrice },
 		{ name: "stock", func: price.getStockPrice },
+
+		{ name: "instagram", func: instagram.getPost },
 	];
 
 	const app = express();

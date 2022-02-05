@@ -1,4 +1,4 @@
-const { get } = require("../utils/request");
+const { api } = require("../utils/request");
 
 function scrap(data) {
 	const dirtyJSON = JSON.parse(data.match(/window\._sharedData\s?=\s?(?<a>{.+);<\/script>/)[1]);
@@ -22,39 +22,34 @@ function scrap(data) {
 		};
 	});
 
-	const json = {
-		user,
-		medias,
-	};
-
-	return json;
+	return { user, medias };
 }
 
-function formatResponse(url, num, json) {
-	const profilePic = json.user.profile_pic_url_hd;
-	let bio = json.user.biography;
-	const name = json.user.full_name;
-	const followers = json.user.edge_followed_by.count;
-	const follows = json.user.edge_follow.count;
-	const posts = json.user.edge_owner_to_timeline_media.count;
+async function getPost(options) {
+	const { handle, number } = options;
+	const num = number ? number : 0;
 
-	if (bio === "") bio = "No bio";
+	const url = `https://www.instagram.com/${handle}/`;
 
-	const res = {
-		bio,
-		error: null,
-		followers,
-		follows,
-		image: null,
-		name,
-		posts,
-		profilePic,
-		url,
-	};
+	try {
+		const res = await api({ method: "get", url });
 
-	if (json.user.is_private) {
-		res.error = "Este xixo é privado :wink:";
-	} else {
+		const json = scrap(res.data);
+
+		if (!json) return { status: 500, body: { message: "INSTAGRAM_DOWN" } };
+
+		const user = {
+			isPrivate: json.user.is_private,
+			bio: json.user.biography ? json.user.biography : "NO_BIO",
+			followers: json.user.edge_followed_by.count,
+			follows: json.user.edge_follow.count,
+			image: null,
+			name: json.user.full_name,
+			posts: json.user.edge_owner_to_timeline_media.count,
+			profilePic: json.user.profile_pic_url_hd,
+			url,
+		};
+
 		const images = json.medias;
 
 		if (images.length > 0) {
@@ -66,34 +61,14 @@ function formatResponse(url, num, json) {
 			}
 
 			const image = images[finalNum].displayUrl;
-			res.image = image;
+			user.image = image;
 		} else {
-			res.error = "Este perfil não tem fotos";
+			user.image = "NO_IMAGES";
 		}
-	}
 
-	return res;
-}
-
-async function getPost(options) {
-	const user = options.user;
-	const num = options.number ? options.number : 0;
-
-	const url = `https://www.instagram.com/${user}/`;
-
-	try {
-		const res = await get(url);
-
-		const json = scrap(res.data);
-
-		if (!json) return "Instagram is asking for captcha rip";
-
-		const post = formatResponse(url, num, json);
-
-		return post;
+		return { status: 200, body: { message: "INSTAGRAM_SUCCESS", data: user } };
 	} catch (err) {
-		console.log(err);
-		return "Claramente esse xixo não existe";
+		return { status: 404, body: { message: "INSTAGRAM_NOT_FOUND" } };
 	}
 }
 

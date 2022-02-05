@@ -22,7 +22,7 @@ async function convert(options) {
 	return {
 		status: 200,
 		body: {
-			message: "CONVERT_SUCCESS",
+			message: "PRICE_CONVERT_SUCCESS",
 			data: { number, from, to, convertedNumber: number * exchangeRates[to] },
 		},
 	};
@@ -101,7 +101,7 @@ async function getCryptoPrice(options) {
 	return {
 		status: 200,
 		body: {
-			message: "GET_CRYPTO_PRICE_SUCCESS",
+			message: "PRICE_CRYPTO_SUCCESS",
 			data: {
 				id: coin.id,
 				name: coin.name,
@@ -160,7 +160,7 @@ async function getStockPrice(options) {
 	return {
 		status: 200,
 		body: {
-			message: "GET_STOCK_PRICE_SUCCESS",
+			message: "PRICE_STOCK_SUCCESS",
 			data: {
 				id: quoteRes.symbol,
 				name: quoteRes.shortName,
