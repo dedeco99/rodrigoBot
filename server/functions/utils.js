@@ -97,7 +97,7 @@ function math(options) {
 
 	const result = evaluate(expression);
 
-	return { status: 200, body: { message: "MATH_SUCCESS", data: { result } } };
+	return { status: 200, body: { message: "MATH_SUCCESS", data: { expression, result } } };
 }
 
 async function weather(options) {
@@ -115,12 +115,19 @@ async function weather(options) {
 		body: {
 			message: "WEATHER_SUCCESS",
 			data: {
-				forecast: res.data.weather[0].main,
+				location: res.data.name,
+				country: res.data.sys.country,
+				forecast: {
+					description: res.data.weather[0].description,
+					image: `http://openweathermap.org/img/wn/${res.data.weather[0].icon}@2x.png`,
+				},
 				temp: res.data.main.temp,
 				feelsLike: res.data.main.feels_like,
 				minTemp: res.data.main.temp_min.toFixed(0).toString(),
 				maxTemp: res.data.main.temp_max.toFixed(0).toString(),
-				wind: res.data.wind.speed,
+				windSpeed: res.data.wind.speed,
+				windDirection: res.data.wind.deg,
+				clouds: res.data.clouds.all,
 				sunrise: formatDate(res.data.sys.sunrise * 1000, "HH:mm"),
 				sunset: formatDate(res.data.sys.sunset * 1000, "HH:mm"),
 			},

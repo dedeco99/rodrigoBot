@@ -129,8 +129,6 @@ async function getStockPrice(options) {
 
 	const quoteRes = await yahooFinance.quote(symbol);
 
-	console.log(quoteRes);
-
 	const exchangeRates = await getExchangeRates({ base: "EUR" });
 
 	const historicalRes = await yahooFinance.historical(quoteRes.symbol, {

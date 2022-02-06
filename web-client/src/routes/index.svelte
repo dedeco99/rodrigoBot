@@ -1,25 +1,31 @@
 <script>
+	import Define from "$lib/define.svelte";
+	import Search from "$lib/search.svelte";
+	import Sort from "$lib/sort.svelte";
+	import Math from "$lib/math.svelte";
+	import Weather from "$lib/weather.svelte";
+
 	let prompt = "";
 	let chat = [];
 
+	const commands = {
+		define: { regex: /(?<word>.+)/, options: ["word"], component: Define },
+		search: { regex: /(?<word>.+)/, options: ["word"], component: Search },
+		sort: { regex: /(?<values>.+)/, options: ["values"], component: Sort },
+		math: { regex: /(?<expression>.+)/, options: ["expression"], component: Math },
+		weather: { regex: /(?<location>.+)/, options: ["location"], component: Weather },
+
+		convert: { regex: /(?<number>[0-9]+) (?<from>\w+) (?<to>\w+)/, options: ["number", "from", "to"] },
+		crypto: { regex: /(?<symbol>.+)/, options: ["symbol"] },
+		stock: { regex: /(?<symbol>.+)/, options: ["symbol"] },
+
+		instagram: { regex: /(?<handle>.+)/, options: ["handle"] },
+		reddit: { regex: /(?<subreddit>.+)/, options: ["subreddit"] },
+		youtube: { regex: /(?<channel>.+)/, options: ["channel"] },
+	};
+
 	async function sendCommand(e) {
 		e.preventDefault();
-
-		const commands = {
-			define: { regex: /(?<word>.+)/, options: ["word"] },
-			search: { regex: /(?<word>.+)/, options: ["word"] },
-			sort: { regex: /(?<values>.+)/, options: ["values"] },
-			math: { regex: /(?<expression>.+)/, options: ["expression"] },
-			weather: { regex: /(?<location>.+)/, options: ["location"] },
-
-			convert: { regex: /(?<number>[0-9]+) (?<from>\w+) (?<to>\w+)/, options: ["number", "from", "to"] },
-			crypto: { regex: /(?<symbol>.+)/, options: ["symbol"] },
-			stock: { regex: /(?<symbol>.+)/, options: ["symbol"] },
-
-			instagram: { regex: /(?<handle>.+)/, options: ["handle"] },
-			reddit: { regex: /(?<subreddit>.+)/, options: ["subreddit"] },
-			youtube: { regex: /(?<channel>.+)/, options: ["channel"] },
-		};
 
 		const regex = /(?<isCommand>\/)(?<command>\w+) (?<options>.+)/;
 
@@ -43,10 +49,10 @@
 			const json = await res.json();
 
 			if (res.status === 200) {
-				chat = [...chat, JSON.stringify(json.data)];
+				chat = [{ command, data: json.data }, ...chat];
 			} else {
 				// TODO: translate message
-				chat = [...chat, json.message];
+				chat = [json.message, ...chat];
 			}
 
 			prompt = "";
@@ -58,13 +64,13 @@
 	<form on:submit={sendCommand}>
 		<input class="prompt" type="text" bind:value={prompt} />
 	</form>
-	{#if chat.length}
-		<div class="chat">
-			{#each chat as message}
-				<div class="message">{message}</div>
-			{/each}
-		</div>
-	{/if}
+	<div class="chat">
+		{#each chat as message}
+			<div class="message">
+				<svelte:component this={commands[message.command].component} data={message.data} />
+			</div>
+		{/each}
+	</div>
 	<br />
 </div>
 
@@ -81,10 +87,13 @@
 
 	.chat {
 		width: 500px;
+		height: calc(100% - 60px);
 		background: #444;
 		border-radius: 5px;
 		padding: 10px;
 		margin: 10px 0px;
+		overflow-x: hidden;
+		overflow-y: auto;
 	}
 
 	.message {
@@ -92,7 +101,7 @@
 		border-radius: 5px;
 		padding: 10px;
 		margin: 10px 0px;
-		word-wrap: break-word;
+		font-size: 0.85em;
 
 		&:hover {
 			background: #555;

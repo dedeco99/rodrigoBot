@@ -14,19 +14,22 @@
 
 <style>
 	header {
+		height: 325px;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		margin: 20px;
 	}
 
 	main {
-		height: 100%;
+		height: calc(100vh - 325px - 50px);
 		display: flex;
 		justify-content: center;
 	}
 
 	footer {
-		text-align: center;
+		height: 50px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 </style>
