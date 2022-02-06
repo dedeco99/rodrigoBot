@@ -5,22 +5,52 @@
 	async function sendCommand(e) {
 		e.preventDefault();
 
-		const res = await fetch("http://localhost:5000/api/commands/stock", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ symbol: prompt }),
-		});
+		const commands = {
+			define: { regex: /(?<word>.+)/, options: ["word"] },
+			search: { regex: /(?<word>.+)/, options: ["word"] },
+			sort: { regex: /(?<values>.+)/, options: ["values"] },
+			math: { regex: /(?<expression>.+)/, options: ["expression"] },
+			weather: { regex: /(?<location>.+)/, options: ["location"] },
 
-		const json = await res.json();
+			convert: { regex: /(?<number>[0-9]+) (?<from>\w+) (?<to>\w+)/, options: ["number", "from", "to"] },
+			crypto: { regex: /(?<symbol>.+)/, options: ["symbol"] },
+			stock: { regex: /(?<symbol>.+)/, options: ["symbol"] },
 
-		if (res.status === 200) {
-			chat = [...chat, JSON.stringify(json.data)];
-		} else {
-			// TODO: translate message
-			chat = [...chat, json.message];
+			instagram: { regex: /(?<handle>.+)/, options: ["handle"] },
+			reddit: { regex: /(?<subreddit>.+)/, options: ["subreddit"] },
+			youtube: { regex: /(?<channel>.+)/, options: ["channel"] },
+		};
+
+		const regex = /(?<isCommand>\/)(?<command>\w+) (?<options>.+)/;
+
+		const match = prompt.match(regex);
+
+		if (match) {
+			const command = match.groups.command;
+			const options = match.groups.options.match(commands[command].regex);
+
+			const validatedOptions = {};
+			for (let i = 0; i < commands[command].options.length; i++) {
+				validatedOptions[commands[command].options[i]] = options.groups[commands[command].options[i]];
+			}
+
+			const res = await fetch(`http://localhost:5000/api/commands/${command}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(validatedOptions),
+			});
+
+			const json = await res.json();
+
+			if (res.status === 200) {
+				chat = [...chat, JSON.stringify(json.data)];
+			} else {
+				// TODO: translate message
+				chat = [...chat, json.message];
+			}
+
+			prompt = "";
 		}
-
-		prompt = "";
 	}
 </script>
 
@@ -62,6 +92,7 @@
 		border-radius: 5px;
 		padding: 10px;
 		margin: 10px 0px;
+		word-wrap: break-word;
 
 		&:hover {
 			background: #555;
