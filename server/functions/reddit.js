@@ -91,6 +91,7 @@ function formatResponse(json) {
 		created: json.data.children[num].data.created,
 		image,
 		score: json.data.children[num].data.score,
+		comments: json.data.children[num].data.num_comments,
 		subreddit: json.data.children[num].data.subreddit,
 		title: json.data.children[num].data.title,
 		url,

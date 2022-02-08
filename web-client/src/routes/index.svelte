@@ -4,6 +4,12 @@
 	import Sort from "$lib/sort.svelte";
 	import Math from "$lib/math.svelte";
 	import Weather from "$lib/weather.svelte";
+	import Convert from "$lib/convert.svelte";
+	import Crypto from "$lib/crypto.svelte";
+	import Stock from "$lib/stock.svelte";
+	import Instagram from "$lib/instagram.svelte";
+	import Reddit from "$lib/reddit.svelte";
+	import Youtube from "$lib/youtube.svelte";
 
 	let prompt = "";
 	let chat = [];
@@ -15,13 +21,17 @@
 		math: { regex: /(?<expression>.+)/, options: ["expression"], component: Math },
 		weather: { regex: /(?<location>.+)/, options: ["location"], component: Weather },
 
-		convert: { regex: /(?<number>[0-9]+) (?<from>\w+) (?<to>\w+)/, options: ["number", "from", "to"] },
-		crypto: { regex: /(?<symbol>.+)/, options: ["symbol"] },
-		stock: { regex: /(?<symbol>.+)/, options: ["symbol"] },
+		convert: {
+			regex: /(?<number>[0-9]+) (?<from>\w+) (?<to>\w+)/,
+			options: ["number", "from", "to"],
+			component: Convert,
+		},
+		crypto: { regex: /(?<symbol>.+)/, options: ["symbol"], component: Crypto },
+		stock: { regex: /(?<symbol>.+)/, options: ["symbol"], component: Stock },
 
-		instagram: { regex: /(?<handle>.+)/, options: ["handle"] },
-		reddit: { regex: /(?<subreddit>.+)/, options: ["subreddit"] },
-		youtube: { regex: /(?<channel>.+)/, options: ["channel"] },
+		instagram: { regex: /(?<handle>.+)/, options: ["handle"], component: Instagram },
+		reddit: { regex: /(?<subreddit>.+)/, options: ["subreddit"], component: Reddit },
+		youtube: { regex: /(?<channel>.+)/, options: ["channel"], component: Youtube },
 	};
 
 	async function sendCommand(e) {
