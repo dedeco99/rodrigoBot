@@ -12,6 +12,8 @@
 	import Youtube from "$lib/youtube.svelte";
 
 	let prompt = "";
+	let autocompleteCommands = [];
+	let selectedAutocompleteIndex = 0;
 	let command = null;
 	let options = {};
 	let chat = [];
@@ -32,20 +34,48 @@
 		youtube: { name: "youtube", options: ["channel"], component: Youtube },
 	};
 
-	function handleInput() {
-		const regex = /(?<isCommand>\/)(?<command>\w+)/;
+	function handleInput(e) {
+		if (["ArrowDown", "ArrowUp"].includes(e.key) && autocompleteCommands.length) {
+			selectedAutocompleteIndex =
+				e.key === "ArrowDown" && selectedAutocompleteIndex < autocompleteCommands.length - 1
+					? selectedAutocompleteIndex + 1
+					: e.key === "ArrowUp" && selectedAutocompleteIndex > 0
+					? selectedAutocompleteIndex - 1
+					: selectedAutocompleteIndex;
+		} else if (e.key === "Enter" && autocompleteCommands[selectedAutocompleteIndex]) {
+			prompt = `/${autocompleteCommands[selectedAutocompleteIndex].name}`;
 
-		const match = prompt.match(regex);
-
-		if (match && commands[match.groups.command]) {
-			command = commands[match.groups.command];
+			handleInput({ key: null });
 		} else {
-			command = null;
-			options = {};
+			const regex = /(?<isCommand>\/)(?<command>\w+)/;
+
+			const match = prompt.match(regex);
+
+			if (match && commands[match.groups.command]) {
+				command = commands[match.groups.command];
+			} else {
+				command = null;
+				options = {};
+			}
+
+			autocompleteCommands = [];
+			if (match) {
+				for (const name in commands) {
+					if (name.includes(match.groups.command)) autocompleteCommands.push(commands[name]);
+				}
+			} else if (prompt === "/") {
+				autocompleteCommands = Object.values(commands);
+			}
 		}
 	}
 
-	async function sendCommand(e) {
+	function autocompleteCommand(command) {
+		prompt = `/${command}`;
+
+		handleInput();
+	}
+
+	async function sendCommand() {
 		if (!command) return;
 
 		for (let i = 0; i < command.options.length; i++) {
@@ -70,6 +100,10 @@
 		prompt = "";
 		command = null;
 		options = {};
+		autocompleteCommands = [];
+		selectedAutocompleteIndex = 0;
+
+		document.getElementById("prompt").focus();
 	}
 
 	function preventDefault(e) {
@@ -79,29 +113,45 @@
 	function handleKeypress(e) {
 		preventDefault(e);
 
-		if (e.key === "Enter") {
-			sendCommand(e);
+		if (e.key === "Enter" && command) {
+			sendCommand();
 		} else {
-			handleInput();
+			handleInput(e);
 		}
 	}
 </script>
 
 <div>
-	<form on:submit={preventDefault} on:keyup={handleKeypress}>
-		<input
-			class="prompt"
-			type="text"
-			bind:value={prompt}
-			style="--width: {prompt.length ? `${prompt.length + 0.5}ch` : '100%'}"
-		/>
-		{#if command}
-			{#each command.options as option}
-				<label for={option}>{option}:</label>
-				<input class="option" id={option} bind:value={options[option]} />
-			{/each}
+	<div class="promptContainer">
+		<form autocomplete="off" on:submit={preventDefault} on:keyup={handleKeypress}>
+			<input
+				id="prompt"
+				class="prompt"
+				type="text"
+				bind:value={prompt}
+				style="--width: {prompt.length ? `${prompt.length + 0.5}ch` : '100%'}"
+				autofocus
+			/>
+			{#if command}
+				{#each command.options as option}
+					<label class="option" for={option}>{option}:</label>
+					<input class="optionInput" id={option} bind:value={options[option]} />
+				{/each}
+			{/if}
+		</form>
+		{#if autocompleteCommands.length}
+			<div class="autocomplete">
+				{#each autocompleteCommands as command, index}
+					<div
+						class={`command ${index === selectedAutocompleteIndex ? "selected" : ""}`}
+						on:click={() => autocompleteCommand(command.name)}
+					>
+						/{command.name}{#each command.options as option}<span class="option">{option}</span>{/each}
+					</div>
+				{/each}
+			</div>
 		{/if}
-	</form>
+	</div>
 	<div class="chat">
 		{#each chat as message}
 			<div class="message">
@@ -117,45 +167,90 @@
 </div>
 
 <style lang="scss">
-	form {
+	@mixin containerBox {
 		width: 600px;
-		display: flex;
-		align-items: center;
 		background: #444;
 		border-radius: 5px;
+		margin: 5px 0px;
 
-		input {
-			height: 30px;
-			background: none;
-			color: white;
-			border: none;
-			font-size: 1.25em;
-			font-family: "Source Code Pro", monospace;
-			margin: 10px;
-		}
-
-		.prompt {
-			width: var(--width);
-		}
-
-		label {
+		.option {
 			background: #222;
 			padding: 2px 10px;
 			border-radius: 5px;
 		}
+	}
 
-		.option {
-			width: 100%;
+	.promptContainer {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		position: relative;
+
+		form {
+			@include containerBox;
+
+			display: flex;
+			align-items: center;
+
+			input {
+				height: 30px;
+				background: none;
+				color: white;
+				border: none;
+				outline: none;
+				font-size: 1.25em;
+				font-family: "Source Code Pro", monospace;
+				margin: 10px;
+			}
+
+			.prompt {
+				width: var(--width);
+			}
+
+			.optionInput {
+				width: 100%;
+			}
+		}
+
+		.autocomplete {
+			@include containerBox;
+
+			width: 700px;
+			display: flex;
+			flex-direction: column;
+			background: #333;
+			max-height: 300px;
+			overflow: auto;
+			margin: 0px;
+			position: absolute;
+			top: 65px;
+			z-index: 1;
+			box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+
+			.command {
+				display: flex;
+				gap: 10px;
+				padding: 10px;
+				margin: 5px;
+				border-radius: 5px;
+
+				&:hover {
+					background: #555;
+					cursor: pointer;
+				}
+			}
+
+			.selected {
+				background: #888;
+			}
 		}
 	}
 
 	.chat {
-		width: 600px;
+		@include containerBox;
+
 		height: calc(100% - 60px);
-		background: #444;
-		border-radius: 5px;
-		padding: 10px;
-		margin: 10px 0px;
+		padding: 0px 10px;
 		overflow-x: hidden;
 		overflow-y: auto;
 	}
