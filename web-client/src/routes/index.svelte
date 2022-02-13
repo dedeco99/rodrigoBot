@@ -20,6 +20,7 @@
 	let command = null;
 	let options = {};
 	let chat = [];
+	let error = null;
 
 	const commands = {
 		define: { name: "define", options: ["word"], component: Define },
@@ -59,6 +60,7 @@
 			} else {
 				command = null;
 				options = {};
+				error = "";
 			}
 
 			autocompleteCommands = [];
@@ -97,18 +99,21 @@
 
 		if (res.status === 200) {
 			chat = [{ command: command.name, data: json.data }, ...chat];
+
+			prompt = "";
+			command = null;
+			options = {};
+			autocompleteCommands = [];
+			selectedAutocompleteIndex = 0;
+			error = "";
+
+			focusOnPrompt();
 		} else {
 			// TODO: translate message
-			chat = [json.message, ...chat];
+			error = json.message;
 		}
 
-		prompt = "";
-		command = null;
-		options = {};
-		autocompleteCommands = [];
-		selectedAutocompleteIndex = 0;
-
-		focusOnPrompt();
+		console.log(error);
 
 		loading = false;
 	}
@@ -139,6 +144,7 @@
 <div>
 	<img class="loading" src="/loading.gif" alt="Loading" style="--opacity: {loading ? 1 : 0}" />
 	<div class="promptContainer">
+		<div class="error" style="--opacity: {error ? 1 : 0};--top: {error ? '-42px' : '10px'}">{error}</div>
 		<form autocomplete="off" on:submit={preventDefault} on:keyup={handleKeypress}>
 			<input
 				id="prompt"
@@ -202,6 +208,19 @@
 		left: 725px;
 		position: absolute;
 		transition: opacity 500ms ease-in-out;
+	}
+
+	.error {
+		@include containerBox;
+
+		opacity: var(--opacity);
+		width: fit-content;
+		top: var(--top);
+		position: absolute;
+		background: #b00020;
+		padding: 5px;
+		text-align: center;
+		transition: opacity 250ms ease-in-out, top 250ms ease-in-out;
 	}
 
 	.promptContainer {
