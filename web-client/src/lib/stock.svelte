@@ -106,10 +106,6 @@
 			@include insideBox;
 
 			width: 125px;
-
-			.percent {
-				color: var(--color);
-			}
 		}
 	}
 </style>

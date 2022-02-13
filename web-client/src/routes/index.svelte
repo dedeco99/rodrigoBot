@@ -1,4 +1,6 @@
 <script>
+	import { onMount } from "svelte";
+
 	import Define from "$lib/define.svelte";
 	import Search from "$lib/search.svelte";
 	import Sort from "$lib/sort.svelte";
@@ -11,6 +13,7 @@
 	import Reddit from "$lib/reddit.svelte";
 	import Youtube from "$lib/youtube.svelte";
 
+	let loading = false;
 	let prompt = "";
 	let autocompleteCommands = [];
 	let selectedAutocompleteIndex = 0;
@@ -72,11 +75,13 @@
 	function autocompleteCommand(command) {
 		prompt = `/${command}`;
 
-		handleInput();
+		handleInput({ key: null });
 	}
 
 	async function sendCommand() {
 		if (!command) return;
+
+		loading = true;
 
 		for (let i = 0; i < command.options.length; i++) {
 			if (!options[command.options[i]]) return alert("400 Bad Request");
@@ -103,6 +108,12 @@
 		autocompleteCommands = [];
 		selectedAutocompleteIndex = 0;
 
+		focusOnPrompt();
+
+		loading = false;
+	}
+
+	function focusOnPrompt() {
 		document.getElementById("prompt").focus();
 	}
 
@@ -119,9 +130,14 @@
 			handleInput(e);
 		}
 	}
+
+	onMount(async () => {
+		focusOnPrompt();
+	});
 </script>
 
 <div>
+	<img class="loading" src="/loading.gif" alt="Loading" style="--opacity: {loading ? 1 : 0}" />
 	<div class="promptContainer">
 		<form autocomplete="off" on:submit={preventDefault} on:keyup={handleKeypress}>
 			<input
@@ -130,7 +146,6 @@
 				type="text"
 				bind:value={prompt}
 				style="--width: {prompt.length ? `${prompt.length + 0.5}ch` : '100%'}"
-				autofocus
 			/>
 			{#if command}
 				{#each command.options as option}
@@ -178,6 +193,15 @@
 			padding: 2px 10px;
 			border-radius: 5px;
 		}
+	}
+
+	.loading {
+		opacity: var(--opacity);
+		width: 150px;
+		top: 50px;
+		left: 725px;
+		position: absolute;
+		transition: opacity 500ms ease-in-out;
 	}
 
 	.promptContainer {
