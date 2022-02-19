@@ -205,48 +205,6 @@ const commands = [
 			},
 		],
 	},
-	// Specific
-	{
-		name: "radars",
-		description: "Returns radars for a specified location",
-		options: [
-			{
-				name: "location",
-				type: "STRING",
-				description: "The location you want the radars from",
-				required: true,
-			},
-		],
-	},
-	{
-		name: "corona",
-		description: "Returns information about corona",
-		options: [
-			{
-				name: "country",
-				type: "STRING",
-				description: "The country you want the information from",
-				required: true,
-			},
-		],
-	},
-	{
-		name: "keyboards",
-		description: "Returns information about a keyboard group buy",
-	},
-	/*
-	{
-		name: "stock",
-		description: "Returns information about stock of added products",
-		options: [
-			{
-				name: "link",
-				type: "STRING",
-				description: "The link for the product you want to track",
-			},
-		],
-	},
-	*/
 	// Memes
 	{
 		name: "meme",
@@ -426,8 +384,48 @@ const commands = [
 			},
 		],
 	},
-	/* Discord */
-	// Utils
+	// Specific
+	{
+		name: "radars",
+		description: "Returns radars for a specified location",
+		options: [
+			{
+				name: "location",
+				type: "STRING",
+				description: "The location you want the radars from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "corona",
+		description: "Returns information about corona",
+		options: [
+			{
+				name: "country",
+				type: "STRING",
+				description: "The country you want the information from",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "keyboards",
+		description: "Returns information about a keyboard group buy",
+	},
+	/*
+	{
+		name: "stock",
+		description: "Returns information about stock of added products",
+		options: [
+			{
+				name: "link",
+				type: "STRING",
+				description: "The link for the product you want to track",
+			},
+		],
+	},
+	*/
 	{
 		name: "reminder",
 		description: "Creates a reminder for a specific date and time",
@@ -470,6 +468,8 @@ const commands = [
 			},
 		],
 	},
+	/* Discord */
+	// Utils
 	{
 		name: "vote",
 		description: "Returns a poll with the specified options",

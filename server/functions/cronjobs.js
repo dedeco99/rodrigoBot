@@ -1,8 +1,5 @@
 const nodeCron = require("node-cron");
 
-const youtube = require("./youtube");
-// const twitch = require("./twitch");
-
 const Cronjob = require("../models/cronjob");
 
 async function cronjobScheduler(toSchedule) {
@@ -84,15 +81,16 @@ async function getCronjobs(msg) {
 async function handleCronjobs(callback) {
 	global.callback = callback;
 
+	// TODO: notifications
+	/*
 	nodeCron.schedule("0/20 * * * *", async () => {
 		const notification = await youtube.fetchNotifications();
 		if (notification) return global.callback("525343734746054657", notification);
 
-		/*
 		notification = await twitch.fetchNotifications();
 		if (notification) client.channels.cache.get("525343734746054657").send(notification);
-		*/
 	});
+	*/
 
 	await cronjobScheduler();
 }
