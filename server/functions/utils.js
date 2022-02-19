@@ -56,15 +56,15 @@ async function define(options) {
 }
 
 async function search(options) {
-	const { word } = options;
+	const { topic } = options;
 
 	const res = await api({
 		method: "get",
-		url: `https://www.googleapis.com/customsearch/v1?q=${word}&cx=007153606045358422053:uw-koc4dhb8&key=${process.env.youtubeKey}`,
+		url: `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${process.env.youtubeKey}`,
 	});
 	const json = res.data;
 
-	const data = { word, results: [] };
+	const data = { topic, results: [] };
 	for (let i = 0; i < 3; i++) {
 		data.results.push({
 			title: json.items[i].title,

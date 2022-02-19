@@ -2,8 +2,6 @@
 const { Intents, Client } = require("discord.js");
 const rodrigo = require("rodrigo");
 
-if (!process.env.ENV) require("../server/utils/secrets");
-
 const embed = require("./utils/embed");
 
 const utils = require("./functions/utils");
@@ -13,15 +11,25 @@ const system = require("./functions/system");
 const embeds = {
 	define: embed.createDefineEmbed,
 	search: embed.createSearchEmbed,
+	sort: embed.createSortMessage,
+	math: embed.createMathMessage,
 	weather: embed.createWeatherEmbed,
-	radar: embed.createRadarEmbed,
-	corona: embed.createCoronaEmbed,
-	reddit: embed.createRedditEmbed,
-	insta: embed.createInstaEmbed,
+
+	convert: embed.createConvertMessage,
 	crypto: embed.createCryptoEmbed,
-	vote: embed.createPollEmbed,
+	stock: embed.createCryptoEmbed,
+
+	instagram: embed.createInstaEmbed,
+	reddit: embed.createRedditEmbed,
+	youtube: embed.createYoutubeMessage,
+
+	radars: embed.createRadarEmbed,
+	corona: embed.createCoronaEmbed,
 	keyboards: embed.createKeyboardEmbed,
-	stock: embed.createStockEmbed,
+	reminder: embed.createReminderMessage,
+	birthday: embed.createReminderMessage,
+
+	vote: embed.createPollEmbed,
 };
 
 const discordFeatures = [
@@ -83,6 +91,31 @@ const commands = [
 		],
 	},
 	{
+		name: "math",
+		description: "Returns the result for the provided mathematical expression",
+		options: [
+			{
+				name: "expression",
+				type: "STRING",
+				description: "The expression you want to resolve",
+				required: true,
+			},
+		],
+	},
+	{
+		name: "weather",
+		description: "Returns the weather for a specified location",
+		options: [
+			{
+				name: "location",
+				type: "STRING",
+				description: "The location you want the weather from",
+				required: true,
+			},
+		],
+	},
+	// Price
+	{
 		name: "convert",
 		description: "Converts one currency to another",
 		options: [
@@ -107,43 +140,74 @@ const commands = [
 		],
 	},
 	{
-		name: "math",
-		description: "Returns the result for the provided mathematical expression",
-		options: [
-			{
-				name: "expression",
-				type: "STRING",
-				description: "The expression you want to resolve",
-				required: true,
-			},
-		],
-	},
-	{
 		name: "crypto",
 		description: "Returns information about a coin",
 		options: [
 			{
-				name: "coin",
+				name: "symbol",
 				type: "STRING",
-				description: "The name or symbol of a coin",
+				description: "The symbol of a coin",
 				required: true,
 			},
 		],
 	},
 	{
-		name: "weather",
-		description: "Returns the weather for a specified location",
+		name: "stock",
+		description: "Returns information about a stock",
 		options: [
 			{
-				name: "location",
+				name: "symbol",
 				type: "STRING",
-				description: "The location you want the weather from",
+				description: "The symbol of a stock",
+				required: true,
+			},
+		],
+	},
+	// Social Media
+	{
+		name: "instagram",
+		description: "Returns a post from the specified user",
+		options: [
+			{
+				name: "handle",
+				type: "STRING",
+				description: "The handle of the user you want the post from",
+				required: true,
+			},
+			{
+				name: "number",
+				type: "NUMBER",
+				description: "The number of the post (the latest one is 0)",
+			},
+		],
+	},
+	{
+		name: "reddit",
+		description: "Returns a random post from the specified subreddit",
+		options: [
+			{
+				name: "subreddit",
+				type: "STRING",
+				description: "The subreddit you want a post from",
 				required: true,
 			},
 		],
 	},
 	{
-		name: "radar",
+		name: "youtube",
+		description: "Returns the latest video from the specified channel",
+		options: [
+			{
+				name: "channel",
+				type: "STRING",
+				description: "The channel you want a video from",
+				required: true,
+			},
+		],
+	},
+	// Specific
+	{
+		name: "radars",
 		description: "Returns radars for a specified location",
 		options: [
 			{
@@ -183,60 +247,6 @@ const commands = [
 		],
 	},
 	*/
-	// Social Media
-	{
-		name: "reddit",
-		description: "Returns a random post from the specified subreddit",
-		options: [
-			{
-				name: "subreddit",
-				type: "STRING",
-				description: "The subreddit you want a post from",
-				required: true,
-			},
-		],
-	},
-	{
-		name: "youtube",
-		description: "Returns the latest video from the specified channel",
-		options: [
-			{
-				name: "channel",
-				type: "STRING",
-				description: "The channel you want a video from",
-				required: true,
-			},
-		],
-	},
-	{
-		name: "twitch",
-		description: "Returns the stream from the specified channel",
-		options: [
-			{
-				name: "channel",
-				type: "STRING",
-				description: "The channel you want the stream from",
-				required: true,
-			},
-		],
-	},
-	{
-		name: "insta",
-		description: "Returns a post from the specified user",
-		options: [
-			{
-				name: "user",
-				type: "STRING",
-				description: "The user you want the post from",
-				required: true,
-			},
-			{
-				name: "number",
-				type: "NUMBER",
-				description: "The number of the post (the latest one is 0)",
-			},
-		],
-	},
 	// Memes
 	{
 		name: "meme",
@@ -378,6 +388,38 @@ const commands = [
 						name: "phrase3",
 						type: "STRING",
 						description: "Third phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "headache",
+				type: "SUB_COMMAND",
+				description: "Headache meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+				],
+			},
+			{
+				name: "freerealestate",
+				type: "SUB_COMMAND",
+				description: "Free Real Estate meme",
+				options: [
+					{
+						name: "phrase",
+						type: "STRING",
+						description: "Phrase",
+						required: true,
+					},
+					{
+						name: "phrase2",
+						type: "STRING",
+						description: "Phrase",
 						required: true,
 					},
 				],
@@ -556,27 +598,26 @@ async function handleInteraction(interaction) {
 		}
 	}
 
-	let response = await rodrigo.handleCommand(interaction.commandName, options);
+	const discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
 
-	let discordFeature = null;
-	if (!response) {
-		discordFeature = discordFeatures.find(feat => feat.command === interaction.commandName);
+	if (discordFeature) {
+		const message = await discordFeature.func(options);
 
-		if (discordFeature) {
-			response = { command: discordFeature.command, message: await discordFeature.func(options) };
-		}
-
-		if (!response || !response.message) return interaction.followUp("Either you or I did something wrong");
-	}
-
-	if (!discordFeature && embeds[response.command] && typeof response.message !== "string") {
-		response.message = embeds[response.command](response.message);
-	}
-
-	if (response.message) {
-		const msg = await interaction.followUp(response.message);
+		const msg = await interaction.followUp(message);
 
 		if (discordFeature && discordFeature.afterFunc) await discordFeature.afterFunc(msg, options);
+	} else {
+		const response = await rodrigo.handleCommand(interaction.commandName, options);
+
+		if (response.data.status === 200) {
+			const message = embeds[response.command]
+				? embeds[response.command](response.data.body.data)
+				: response.data.body.data;
+
+			if (message) await interaction.followUp(message);
+		} else {
+			interaction.followUp(response.data.body.message);
+		}
 	}
 }
 
@@ -584,12 +625,14 @@ async function handleCronjob(room, message) {
 	if (typeof message === "string") {
 		global.client.channels.cache.get(room).send(message);
 	} else {
-		let response = await rodrigo.handleCommand(message.command, message.options);
+		const response = await rodrigo.handleCommand(message.command, message.options);
 
-		if (embeds[response.command]) {
-			response = embeds[response.command](response.message);
+		if (response.data.status === 200) {
+			const msg = embeds[response.command]
+				? embeds[response.command](response.data.body.data)
+				: response.data.body.data;
 
-			if (response) global.client.channels.cache.get(room).send(response);
+			if (msg) global.client.channels.cache.get(room).send(msg);
 		}
 	}
 }

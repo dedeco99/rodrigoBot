@@ -24,7 +24,7 @@
 
 	const commands = {
 		define: { name: "define", options: ["word"], component: Define },
-		search: { name: "search", options: ["word"], component: Search },
+		search: { name: "search", options: ["topic"], component: Search },
 		sort: { name: "sort", options: ["values"], component: Sort },
 		math: { name: "math", options: ["expression"], component: Math },
 		weather: { name: "weather", options: ["location"], component: Weather },
@@ -112,8 +112,6 @@
 			// TODO: translate message
 			error = json.message;
 		}
-
-		console.log(error);
 
 		loading = false;
 	}

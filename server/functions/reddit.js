@@ -95,6 +95,7 @@ function formatResponse(json) {
 		subreddit: json.data.children[num].data.subreddit,
 		title: json.data.children[num].data.title,
 		url,
+		permalink: `https://reddit.com${json.data.children[num].data.permalink}`,
 	};
 
 	return res;

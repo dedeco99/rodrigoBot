@@ -1,28 +1,5 @@
 const embed = require("../utils/embed");
 
-function remindMe(msg) {
-	const params = msg.content.split(" ");
-	const remindVars = ["minutes", "hours", "days"];
-	const remindVarsValues = {
-		minutes: 60000,
-		hours: 60000 * 60,
-		days: 60000 * 60 * 24,
-	};
-
-	// Get reminder, remind time, and remind time unit
-	const remindUnit = params.find(param => remindVars.includes(param));
-	const remindTime = Number(params[params.indexOf(remindUnit) - 1] || 1);
-	const reminder = params.filter(param => {
-		return params.indexOf(param) > 2 && params.indexOf(param) < params.length - 3;
-	});
-
-	setTimeout(() => {
-		msg.channel.send(reminder.join(" "));
-	}, remindTime * remindVarsValues[remindUnit]);
-
-	return "Ja te lembro";
-}
-
 function vote(options) {
 	/*
 	if (message[2] === "results") {
@@ -46,7 +23,7 @@ async function voteReactions(msg, options) {
 	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
 
 	const promises = [];
-	for (let i = 0; i < options.options.length; i++) {
+	for (let i = 0; i < options.options.split(";").length; i++) {
 		promises.push(msg.react(reacts[i]));
 	}
 
@@ -82,4 +59,4 @@ async function pin(msg, isMessageToPin) {
 	return null;
 }
 
-module.exports = { remindMe, vote, voteReactions, pin };
+module.exports = { vote, voteReactions, pin };

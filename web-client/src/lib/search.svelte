@@ -3,7 +3,7 @@
 </script>
 
 <div>
-	<h3>{data.word}</h3>
+	<h3>{data.topic}</h3>
 	{#each data.results as result}
 		<div class="result">
 			<a href={result.link} target="_blank"><b>{result.title}</b></a>

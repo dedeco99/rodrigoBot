@@ -40,7 +40,7 @@ async function getPost(options) {
 
 		const user = {
 			isPrivate: json.user.is_private,
-			bio: json.user.biography ? json.user.biography : "NO_BIO",
+			bio: json.user.biography ? json.user.biography : "",
 			followers: json.user.edge_followed_by.count,
 			follows: json.user.edge_follow.count,
 			image: null,

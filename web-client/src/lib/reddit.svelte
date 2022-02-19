@@ -1,10 +1,10 @@
 <script>
-	import { formatDate, simplifyNumber } from "../utils/utils";
+	import { formatDate } from "../utils/utils";
 
 	export let data = {};
 </script>
 
-<a href={data.url} target="_blank" class="title">{data.title}</a>
+<a href={data.permalink} target="_blank" class="title">{data.title}</a>
 {#if data.contentImage}
 	<img class="image" src={data.contentImage} alt={data.title} />
 {:else}

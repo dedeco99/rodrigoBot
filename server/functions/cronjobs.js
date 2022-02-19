@@ -38,7 +38,7 @@ async function cronjobScheduler(toSchedule) {
 async function addCronjob(options) {
 	const { type, cron, message, room, user } = options;
 
-	if (!nodeCron.validate(cron)) return "Cronjob inválido";
+	if (!nodeCron.validate(cron)) return false;
 
 	const cronjob = await Cronjob.findOne({
 		type,
@@ -48,7 +48,7 @@ async function addCronjob(options) {
 		user,
 	});
 
-	if (cronjob) return "Cronjob já existe seu lixo";
+	if (cronjob) return false;
 
 	const newCronjob = new Cronjob({
 		type,
@@ -62,7 +62,7 @@ async function addCronjob(options) {
 
 	await cronjobScheduler([newCronjob]);
 
-	return "Cronjob adicionado com sucesso";
+	return true;
 }
 
 async function removeCronjob(msg) {
@@ -70,7 +70,7 @@ async function removeCronjob(msg) {
 
 	await Cronjob.deleteOne({ name });
 
-	return "Cronjob removido com sucesso";
+	return true;
 }
 
 async function getCronjobs(msg) {
@@ -92,8 +92,6 @@ async function handleCronjobs(callback) {
 		notification = await twitch.fetchNotifications();
 		if (notification) client.channels.cache.get("525343734746054657").send(notification);
 		*/
-
-		return null;
 	});
 
 	await cronjobScheduler();

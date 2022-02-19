@@ -7,47 +7,52 @@ const price = require("../functions/price");
 const instagram = require("../functions/instagram");
 const reddit = require("../functions/reddit");
 const youtube = require("../functions/youtube");
-/*const specific = require("../functions/specific");
 const memes = require("../functions/memes");
+const specific = require("../functions/specific");
+/*
+
 const personality = require("../functions/personality");
 */
 
 const log = require("../utils/log");
 
+const commands = [
+	{ name: "answer", func: utils.answer },
+	{ name: "define", func: utils.define },
+	{ name: "search", func: utils.search },
+	{ name: "sort", func: utils.sort },
+	{ name: "math", func: utils.math },
+	{ name: "weather", func: utils.weather },
+
+	{ name: "convert", func: price.convert },
+	{ name: "crypto", func: price.getCryptoPrice },
+	{ name: "stock", func: price.getStockPrice },
+
+	{ name: "instagram", func: instagram.getPost },
+	{ name: "reddit", func: reddit.getPost },
+	{ name: "youtube", func: youtube.getVideo },
+	{ name: "youtube/search", func: youtube.getVideoSearch },
+
+	{ name: "meme", func: memes.createMeme },
+
+	{ name: "radars", func: specific.radars },
+	{ name: "corona", func: specific.corona },
+	{ name: "keyboards", func: specific.keyboards },
+	{ name: "reminder", func: specific.reminder },
+	{ name: "birthday", func: specific.birthday },
+];
+
+/*
 const features = [
-	// Utils
-	{ command: "answer", func: utils.answer },
-	{ command: "define", func: utils.define },
-	{ command: "search", func: utils.search },
-	{ command: "sort", func: utils.sort },
-	{ command: "convert", func: utils.convert },
-	{ command: "math", func: utils.math },
-	{ command: "weather", func: utils.weather },
-
 	// { command: "price", func: utils.getAmazonPrice },
-	{ command: "crypto", func: price.getCryptoPrice },
-	/*
-	{ command: "radar", func: specific.radars },
-	{ command: "corona", func: specific.corona },
-	{ command: "keyboards", func: specific.keyboards },
+
 	// { command: "stock", func: specific.stock },
-	{ command: "reminder", func: specific.reminder },
-	{ command: "birthday", func: specific.birthday },
-
-	// Memes
-	{ command: "meme", func: memes.createMeme },
-
-	// Social Media
-	{ command: "reddit", func: reddit.getPost },
-	{ command: "youtube", func: youtube.getVideo },
-	{ command: "twitch", func: twitch.getStream },
-	{ command: "insta", func: instagram.getPost },
-
+	
 	// Personality
 	{ command: "compliment", func: personality.compliment },
 	{ command: "insult", func: personality.insult },
-	*/
 ];
+*/
 
 async function handleCommand(command, options) {
 	/*
@@ -63,40 +68,22 @@ async function handleCommand(command, options) {
 	);
 	*/
 
-	const feature = features.find(feat => feat.command === command);
+	const feature = commands.find(feat => feat.name === command);
 
-	if (!feature) return null;
+	if (!feature) return { command, data: { status: 404, body: { message: "COMMAND_NOT_FOUND" } } };
 
 	console.log(command, options);
 
 	try {
-		return { command, message: await feature.func(options) };
+		return { command, data: await feature.func(options) };
 	} catch (err) {
 		log.error({ status: "command", data: err.stack });
 
-		return null;
+		return { command, data: { status: 500, body: { message: "COMMAND_INTERNAL_ERROR" } } };
 	}
 }
 
 function setupCommandApi() {
-	const commands = [
-		{ name: "answer", func: utils.answer },
-		{ name: "define", func: utils.define },
-		{ name: "search", func: utils.search },
-		{ name: "sort", func: utils.sort },
-		{ name: "math", func: utils.math },
-		{ name: "weather", func: utils.weather },
-
-		{ name: "convert", func: price.convert },
-		{ name: "crypto", func: price.getCryptoPrice },
-		{ name: "stock", func: price.getStockPrice },
-
-		{ name: "instagram", func: instagram.getPost },
-		{ name: "reddit", func: reddit.getPost },
-		{ name: "youtube", func: youtube.getVideo },
-		{ name: "youtube/search", func: youtube.getVideoSearch },
-	];
-
 	const app = express();
 
 	app.set("port", process.env.PORT || 5000);

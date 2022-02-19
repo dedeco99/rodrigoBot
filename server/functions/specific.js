@@ -5,17 +5,17 @@ dayjs.extend(customParseFormat);
 
 const { addCronjob } = require("./cronjobs");
 
-const { get } = require("../utils/request");
+const { api } = require("../utils/request");
 
 const GroupBuy = require("../models/groupBuy");
 const Stock = require("../models/stock");
 
 async function radars(options, page = 0, data = []) {
-	const location = options.location;
+	const { location } = options;
 
 	const url = `https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=${page}`;
 
-	const res = await get(url);
+	const res = await api({ method: "get", url });
 	const $ = cheerio.load(res.data);
 
 	const response = data.concat(
@@ -50,14 +50,15 @@ async function radars(options, page = 0, data = []) {
 		? radarsByLocation[0].location.charAt(0).toUpperCase() + radarsByLocation[0].location.slice(1).toLowerCase()
 		: location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
 
-	return { location: title, radars: radarsByLocation };
+	return { status: 200, body: { message: "RADARS_SUCCESS", data: { location: title, radars: radarsByLocation } } };
 }
 
 async function corona(options) {
-	const country = options.country;
+	const { country } = options;
+
 	const url = "https://www.worldometers.info/coronavirus/";
 
-	const res = await get(url);
+	const res = await api({ method: "get", url });
 	const $ = cheerio.load(res.data);
 
 	const total = $(".maincounter-number")
@@ -83,18 +84,13 @@ async function corona(options) {
 
 	const countryData = countries.find(e => e.country.toLowerCase() === country.toLowerCase());
 
-	if (!countryData) return "Esse país é imune a corona";
+	if (!countryData) return { status: 404, body: { message: "CORONA_COUNTRY_NOT_FOUND" } };
 
-	const response = {
-		total,
-		country: countryData,
-	};
-
-	return response;
+	return { status: 200, body: { message: "CORONA_SUCCESS", data: { total, country: countryData } } };
 }
 
 async function keyboards() {
-	const res = await get("https://mechgroupbuys.com/gb-data");
+	const res = await api({ method: "get", url: "https://mechgroupbuys.com/gb-data" });
 	const json = res.data;
 
 	const liveGroupBuys = json
@@ -117,21 +113,22 @@ async function keyboards() {
 			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),
 		}));
 
-	for (const groupBuy of liveGroupBuys) {
+	for (const groupBuy of []) {
 		const groupBuyExists = await GroupBuy.findOne({ name: groupBuy.name });
 
 		if (!groupBuyExists) {
 			const newGroupBuy = new GroupBuy(groupBuy);
 
-			await newGroupBuy.save();
+			//await newGroupBuy.save();
 
-			return groupBuy;
+			return { status: 200, body: { message: "KEYBOARDS_SUCCESS", data: groupBuy } };
 		}
 	}
 
-	return null;
+	return { status: 404, body: { message: "KEYBOARDS_NOT_FOUND" } };
 }
 
+// FIXME: Not working
 // eslint-disable-next-line max-lines-per-function
 async function stock(options) {
 	const link = options.link;
@@ -158,7 +155,7 @@ async function stock(options) {
 	for (const stock of stocks) {
 		const url = stock.link;
 
-		const res = await get(url);
+		const res = await api({ method: "get", url });
 		const $ = cheerio.load(res.data);
 
 		let shop = null;
@@ -229,27 +226,31 @@ async function reminder(options) {
 	const { reminder, room, user } = options;
 	const date = dayjs(`${options.date} ${options.time}`, "DD-MM-YYYY HH:mm");
 
-	if (!date.isValid()) return "The date and time are not valid";
-	if (date.diff(dayjs(), "minutes") < 0) return "Can't remind in the past";
+	if (!date.isValid()) return { status: 400, body: { mesage: "REMINDER_INVALID_DATE" } };
+	if (date.diff(dayjs(), "minutes") < 0) return { status: 400, body: { mesage: "REMINDER_IN_PAST" } };
 
 	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
 
 	const response = await addCronjob({ type: "reminder", cron, message: reminder, room, user });
 
-	return response.replace("Cronjob", "Reminder");
+	if (!response) return { status: 400, body: { mesage: "REMINDER_EXISTS" } };
+
+	return { status: 200, body: { message: "REMINDER_SUCCESS", data: "REMINDER_SUCCESS" } };
 }
 
 async function birthday(options) {
 	const { user, room } = options;
 	const date = dayjs(`${options.date} 08:00`, "DD-MM HH:mm");
 
-	if (!date.isValid()) return "The date is not valid";
+	if (!date.isValid()) return { status: 400, body: { mesage: "REMINDER_INVALID_DATE" } };
 
 	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
 
 	const response = await addCronjob({ type: "birthday", cron, message: "Parabéns :partying_face:", room, user });
 
-	return response.replace("Cronjob", "Birthday");
+	if (!response) return { status: 400, body: { mesage: "REMINDER_EXISTS" } };
+
+	return { status: 200, body: { message: "REMINDER_SUCCESS", data: "REMINDER_SUCCESS" } };
 }
 
 module.exports = {

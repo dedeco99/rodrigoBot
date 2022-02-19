@@ -5,13 +5,7 @@
 </script>
 
 <div class="sort">
-	{#each data.list as value, index}
-		{#if index === data.list.length - 1}
-			{value}
-		{:else}
-			{`${value} > `}
-		{/if}
-	{/each}
+	{data.list.join(" > ")}
 </div>
 
 <style lang="scss">

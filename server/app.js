@@ -2,8 +2,8 @@ if (!process.env.ENV) require("./utils/secrets");
 
 const { getMetadata, updateMetadata } = require("./utils/database");
 const { handleCommand, setupCommandApi } = require("./utils/command");
-//const { handleCronjobs } = require("./functions/cronjobs");
-//const { getVideoSearch } = require("./functions/youtube");
+const { handleCronjobs } = require("./functions/cronjobs");
+const { getVideoSearch } = require("./functions/youtube");
 
 global.cache = {
 	crypto: {
@@ -18,8 +18,8 @@ if (process.env.API) setupCommandApi();
 
 module.exports = {
 	handleCommand,
-	//handleCronjobs,
+	handleCronjobs,
 	getMetadata,
 	updateMetadata,
-	//getVideoSearch,
+	getVideoSearch,
 };
