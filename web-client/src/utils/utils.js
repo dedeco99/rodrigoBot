@@ -2,6 +2,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
 
+import translations from "../../../server/utils/translations";
+
 function formatDate(date, format, relative, originalFormat) {
 	return relative ? dayjs(date).fromNow() : dayjs(date, originalFormat).format(format);
 }
@@ -29,4 +31,14 @@ function simplifyNumber(num) {
 	return "∞";
 }
 
-export { formatDate, simplifyNumber };
+function translate(code, ...params) {
+	const lang = "en";
+
+	if (typeof translations[code] === "function") {
+		return translations[code](...params)[lang];
+	}
+
+	return translations[code] ? translations[code][lang] : translations.UNKNOWN_ERROR[lang];
+}
+
+export { formatDate, simplifyNumber, translate };

@@ -114,10 +114,13 @@ async function getPost(options, retries = 0) {
 		},
 	});
 
-	if (res.status === 403) return { status: 403, body: { message: "REDDIT_FORBIDDEN" } };
-	if (res.status === 404) return { status: 404, body: { message: "REDDIT_NOT_FOUND" } };
-
 	const json = res.data;
+
+	if (res.status === 403) return { status: 403, body: { message: "REDDIT_FORBIDDEN" } };
+	if (res.status === 404 || !json.data.children.length) {
+		return { status: 404, body: { message: "REDDIT_NOT_FOUND" } };
+	}
+
 	const response = formatResponse(json);
 
 	if (retries < 5 && global.cache.reddit.posts.includes(response.id)) {

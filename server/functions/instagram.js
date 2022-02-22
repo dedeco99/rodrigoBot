@@ -63,7 +63,7 @@ async function getPost(options) {
 			const image = images[finalNum].displayUrl;
 			user.image = image;
 		} else {
-			user.image = "NO_IMAGES";
+			user.image = null;
 		}
 
 		return { status: 200, body: { message: "INSTAGRAM_SUCCESS", data: user } };

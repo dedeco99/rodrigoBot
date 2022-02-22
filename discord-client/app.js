@@ -8,6 +8,8 @@ const utils = require("./functions/utils");
 const media = require("./functions/media");
 const system = require("./functions/system");
 
+const { translate } = require("./utils/utils");
+
 const embeds = {
 	define: embed.createDefineEmbed,
 	search: embed.createSearchEmbed,
@@ -616,7 +618,7 @@ async function handleInteraction(interaction) {
 
 			if (message) await interaction.followUp(message);
 		} else {
-			interaction.followUp(response.data.body.message);
+			interaction.followUp(translate(response.data.body.message));
 		}
 	}
 }

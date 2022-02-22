@@ -49,7 +49,7 @@ async function define(options) {
 			data: {
 				word,
 				definition: cleanString(json.list[0].definition),
-				example: json.list[0].example ? cleanString(json.list[0].example) : "NO_EXAMPLE",
+				example: json.list[0].example ? cleanString(json.list[0].example) : "",
 			},
 		},
 	};
@@ -108,7 +108,7 @@ async function weather(options) {
 		url: `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${process.env.openWeatherMapKey}`,
 	});
 
-	if (res.status === 404) return { status: 200, body: { message: "WEATHER_CITY_NOT_FOUND" } };
+	if (res.status === 404) return { status: 404, body: { message: "WEATHER_CITY_NOT_FOUND" } };
 
 	return {
 		status: 200,

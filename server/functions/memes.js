@@ -66,7 +66,7 @@ async function createMeme(options) {
 
 	return {
 		status: 200,
-		body: { message: "ANSWER_SUCCESS", data: { files: [`${filePath}/temp/${meme.name}.jpg`] } },
+		body: { message: "MEME_SUCCESS", data: { files: [`${filePath}/temp/${meme.name}.jpg`] } },
 	};
 }
 

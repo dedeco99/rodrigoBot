@@ -86,8 +86,8 @@ async function getCryptoPrice(options) {
 		const res = await api({ method: "get", url, headers });
 		const json = res.data;
 
-		if (res.status === 400) return { status: 404, body: { message: "GET_CRYPTO_PRICE_NOT_FOUND" } };
-		if (res.status !== 200) return { status: 500, body: { message: "GET_CRYPTO_PRICE_DOWN" } };
+		if (res.status === 400) return { status: 404, body: { message: "PRICE_CRYPTO_NOT_FOUND" } };
+		if (res.status !== 200) return { status: 500, body: { message: "PRICE_CRYPTO_DOWN" } };
 
 		data = json.data;
 	}

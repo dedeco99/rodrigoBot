@@ -13,6 +13,8 @@
 	import Reddit from "$lib/reddit.svelte";
 	import Youtube from "$lib/youtube.svelte";
 
+	import { translate } from "../utils/utils";
+
 	let loading = false;
 	let prompt = "";
 	let autocompleteCommands = [];
@@ -110,7 +112,7 @@
 			focusOnPrompt();
 		} else {
 			// TODO: translate message
-			error = json.message;
+			error = translate(json.message);
 		}
 
 		loading = false;

@@ -2,6 +2,8 @@ const dayjs = require("dayjs");
 const relativeTime = require("dayjs/plugin/relativeTime");
 dayjs.extend(relativeTime);
 
+const translations = require("../../server/utils/translations");
+
 function formatDate(date, format, relative, originalFormat) {
 	return relative ? dayjs(date).fromNow() : dayjs(date, originalFormat).format(format);
 }
@@ -29,4 +31,14 @@ function simplifyNumber(num) {
 	return "∞";
 }
 
-module.exports = { formatDate, simplifyNumber };
+function translate(code, ...params) {
+	const lang = "en";
+
+	if (typeof translations[code] === "function") {
+		return translations[code](...params)[lang];
+	}
+
+	return translations[code] ? translations[code][lang] : translations.UNKNOWN_ERROR[lang];
+}
+
+module.exports = { formatDate, simplifyNumber, translate };
