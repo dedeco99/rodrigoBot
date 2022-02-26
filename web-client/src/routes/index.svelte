@@ -1,6 +1,9 @@
 <script>
 	import { onMount } from "svelte";
 
+	import "../styles/global.css";
+
+	import Title from "$lib/title.svelte";
 	import Define from "$lib/define.svelte";
 	import Search from "$lib/search.svelte";
 	import Sort from "$lib/sort.svelte";
@@ -111,7 +114,6 @@
 
 			focusOnPrompt();
 		} else {
-			// TODO: translate message
 			error = translate(json.message);
 		}
 
@@ -142,49 +144,50 @@
 </script>
 
 <div>
-	<img class="loading" src="/loading.gif" alt="Loading" style="--opacity: {loading ? 1 : 0}" />
-	<div class="promptContainer">
-		<div class="error" style="--opacity: {error ? 1 : 0};--top: {error ? '-42px' : '10px'}">{error}</div>
-		<form autocomplete="off" on:submit={preventDefault} on:keyup={handleKeypress}>
-			<input
-				id="prompt"
-				class="prompt"
-				type="text"
-				bind:value={prompt}
-				style="--width: {prompt.length ? `${prompt.length + 0.5}ch` : '100%'}"
-			/>
-			{#if command}
-				{#each command.options as option}
-					<label class="option" for={option}>{option}:</label>
-					<input class="optionInput" id={option} bind:value={options[option]} />
-				{/each}
-			{/if}
-		</form>
-		{#if autocompleteCommands.length}
-			<div class="autocomplete">
-				{#each autocompleteCommands as command, index}
-					<div
-						class={`command ${index === selectedAutocompleteIndex ? "selected" : ""}`}
-						on:click={() => autocompleteCommand(command.name)}
-					>
-						/{command.name}{#each command.options as option}<span class="option">{option}</span>{/each}
-					</div>
-				{/each}
-			</div>
-		{/if}
-	</div>
-	<div class="chat">
-		{#each chat as message}
-			<div class="message">
-				{#if typeof message === "string"}
-					{message}
-				{:else}
-					<svelte:component this={commands[message.command].component} data={message.data} />
+	<header><Title title="RodrigoBot" {loading} /></header>
+	<main>
+		<div class="promptContainer">
+			<div class="error" style="--opacity: {error ? 1 : 0};--top: {error ? '-42px' : '10px'}">{error}</div>
+			<form autocomplete="off" on:submit={preventDefault} on:keyup={handleKeypress}>
+				<input
+					id="prompt"
+					class="prompt"
+					type="text"
+					bind:value={prompt}
+					style="--width: {prompt.length ? `${prompt.length + 0.5}ch` : '100%'}"
+				/>
+				{#if command}
+					{#each command.options as option}
+						<label class="option" for={option}>{option}:</label>
+						<input class="optionInput" id={option} bind:value={options[option]} />
+					{/each}
 				{/if}
-			</div>
-		{/each}
-	</div>
-	<br />
+			</form>
+			{#if autocompleteCommands.length}
+				<div class="autocomplete">
+					{#each autocompleteCommands as command, index}
+						<div
+							class={`command ${index === selectedAutocompleteIndex ? "selected" : ""}`}
+							on:click={() => autocompleteCommand(command.name)}
+						>
+							/{command.name}{#each command.options as option}<span class="option">{option}</span>{/each}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+		<div class="chat">
+			{#each chat as message}
+				<div class="message">
+					{#if typeof message === "string"}
+						{message}
+					{:else}
+						<svelte:component this={commands[message.command].component} data={message.data} />
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</main>
 </div>
 
 <style lang="scss">
@@ -201,13 +204,17 @@
 		}
 	}
 
-	.loading {
-		opacity: var(--opacity);
-		width: 150px;
-		top: 50px;
-		left: 725px;
-		position: absolute;
-		transition: opacity 500ms ease-in-out;
+	header {
+		height: 325px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	main {
+		height: calc(100vh - 325px - 20px);
+		min-height: 455px;
+		margin-bottom: 20px;
 	}
 
 	.error {
