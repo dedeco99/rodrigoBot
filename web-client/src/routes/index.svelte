@@ -45,14 +45,13 @@
 
 	function handleInput(e) {
 		if (["ArrowDown", "ArrowUp"].includes(e.key) && autocompleteCommands.length) {
-			selectedAutocompleteIndex =
-				e.key === "ArrowDown" && selectedAutocompleteIndex < autocompleteCommands.length - 1
-					? selectedAutocompleteIndex + 1
-					: e.key === "ArrowUp" && selectedAutocompleteIndex > 0
-					? selectedAutocompleteIndex - 1
-					: selectedAutocompleteIndex;
-		} else if (e.key === "Enter" && autocompleteCommands[selectedAutocompleteIndex]) {
+			selectedAutocompleteIndex += e.key === "ArrowDown" ? 1 : -1;
+		} else if (["Enter", "Tab"].includes(e.key) && autocompleteCommands[selectedAutocompleteIndex]) {
 			prompt = `/${autocompleteCommands[selectedAutocompleteIndex].name}`;
+
+			if (e.key === "Enter" || (e.key === "Tab" && !command)) {
+				setTimeout(() => document.getElementById(command.options[0]).focus(), 1);
+			}
 
 			handleInput({ key: null });
 		} else {
@@ -77,6 +76,13 @@
 				autocompleteCommands = Object.values(commands);
 			}
 		}
+
+		selectedAutocompleteIndex =
+			selectedAutocompleteIndex > autocompleteCommands.length - 1
+				? autocompleteCommands.length - 1
+				: selectedAutocompleteIndex < 0
+				? 0
+				: selectedAutocompleteIndex;
 	}
 
 	function autocompleteCommand(command) {
@@ -91,6 +97,7 @@
 		loading = true;
 
 		for (let i = 0; i < command.options.length; i++) {
+			// TODO: change alert to toast
 			if (!options[command.options[i]]) return alert("400 Bad Request");
 		}
 
@@ -138,9 +145,11 @@
 		}
 	}
 
-	onMount(async () => {
-		focusOnPrompt();
-	});
+	function handleTab(e) {
+		if (e.key === "Tab" && !command) preventDefault(e);
+	}
+
+	onMount(focusOnPrompt);
 </script>
 
 <div>
@@ -148,7 +157,7 @@
 	<main>
 		<div class="promptContainer">
 			<div class="error" style="--opacity: {error ? 1 : 0};--top: {error ? '-42px' : '10px'}">{error}</div>
-			<form autocomplete="off" on:submit={preventDefault} on:keyup={handleKeypress}>
+			<form autocomplete="off" on:submit={preventDefault} on:keyup={handleKeypress} on:keydown={handleTab}>
 				<input
 					id="prompt"
 					class="prompt"
