@@ -1,4 +1,6 @@
 {
+	"REQUIRED_FIELDS_MISSING": { "en": "Required fields are missing" },
+
 	"COMMAND_NOT_FOUND": { "en": "The command specified was not found" },
 	"COMMAND_INTERNAL_ERROR": { "en": "Something went wrong" },
 

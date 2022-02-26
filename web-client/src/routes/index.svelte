@@ -97,8 +97,11 @@
 		loading = true;
 
 		for (let i = 0; i < command.options.length; i++) {
-			// TODO: change alert to toast
-			if (!options[command.options[i]]) return alert("400 Bad Request");
+			if (!options[command.options[i]]) {
+				error = translate("REQUIRED_FIELDS_MISSING");
+				loading = false;
+				return;
+			}
 		}
 
 		const res = await fetch(`http://localhost:5000/api/commands/${command.name}`, {
