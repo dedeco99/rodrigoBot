@@ -13,11 +13,14 @@
 		<img class="logo" src={data.image} alt={data.symbol} />
 		<div class="name">
 			<div>{data.name}</div>
-			<div>{data.symbol} <span class="rank">{data.rank}</span></div>
+			<div>
+				{data.symbol}
+				{#if data.rank}<span class="rank">{data.rank}</span>{/if}
+			</div>
 		</div>
 	</div>
 	<div>
-		<div class="price">{data.price.toFixed(2)}€</div>
+		<div class="price">{data.price.toFixed(data.price.toFixed(2) === "0.00" ? 10 : 2)}€</div>
 	</div>
 </div>
 <div class="row">
@@ -40,22 +43,30 @@
 		</div>
 	</div>
 	<div class="changes">
-		<div class="value">
-			1h
-			<span class="percent" style="color: {getColor(data.change1h)}">{data.change1h.toFixed(1)}%</span>
-		</div>
-		<div class="value">
-			24h
-			<span class="percent" style="color: {getColor(data.change24h)}">{data.change24h.toFixed(1)}%</span>
-		</div>
-		<div class="value">
-			7d
-			<span class="percent" style="color: {getColor(data.change7d)}">{data.change7d.toFixed(1)}%</span>
-		</div>
-		<div class="value">
-			30d
-			<span class="percent" style="color: {getColor(data.change30d)}">{data.change30d.toFixed(1)}%</span>
-		</div>
+		{#if data.change1h}
+			<div class="value">
+				1h
+				<span class="percent" style="color: {getColor(data.change1h)}">{data.change1h.toFixed(1)}%</span>
+			</div>
+		{/if}
+		{#if data.change24h}
+			<div class="value">
+				24h
+				<span class="percent" style="color: {getColor(data.change24h)}">{data.change24h.toFixed(1)}%</span>
+			</div>
+		{/if}
+		{#if data.change7d}
+			<div class="value">
+				7d
+				<span class="percent" style="color: {getColor(data.change7d)}">{data.change7d.toFixed(1)}%</span>
+			</div>
+		{/if}
+		{#if data.change30d}
+			<div class="value">
+				30d
+				<span class="percent" style="color: {getColor(data.change30d)}">{data.change30d.toFixed(1)}%</span>
+			</div>
+		{/if}
 	</div>
 </div>
 

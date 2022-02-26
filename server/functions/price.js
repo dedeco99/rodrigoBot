@@ -127,53 +127,57 @@ async function getCryptoPrice(options) {
 async function getStockPrice(options) {
 	const { symbol } = options;
 
-	const quoteRes = await yahooFinance.quote(symbol);
+	try {
+		const quoteRes = await yahooFinance.quote(symbol);
 
-	const exchangeRates = await getExchangeRates({ base: "EUR" });
+		const exchangeRates = await getExchangeRates({ base: "EUR" });
 
-	const historicalRes = await yahooFinance.historical(quoteRes.symbol, {
-		period1: dayjs().subtract(1, "month").format("YYYY-MM-DD"),
-	});
+		const historicalRes = await yahooFinance.historical(quoteRes.symbol, {
+			period1: dayjs().subtract(1, "month").format("YYYY-MM-DD"),
+		});
 
-	const price =
-		quoteRes.currency === "EUR"
-			? quoteRes.regularMarketPrice
-			: quoteRes.regularMarketPrice / exchangeRates[quoteRes.currency];
+		const price =
+			quoteRes.currency === "EUR"
+				? quoteRes.regularMarketPrice
+				: quoteRes.regularMarketPrice / exchangeRates[quoteRes.currency];
 
-	const openPrice =
-		quoteRes.currency === "EUR"
-			? quoteRes.regularMarketOpen
-			: quoteRes.regularMarketOpen / exchangeRates[quoteRes.currency];
+		const openPrice =
+			quoteRes.currency === "EUR"
+				? quoteRes.regularMarketOpen
+				: quoteRes.regularMarketOpen / exchangeRates[quoteRes.currency];
 
-	const weekPrice =
-		quoteRes.currency === "EUR"
-			? historicalRes[historicalRes.length - 7].close
-			: historicalRes[historicalRes.length - 7].close / exchangeRates[quoteRes.currency];
+		const weekPrice =
+			quoteRes.currency === "EUR"
+				? historicalRes[historicalRes.length - 7].close
+				: historicalRes[historicalRes.length - 7].close / exchangeRates[quoteRes.currency];
 
-	const monthPrice =
-		quoteRes.currency === "EUR"
-			? historicalRes[0].close
-			: historicalRes[0].close / exchangeRates[quoteRes.currency];
+		const monthPrice =
+			quoteRes.currency === "EUR"
+				? historicalRes[0].close
+				: historicalRes[0].close / exchangeRates[quoteRes.currency];
 
-	return {
-		status: 200,
-		body: {
-			message: "PRICE_STOCK_SUCCESS",
-			data: {
-				id: quoteRes.symbol,
-				name: quoteRes.shortName,
-				symbol: quoteRes.symbol,
-				image: `https://companiesmarketcap.com/img/company-logos/80/${quoteRes.symbol}.png`,
-				price,
-				marketCap: quoteRes.marketCap,
-				volume: quoteRes.regularMarketVolume,
-				change1h: ((price - openPrice) / openPrice) * 100,
-				change24h: quoteRes.regularMarketChangePercent,
-				change7d: ((price - weekPrice) / weekPrice) * 100,
-				change30d: ((price - monthPrice) / monthPrice) * 100,
+		return {
+			status: 200,
+			body: {
+				message: "PRICE_STOCK_SUCCESS",
+				data: {
+					id: quoteRes.symbol,
+					name: quoteRes.shortName,
+					symbol: quoteRes.symbol,
+					image: `https://companiesmarketcap.com/img/company-logos/80/${quoteRes.symbol}.png`,
+					price,
+					marketCap: quoteRes.marketCap,
+					volume: quoteRes.regularMarketVolume,
+					change1h: ((price - openPrice) / openPrice) * 100,
+					change24h: quoteRes.regularMarketChangePercent,
+					change7d: ((price - weekPrice) / weekPrice) * 100,
+					change30d: ((price - monthPrice) / monthPrice) * 100,
+				},
 			},
-		},
-	};
+		};
+	} catch (err) {
+		return { status: 404, body: { message: "PRICE_CRYPTO_NOT_FOUND" } };
+	}
 }
 
 module.exports = {

@@ -105,7 +105,7 @@ function createCryptoEmbed(res) {
 		},
 	];
 
-	if (res.rank) {
+	if ("rank" in res) {
 		embed.fields.push(
 			{
 				name: `Available Supply (${res.symbol})`,
@@ -120,11 +120,14 @@ function createCryptoEmbed(res) {
 		);
 	}
 
-	embed.footer = {
-		text: `1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(
-			2,
-		)}% | 30d: ${res.change30d.toFixed(2)}%`,
-	};
+	let footer = "";
+
+	if (res.change1h) footer += `1h: ${res.change1h.toFixed(2)}%`;
+	if (res.change24h) footer += ` | 24h: ${res.change24h.toFixed(2)}%`;
+	if (res.change7d) footer += ` | 7d: ${res.change7d.toFixed(2)}%`;
+	if (res.change30d) footer += ` | 30d: ${res.change30d.toFixed(2)}%`;
+
+	embed.footer = { text: footer };
 
 	return { embeds: [embed] };
 }
