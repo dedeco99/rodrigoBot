@@ -18,6 +18,7 @@
 
 	import { translate } from "../utils/utils";
 
+	let animate = false;
 	let loading = false;
 	let prompt = "";
 	let autocompleteCommands = [];
@@ -123,6 +124,9 @@
 			error = "";
 
 			focusOnPrompt();
+
+			animate = false;
+			setTimeout(() => (animate = true), 100);
 		} else {
 			error = translate(json.message);
 		}
@@ -170,7 +174,7 @@
 				/>
 				{#if command}
 					{#each command.options as option}
-						<label class="option" for={option}>{option}:</label>
+						<label class="option animate" for={option}>{option}:</label>
 						<input class="optionInput" id={option} bind:value={options[option]} />
 					{/each}
 				{/if}
@@ -190,8 +194,8 @@
 			</div>
 		</div>
 		<div class="chat">
-			{#each chat as message}
-				<div class="message">
+			{#each chat as message, index}
+				<div class="message {index === 0 && animate ? 'animate' : ''}">
 					{#if typeof message === "string"}
 						{message}
 					{:else}
@@ -270,6 +274,21 @@
 				width: var(--width);
 			}
 
+			.option {
+				opacity: 0;
+				&.animate {
+					animation: fadeIn 500ms ease-in-out forwards;
+
+					&:nth-child(4) {
+						animation-delay: 150ms;
+					}
+
+					&:nth-child(6) {
+						animation-delay: 300ms;
+					}
+				}
+			}
+
 			.optionInput {
 				width: 100%;
 			}
@@ -322,14 +341,46 @@
 	}
 
 	.message {
+		opacity: 0;
 		background: #333;
 		border-radius: 5px;
 		padding: 10px;
 		margin: 10px 0px;
 		font-size: 0.85em;
+		transition: background 250ms ease-in-out;
+
+		&.animate {
+			opacity: 1;
+			animation: drop 1s ease-in-out forwards, fadeIn 500ms ease-in;
+		}
+
+		&:not(:first-child) {
+			opacity: 1;
+		}
 
 		&:hover {
 			background: #555;
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes drop {
+		0% {
+			transform: translateY(-100%);
+		}
+		50% {
+			transform: translateY(5%);
+		}
+		100% {
+			transform: translateY(0%);
 		}
 	}
 </style>

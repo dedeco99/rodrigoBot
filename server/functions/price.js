@@ -17,6 +17,8 @@ async function getExchangeRates(options) {
 async function convert(options) {
 	const { number, from, to } = options;
 
+	// TODO: check if is number and if from/to are valid
+
 	const exchangeRates = await getExchangeRates({ base: from });
 
 	return {
