@@ -175,18 +175,19 @@
 					{/each}
 				{/if}
 			</form>
-			{#if autocompleteCommands.length}
-				<div class="autocomplete">
-					{#each autocompleteCommands as command, index}
-						<div
-							class={`command ${index === selectedAutocompleteIndex ? "selected" : ""}`}
-							on:click={() => autocompleteCommand(command.name)}
-						>
-							/{command.name}{#each command.options as option}<span class="option">{option}</span>{/each}
-						</div>
-					{/each}
-				</div>
-			{/if}
+			<div
+				class="autocomplete"
+				style="--opacity: {autocompleteCommands.length ? 1 : 0}; --height: {autocompleteCommands.length * 57}px"
+			>
+				{#each autocompleteCommands as command, index}
+					<div
+						class={`command ${index === selectedAutocompleteIndex ? "selected" : ""}`}
+						on:click={() => autocompleteCommand(command.name)}
+					>
+						/{command.name}{#each command.options as option}<span class="option">{option}</span>{/each}
+					</div>
+				{/each}
+			</div>
 		</div>
 		<div class="chat">
 			{#each chat as message}
@@ -277,10 +278,12 @@
 		.autocomplete {
 			@include containerBox;
 
+			opacity: var(--opacity);
 			width: 700px;
 			display: flex;
 			flex-direction: column;
 			background: #333;
+			height: var(--height);
 			max-height: 300px;
 			overflow: auto;
 			margin: 0px;
@@ -288,6 +291,7 @@
 			top: 65px;
 			z-index: 1;
 			box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+			transition: opacity 250ms ease-in-out, height 500ms ease-in-out;
 
 			.command {
 				display: flex;
