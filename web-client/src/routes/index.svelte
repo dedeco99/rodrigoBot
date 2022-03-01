@@ -114,7 +114,7 @@
 			}
 		}
 
-		const res = await fetch(`http://localhost:5000/api/commands/${commandFound.name}`, {
+		const res = await fetch(`https://rodrigo.rabbitsoftware.dev/api/commands/${commandFound.name}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(options),
