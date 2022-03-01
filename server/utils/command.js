@@ -9,10 +9,7 @@ const reddit = require("../functions/reddit");
 const youtube = require("../functions/youtube");
 const memes = require("../functions/memes");
 const specific = require("../functions/specific");
-/*
-
 const personality = require("../functions/personality");
-*/
 
 const log = require("../utils/log");
 
@@ -40,6 +37,8 @@ const commands = [
 	{ name: "keyboards", func: specific.keyboards },
 	{ name: "reminder", func: specific.reminder },
 	{ name: "birthday", func: specific.birthday },
+
+	{ name: "talk", func: personality.talk },
 ];
 
 /*

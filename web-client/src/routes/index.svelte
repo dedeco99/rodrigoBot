@@ -15,6 +15,7 @@
 	import Instagram from "$lib/instagram.svelte";
 	import Reddit from "$lib/reddit.svelte";
 	import Youtube from "$lib/youtube.svelte";
+	import Talk from "$lib/talk.svelte";
 
 	import { translate } from "../utils/utils";
 
@@ -27,6 +28,7 @@
 	let options = {};
 	let chat = [];
 	let error = null;
+	let conversation = [];
 
 	const commands = {
 		define: { name: "define", options: ["word"], component: Define },
@@ -42,6 +44,8 @@
 		instagram: { name: "instagram", options: ["handle"], component: Instagram },
 		reddit: { name: "reddit", options: ["subreddit"], component: Reddit },
 		youtube: { name: "youtube", options: ["channel"], component: Youtube },
+
+		talk: { name: "talk", options: ["prompt", "conversation"], component: Talk },
 	};
 
 	function handleInput(e) {
@@ -93,19 +97,24 @@
 	}
 
 	async function sendCommand() {
-		if (!command) return;
-
 		loading = true;
 
-		for (let i = 0; i < command.options.length; i++) {
-			if (!options[command.options[i]]) {
+		let commandFound = command;
+		if (!commandFound) {
+			commandFound = commands.talk;
+
+			options = { prompt, conversation };
+		}
+
+		for (let i = 0; i < commandFound.options.length; i++) {
+			if (!options[commandFound.options[i]]) {
 				error = translate("REQUIRED_FIELDS_MISSING");
 				loading = false;
 				return;
 			}
 		}
 
-		const res = await fetch(`http://localhost:5000/api/commands/${command.name}`, {
+		const res = await fetch(`http://localhost:5000/api/commands/${commandFound.name}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(options),
@@ -114,7 +123,9 @@
 		const json = await res.json();
 
 		if (res.status === 200) {
-			chat = [{ command: command.name, data: json.data }, ...chat];
+			chat = [{ command: commandFound.name, data: json.data }, ...chat];
+
+			if (commandFound.name === "talk") conversation.push(prompt, json.data.response);
 
 			prompt = "";
 			command = null;
@@ -145,7 +156,7 @@
 	function handleKeypress(e) {
 		preventDefault(e);
 
-		if (e.key === "Enter" && command) {
+		if (e.key === "Enter" && (command || prompt[0] !== "/")) {
 			sendCommand();
 		} else {
 			handleInput(e);
