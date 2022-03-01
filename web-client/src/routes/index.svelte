@@ -45,7 +45,7 @@
 		reddit: { name: "reddit", options: ["subreddit"], component: Reddit },
 		youtube: { name: "youtube", options: ["channel"], component: Youtube },
 
-		talk: { name: "talk", options: ["prompt", "conversation"], component: Talk },
+		talk: { hidden: true, name: "talk", options: ["prompt", "conversation"], component: Talk },
 	};
 
 	function handleInput(e) {
@@ -64,7 +64,7 @@
 
 			const match = prompt.match(regex);
 
-			if (match && commands[match.groups.command]) {
+			if (match && commands[match.groups.command] && !commands[match.groups.command].hidden) {
 				command = commands[match.groups.command];
 			} else {
 				command = null;
@@ -75,7 +75,9 @@
 			autocompleteCommands = [];
 			if (match) {
 				for (const name in commands) {
-					if (name.includes(match.groups.command)) autocompleteCommands.push(commands[name]);
+					if (name.includes(match.groups.command) && !commands[name].hidden) {
+						autocompleteCommands.push(commands[name]);
+					}
 				}
 			} else if (prompt === "/") {
 				autocompleteCommands = Object.values(commands);
@@ -180,6 +182,7 @@
 					id="prompt"
 					class="prompt"
 					type="text"
+					placeholder={translate("PROMPT_PLACEHOLDER")}
 					bind:value={prompt}
 					style="--width: {prompt.length ? `${prompt.length + 0.5}ch` : '100%'}"
 				/>

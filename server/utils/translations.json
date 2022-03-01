@@ -1,4 +1,5 @@
 {
+	"PROMPT_PLACEHOLDER": { "en": "Type / for commands or type anything else" },
 	"REQUIRED_FIELDS_MISSING": { "en": "Required fields are missing" },
 
 	"COMMAND_NOT_FOUND": { "en": "The command specified was not found" },
