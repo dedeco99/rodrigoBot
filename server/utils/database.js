@@ -1,10 +1,8 @@
-const mongoose = require("mongoose");
-
-const secrets = require("./secrets");
+const { connect } = require("mongoose");
 
 const Meta = require("../models/meta");
 
-mongoose.connect(secrets.databaseConnectionString, {
+connect(process.env.databaseConnectionString, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 });

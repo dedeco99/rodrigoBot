@@ -1,430 +1,138 @@
-const cheerio = require("cheerio");
-const dayjs = require("dayjs");
-const customParseFormat = require("dayjs/plugin/customParseFormat");
-dayjs.extend(customParseFormat);
 const { evaluate } = require("mathjs");
 
-const { addCronjob } = require("./cronjobs");
-
-const { get } = require("../utils/request");
-const secrets = require("../utils/secrets");
-
-const GroupBuy = require("../models/groupBuy");
-const Stock = require("../models/stock");
+const { api } = require("../utils/request");
+const { formatDate } = require("../utils/utils");
 
 function answer(options) {
-	const question = options.question;
+	const { question } = options;
+
 	const phrase = question.substring(0, question.length - 1);
 	let num = Math.floor(Math.random() >= 0.5);
 
+	let data = num ? "ANSWER_YES" : "ANSWER_NO";
 	if (!phrase) {
-		return "Sim, estou vivo";
-	} else if (phrase.includes(" ou ")) {
-		const option1 = phrase.split(" ou ")[0];
-		const option2 = phrase.split(" ou ")[1];
+		return "ANSWER_ALIVE";
+	} else if (phrase.includes(" or ")) {
+		const option1 = phrase.split(" or ")[0];
+		const option2 = phrase.split(" or ")[1];
 
-		return num ? option1 : option2;
-	} else if (phrase.includes(" probabilidade ")) {
+		data = num ? option1 : option2;
+	} else if (phrase.includes(" probability ")) {
 		num = Math.floor(Math.random() * 100);
 
-		return `Cerca de ${num}%`;
-	} else if (phrase.includes(" nota ")) {
+		data = `${num}%`;
+	} else if (phrase.includes(" grade ")) {
 		num = Math.floor(Math.random() * 20);
 
-		return num;
+		data = num.toString();
 	}
 
-	return num ? "Sim" : "Não";
+	return { status: 200, body: { message: "ANSWER_SUCCESS", data: { answer: data } } };
 }
 
 async function define(options) {
-	const word = options.word;
-	const url = `http://api.urbandictionary.com/v0/define?term=${word}`;
+	const { word } = options;
 
-	const res = await get(url);
+	const res = await api({ method: "get", url: `http://api.urbandictionary.com/v0/define?term=${word}` });
 	const json = res.data;
 
-	let response = null;
-	if (json.list.length === 0) {
-		response = {
-			word,
-			definition: "Não há definição para esta palavra",
-			example: "Não há exemplo",
-		};
-	} else {
-		const cleanString = string => {
-			return string.substring(0, 255).replace(/\[/g, "").replace(/\]/g, "");
-		};
+	if (!json.list.length) return { status: 404, body: { message: "DEFINE_NOT_FOUND" } };
 
-		let example = cleanString(json.list[0].example);
-		if (json.list[0].example === "") example = "Não há exemplo";
+	const cleanString = string => {
+		return string.substring(0, 255).replace(/\[/g, "").replace(/\]/g, "");
+	};
 
-		response = {
-			word,
-			definition: cleanString(json.list[0].definition),
-			example,
-		};
-	}
-
-	return response;
+	return {
+		status: 200,
+		body: {
+			message: "DEFINE_SUCCESS",
+			data: {
+				word,
+				definition: cleanString(json.list[0].definition),
+				example: json.list[0].example ? cleanString(json.list[0].example) : "",
+			},
+		},
+	};
 }
 
 async function search(options) {
-	const topic = options.topic;
-	const url = `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${secrets.youtubeKey}`;
+	const { topic } = options;
 
-	const res = await get(url);
+	const res = await api({
+		method: "get",
+		url: `https://www.googleapis.com/customsearch/v1?q=${topic}&cx=007153606045358422053:uw-koc4dhb8&key=${process.env.youtubeKey}`,
+	});
 	const json = res.data;
 
-	const response = [];
+	const data = { topic, results: [] };
 	for (let i = 0; i < 3; i++) {
-		response.push({
-			topic,
+		data.results.push({
 			title: json.items[i].title,
 			link: json.items[i].link,
 			description: json.items[i].snippet,
 		});
 	}
 
-	return response;
+	return { status: 200, body: { message: "SEARCH_SUCCESS", data } };
 }
 
 function sort(options) {
-	let values = options.values;
-	values = values.split(";");
-	const randomized = [];
-	const times = values.length;
+	const { values } = options;
 
-	for (let i = 0; i < times; i++) {
-		const num = Math.floor(Math.random() * values.length);
-		randomized.push(values[num]);
-		values.splice(num, 1);
+	const splitValues = Array.isArray(values) ? values : values.split(";");
+	const length = splitValues.length;
+
+	const randomized = [];
+	for (let i = 0; i < length; i++) {
+		const num = Math.floor(Math.random() * splitValues.length);
+		randomized.push(splitValues[num]);
+		splitValues.splice(num, 1);
 	}
 
-	return randomized.join(" > ");
-}
-
-// FIXME: Change api
-async function convert(options) {
-	const url = `https://api.exchangerate.host/latest?base=${options.from}`;
-
-	const res = await get(url);
-	const json = res.data;
-
-	return `${options.number} ${options.from} = ${(options.number * json.rates[options.to]).toFixed(2)} ${
-		options.to
-	}`;
+	return { status: 200, body: { message: "SORT_SUCCESS", data: { list: randomized } } };
 }
 
 function math(options) {
-	const expression = options.expression;
+	const { expression } = options;
+
 	const result = evaluate(expression);
 
-	return result.toString();
-}
-
-// FIXME: Not working
-function price() {
-	/*
-	let thing = msg.split("price ")[1];
-	thing = thing.replace(/ /g, "%20");
-	const url = `https://www.amazon.es/s?field-keywords=${thing}`;
-
-	const res = await get(url);
-	const $ = cheerio.load(res.data);
-	const response = [];
-	thing = thing.replace(/%20/g, " ");
-
-	$("html").find(".a-link-normal.s-access-detail-page.s-color-twister-title-link.a-text-normal")
-		.each((index) => {
-			if (index !== 0 && index !== 1 && index < 7) {
-				const productUrl = $(this)[0].attribs.href;
-				const product = `${$(this)[0].attribs.title.substring(0, 50)}...`;
-				response.push({ search: thing, url, productUrl, product });
-			}
-		});
-
-	$("html").find(".a-size-base.a-color-price.a-text-bold")
-		.each((index) => {
-			if (index < 5) {
-				const price = $(this)[0].children[0].data;
-				if (response[index]) response[index].price = price;
-			}
-		});
-
-	if (response.length > 0) {
-		return embed.createPriceEmbed(response);
-	}
-
-	return "Não existe esse produto do xixo";
-	*/
-
-	return "Função em manutenção";
+	return { status: 200, body: { message: "MATH_SUCCESS", data: { expression, result } } };
 }
 
 async function weather(options) {
-	const location = options.location;
+	const { location } = options;
 
-	const url = `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${secrets.openWeatherMapKey}`;
-
-	const res = await get(url);
-
-	if (res.status === 404) return "City Not Found";
-
-	const weatherInfo = {
-		forecast: res.data.weather[0].main,
-		temp: res.data.main.temp,
-		feelsLike: res.data.main.feels_like,
-		minTemp: res.data.main.temp_min.toFixed(0).toString(),
-		maxTemp: res.data.main.temp_max.toFixed(0).toString(),
-		wind: res.data.wind.speed,
-		sunrise: dayjs(res.data.sys.sunrise * 1000).format("HH:mm"),
-		sunset: dayjs(res.data.sys.sunset * 1000).format("HH:mm"),
-	};
-
-	return weatherInfo;
-}
-
-async function radars(options, page = 0, data = []) {
-	const location = options.location;
-
-	const url = `https://temporeal.radaresdeportugal.pt/extras/paginator.php?page=${page}`;
-
-	const res = await get(url);
-	const $ = cheerio.load(res.data);
-
-	const response = data.concat(
-		$(".panel")
-			.toArray()
-			.map(elem => {
-				return {
-					date: $(elem).find(".panel-heading p").text().trim(),
-					location: $(elem).find(".panel-body h4").text(),
-					description: $(elem).find(".panel-body .lead").text(),
-				};
-			}),
-	);
-
-	if (dayjs(response[response.length - 1].date, "DD/MM/YYYY").diff(dayjs(), "days") === 0) {
-		return radars(options, page + 1, response);
-	}
-
-	function sanitizeString(str) {
-		const newStr = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-		return newStr.trim();
-	}
-
-	const radarsByLocation = response.filter(radar => {
-		return (
-			dayjs(radar.date, "DD/MM/YYYY").diff(dayjs(), "days") === 0 &&
-			sanitizeString(radar.location).toLowerCase() === sanitizeString(location).toLowerCase()
-		);
+	const res = await api({
+		method: "get",
+		url: `http://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${process.env.openWeatherMapKey}`,
 	});
 
-	const title = radarsByLocation.length
-		? radarsByLocation[0].location.charAt(0).toUpperCase() + radarsByLocation[0].location.slice(1).toLowerCase()
-		: location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
+	if (res.status === 404) return { status: 404, body: { message: "WEATHER_CITY_NOT_FOUND" } };
 
-	return { location: title, radars: radarsByLocation };
-}
-
-async function corona(options) {
-	const country = options.country;
-	const url = "https://www.worldometers.info/coronavirus/";
-
-	const res = await get(url);
-	const $ = cheerio.load(res.data);
-
-	const total = $(".maincounter-number")
-		.toArray()
-		.map(elem => $(elem).find("span").text());
-
-	const countries = $("tr")
-		.toArray()
-		.map(elem => {
-			return {
-				country: $(elem).children().eq(1).text().trim(),
-				totalCases: $(elem).children().eq(2).text().trim() || "0",
-				newCases: $(elem).children().eq(3).text().trim() || "0",
-				totalDeaths: $(elem).children().eq(4).text().trim() || "0",
-				newDeaths: $(elem).children().eq(5).text().trim() || "0",
-				totalRecovered: $(elem).children().eq(6).text().trim() || "0",
-				activeCases: $(elem).children().eq(7).text().trim() || "0",
-				seriousCases: $(elem).children().eq(8).text().trim() || "0",
-				casesPer1M: $(elem).children().eq(9).text().trim() || "0",
-				deathsPer1M: $(elem).children().eq(10).text().trim() || "0",
-			};
-		});
-
-	const countryData = countries.find(e => e.country.toLowerCase() === country.toLowerCase());
-
-	if (!countryData) return "Esse país é imune a corona";
-
-	const response = {
-		total,
-		country: countryData,
+	return {
+		status: 200,
+		body: {
+			message: "WEATHER_SUCCESS",
+			data: {
+				location: res.data.name,
+				country: res.data.sys.country,
+				forecast: {
+					description: res.data.weather[0].description,
+					image: `http://openweathermap.org/img/wn/${res.data.weather[0].icon}@2x.png`,
+				},
+				temp: res.data.main.temp,
+				feelsLike: res.data.main.feels_like,
+				minTemp: res.data.main.temp_min.toFixed(0).toString(),
+				maxTemp: res.data.main.temp_max.toFixed(0).toString(),
+				windSpeed: res.data.wind.speed,
+				windDirection: res.data.wind.deg,
+				clouds: res.data.clouds.all,
+				sunrise: formatDate(res.data.sys.sunrise * 1000, "HH:mm"),
+				sunset: formatDate(res.data.sys.sunset * 1000, "HH:mm"),
+			},
+		},
 	};
-
-	return response;
-}
-
-async function keyboards() {
-	const res = await get("https://mechgroupbuys.com/gb-data");
-	const json = res.data;
-
-	const liveGroupBuys = json
-		.filter(i => {
-			return (
-				(i.type === "keyboards" || i.type === "keycaps" || i.type === "switches") &&
-				i.startDate &&
-				dayjs(i.startDate, "M/D/YY").diff(dayjs(), "days") <= 0 &&
-				(!i.endDate || dayjs(i.endDate, "M/D/YY").diff(dayjs(), "days") >= 0)
-			);
-		})
-		.map(i => ({
-			name: i.name,
-			type: i.type,
-			image: i.mainImage,
-			startDate: dayjs(i.startDate, "M/D/YY").format("DD/MM/YYYY"),
-			endDate: dayjs(i.endDate, "M/D/YY").format("DD/MM/YYYY"),
-			pricing: i.pricing,
-			saleType: i.saleType,
-			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),
-		}));
-
-	for (const groupBuy of liveGroupBuys) {
-		const groupBuyExists = await GroupBuy.findOne({ name: groupBuy.name });
-
-		if (!groupBuyExists) {
-			const newGroupBuy = new GroupBuy(groupBuy);
-
-			await newGroupBuy.save();
-
-			return groupBuy;
-		}
-	}
-
-	return null;
-}
-
-// eslint-disable-next-line max-lines-per-function
-async function stock(options) {
-	const link = options.link;
-
-	if (link) {
-		if (link.includes("globaldata") || link.includes("chiptec") || link.includes("pcdiga")) {
-			const stockExists = await Stock.findOne({ link }).lean();
-
-			if (stockExists) return "Já existe";
-
-			const stock = new Stock({ link });
-
-			await stock.save();
-
-			return "Link adicionado com sucesso";
-		}
-
-		return "Loja não é válida";
-	}
-
-	const stocks = await Stock.find({}).lean();
-
-	const products = [];
-	for (const stock of stocks) {
-		const url = stock.link;
-
-		const res = await get(url);
-		const $ = cheerio.load(res.data);
-
-		let shop = null;
-		let title = null;
-		let image = null;
-		let stockMessage = null;
-		let inStock = null;
-		if (url.includes("globaldata")) {
-			shop = "Globaldata";
-			title = $(".page-title")
-				.toArray()
-				.map(elem => $(elem).find("span").text());
-			title = title[0];
-			image = $("#mtImageContainer")
-				.toArray()
-				.map(elem => $(elem).find("img").attr("src"));
-			image = image[0];
-
-			stockMessage = $(".stock-shops")
-				.toArray()
-				.map(elem => $(elem).find("span").first().text());
-			stockMessage = stockMessage[0].trim();
-			inStock = stockMessage !== "Esgotado";
-		} else if (url.includes("chiptec")) {
-			shop = "Chiptec";
-			title = $(".prod_tit")
-				.toArray()
-				.map(elem => $(elem).find("h1").text());
-			title = title[0];
-			image = $(".product-image")
-				.toArray()
-				.map(elem => $(elem).find("img").attr("src"));
-			image = image[0];
-
-			stockMessage = $(".amstockstatus")
-				.toArray()
-				.map(elem => $(elem).text());
-			stockMessage = stockMessage[0].trim();
-			inStock = stockMessage === "Disponível";
-		} else if (url.includes("pcdiga")) {
-			shop = "PCDiga";
-			title = $(".item.product")
-				.toArray()
-				.map(elem => $(elem).find("strong").text());
-			title = title[0];
-			image = $(".gallery-placeholder__image")
-				.toArray()
-				.map(elem => $(elem).attr("src"));
-			image = image[0];
-
-			const index = res.data.indexOf("'is_in_stock': ");
-			stockMessage = res.data.substring(index + 15, index + 16);
-			inStock = stockMessage === "1";
-			stockMessage = inStock ? "Em Stock" : "Esgotado";
-		}
-
-		if (stock.stock !== stockMessage) {
-			await Stock.updateOne({ _id: stock._id }, { stock: stockMessage });
-
-			if (inStock) products.push({ shop, title, url, image, stockMessage });
-		}
-	}
-
-	return products.length ? products : null;
-}
-
-async function reminder(options) {
-	const { reminder, room, user } = options;
-	const date = dayjs(`${options.date} ${options.time}`, "DD-MM-YYYY HH:mm");
-
-	if (!date.isValid()) return "The date and time are not valid";
-	if (date.diff(dayjs(), "minutes") < 0) return "Can't remind in the past";
-
-	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
-
-	const response = await addCronjob({ type: "reminder", cron, message: reminder, room, user });
-
-	return response.replace("Cronjob", "Reminder");
-}
-
-async function birthday(options) {
-	const { user, room } = options;
-	const date = dayjs(`${options.date} 08:00`, "DD-MM HH:mm");
-
-	if (!date.isValid()) return "The date is not valid";
-
-	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
-
-	const response = await addCronjob({ type: "birthday", cron, message: "Parabéns :partying_face:", room, user });
-
-	return response.replace("Cronjob", "Birthday");
 }
 
 module.exports = {
@@ -432,14 +140,6 @@ module.exports = {
 	define,
 	search,
 	sort,
-	convert,
 	math,
-	price,
 	weather,
-	radars,
-	corona,
-	keyboards,
-	stock,
-	reminder,
-	birthday,
 };

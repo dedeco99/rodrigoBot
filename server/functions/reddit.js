@@ -1,13 +1,11 @@
-const errors = require("../utils/errors");
-const { get, post } = require("../utils/request");
-const secrets = require("../utils/secrets");
+const { api } = require("../utils/request");
 
 async function getRefreshToken() {
 	/* eslint-disable-line no-unused-vars */
 	const url =
 		"https://www.reddit.com/api/v1/access_token?code=QFwvvqjN4yWyyQDFX_Hnpm5-aok&grant_type=authorization_code&redirect_uri=http://localhost:5000/lul";
 
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+	const encryptedAuth = new Buffer.from(`${process.env.redditClientId}:${process.env.redditSecret}`).toString(
 		"base64",
 	); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
@@ -17,16 +15,16 @@ async function getRefreshToken() {
 		Authorization: auth,
 	};
 
-	const res = await post(url, null, headers);
+	const res = await api({ method: "post", url, headers });
 	const json = res.data;
 
 	console.log(json);
 }
 
 async function getAccessToken() {
-	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${secrets.redditRefreshToken}&grant_type=refresh_token`;
+	const url = `https://www.reddit.com/api/v1/access_token?refresh_token=${process.env.redditRefreshToken}&grant_type=refresh_token`;
 
-	const encryptedAuth = new Buffer.from(`${secrets.redditClientId}:${secrets.redditSecret}`).toString(
+	const encryptedAuth = new Buffer.from(`${process.env.redditClientId}:${process.env.redditSecret}`).toString(
 		"base64",
 	); /* eslint-disable-line no-undef */
 	const auth = `Basic ${encryptedAuth}`;
@@ -36,9 +34,9 @@ async function getAccessToken() {
 		Authorization: auth,
 	};
 
-	const res = await post(url, null, headers);
+	const res = await api({ method: "post", url, headers });
 
-	if (res.status === 400) throw errors.redditRefreshToken;
+	if (res.status === 400) return { status: 400, body: { message: "REDDIT_REFRESH_TOKEN" } };
 
 	const json = res.data;
 
@@ -93,42 +91,47 @@ function formatResponse(json) {
 		created: json.data.children[num].data.created,
 		image,
 		score: json.data.children[num].data.score,
+		comments: json.data.children[num].data.num_comments,
 		subreddit: json.data.children[num].data.subreddit,
 		title: json.data.children[num].data.title,
 		url,
+		permalink: `https://reddit.com${json.data.children[num].data.permalink}`,
 	};
 
 	return res;
 }
 
 async function getPost(options, retries = 0) {
-	const subreddit = options.subreddit;
+	const { subreddit } = options;
 
 	const accessToken = await getAccessToken();
 
-	const url = `https://oauth.reddit.com/r/${subreddit}?limit=100&sort=hot`;
-	const headers = {
-		"User-Agent": "Entertainment-Hub by dedeco99",
-		Authorization: `bearer ${accessToken}`,
-	};
-
-	const res = await get(url, headers);
-
-	if (res.status === 403) throw errors.redditForbidden;
-	if (res.status === 404) throw errors.redditNotFound;
+	const res = await api({
+		url: `https://oauth.reddit.com/r/${subreddit}?limit=100&sort=hot`,
+		headers: {
+			"User-Agent": "Entertainment-Hub by dedeco99",
+			Authorization: `bearer ${accessToken}`,
+		},
+	});
 
 	const json = res.data;
+
+	if (res.status === 403) return { status: 403, body: { message: "REDDIT_FORBIDDEN" } };
+	if (res.status === 404 || !json.data.children.length) {
+		return { status: 404, body: { message: "REDDIT_NOT_FOUND" } };
+	}
+
 	const response = formatResponse(json);
 
-	if (retries < 5 && global.redditPosts.includes(response.id)) {
+	if (retries < 5 && global.cache.reddit.posts.includes(response.id)) {
 		retries++;
 		return getPost(options, retries);
 	}
 
-	global.redditPosts.push(response.id);
-	if (global.redditPosts.length > 10) global.redditPosts.shift();
+	global.cache.reddit.posts.push(response.id);
+	if (global.cache.reddit.posts.length > 10) global.cache.reddit.posts.shift();
 
-	return response;
+	return { status: 200, body: { message: "REDDIT_SUCCESS", data: response } };
 }
 
 module.exports = { getPost };

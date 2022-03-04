@@ -14,10 +14,12 @@ async function music(interaction) {
 	if (interaction.commandName === "play") {
 		const song = interaction.options.get("song").value;
 
-		const url =
-			song.includes("https://www.youtube.com") || song.includes("https://youtu.be")
-				? song
-				: await getVideoSearch(interaction.options.get("song").value);
+		let url = song;
+		if (!song.includes("https://www.youtube.com") || song.includes("https://youtu.be")) {
+			const response = await getVideoSearch({ search: interaction.options.get("song").value });
+
+			url = `https://youtu.be/${response.body.data.videoId}`;
+		}
 
 		if (!subscription && interaction.member instanceof GuildMember && interaction.member.voice.channel) {
 			const channel = interaction.member.voice.channel;

@@ -1,43 +1,26 @@
 const axios = require("axios");
 const https = require("https");
 
-async function get(url, headers = {}) {
-	const config = { headers, httpsAgent: new https.Agent({ rejectUnauthorized: false }) };
-
+async function api({ method, url, data, headers = {} }) {
 	try {
-		const response = await axios.get(url, config);
+		const res = await axios.request({
+			method,
+			url,
+			data,
+			headers,
+			httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+		});
 
 		return {
-			status: response.status,
-			data: response.data,
+			status: res.status,
+			data: res.data,
 		};
-	} catch (error) {
+	} catch (e) {
 		return {
-			status: error.response.status,
-			data: error.response.data,
+			status: e.response.status,
+			data: e.response.data,
 		};
 	}
 }
 
-async function post(url, body, headers = {}) {
-	const config = { headers };
-
-	try {
-		const response = await axios.post(url, body, config);
-
-		return {
-			status: response.status,
-			data: response.data,
-		};
-	} catch (error) {
-		return {
-			status: error.response.status,
-			data: error.response.data,
-		};
-	}
-}
-
-module.exports = {
-	get,
-	post,
-};
+module.exports = { api };

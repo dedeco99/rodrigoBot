@@ -1,10 +1,183 @@
+const { formatDate, simplifyNumber } = require("../utils/utils");
+
+function createDefineEmbed(res) {
+	const embed = {};
+
+	embed.title = res.word;
+	embed.color = 0x00ae86;
+	embed.fields = [{ name: res.definition, value: res.example }];
+
+	return { embeds: [embed] };
+}
+
+function createSearchEmbed(res) {
+	const embed = {};
+
+	embed.title = res.topic;
+	embed.color = 0x00ae86;
+
+	embed.fields = [];
+	for (const result of res.results) {
+		embed.fields.push({ name: result.title, value: result.link });
+		embed.fields.push({ name: "Description", value: result.description });
+	}
+
+	return { embeds: [embed] };
+}
+
+function createSortMessage(res) {
+	return res.list.join(" > ");
+}
+
+function createMathMessage(res) {
+	return `${res.expression} = **${res.result}**`;
+}
+
+function createWeatherEmbed(res) {
+	const embed = {};
+
+	embed.title = res.forecast.description.replace(/\b\w/g, m => m.toUpperCase());
+	embed.thumbnail = { url: res.forecast.image };
+	embed.color = 0x00ae86;
+
+	embed.fields = [
+		{
+			name: "Temperatura atual",
+			value: `${res.temp} (${res.feelsLike}) °C`,
+			inline: true,
+		},
+		{
+			name: "Temperatura máxima",
+			value: `${res.maxTemp} °C`,
+			inline: true,
+		},
+		{
+			name: "Temperatura mínima",
+			value: `${res.minTemp} °C`,
+			inline: true,
+		},
+		{
+			name: "Vento",
+			value: `${res.windSpeed} km/h`,
+			inline: true,
+		},
+		{
+			name: "Nascer do sol",
+			value: res.sunrise,
+			inline: true,
+		},
+		{
+			name: "Pôr do sol",
+			value: res.sunset,
+			inline: true,
+		},
+	];
+
+	return { embeds: [embed] };
+}
+
+function createConvertMessage(res) {
+	return `${res.number} ${res.from} = **${res.convertedNumber.toFixed(2)} ${res.to}**`;
+}
+
+function createCryptoEmbed(res) {
+	const embed = {};
+
+	embed.title = `${res.rank ? `${res.rank}.` : ""} ${res.name} (${res.symbol})`;
+	embed.thumbnail = { url: res.image };
+	embed.color = 0x00ae86;
+
+	embed.fields = [
+		{
+			name: "Price (€)",
+			value: res.price.toFixed(res.price.toFixed(2) === "0.00" ? 10 : 2),
+			inline: true,
+		},
+		{
+			name: "Marketcap (€)",
+			value: simplifyNumber(res.marketCap),
+			inline: true,
+		},
+		{
+			name: "Volume (€)",
+			value: simplifyNumber(res.volume),
+			inline: true,
+		},
+	];
+
+	if ("rank" in res) {
+		embed.fields.push(
+			{
+				name: `Available Supply (${res.symbol})`,
+				value: simplifyNumber(res.circulatingSupply),
+				inline: true,
+			},
+			{
+				name: `Max Supply (${res.symbol})`,
+				value: simplifyNumber(res.maxSupply),
+				inline: true,
+			},
+		);
+	}
+
+	let footer = "";
+
+	if (res.change1h) footer += `1h: ${res.change1h.toFixed(2)}%`;
+	if (res.change24h) footer += ` | 24h: ${res.change24h.toFixed(2)}%`;
+	if (res.change7d) footer += ` | 7d: ${res.change7d.toFixed(2)}%`;
+	if (res.change30d) footer += ` | 30d: ${res.change30d.toFixed(2)}%`;
+
+	embed.footer = { text: footer };
+
+	return { embeds: [embed] };
+}
+
+function createPriceEmbed(res) {
+	const embed = {};
+
+	embed.title = res[0].search;
+	embed.color = 0xff9900;
+	embed.url = res[0].url;
+
+	embed.fields = [];
+	for (let i = 0; i < res.length; i++) {
+		embed.fields.push({ name: res[i].price, value: `[${res[i].product}](${res[i].productUrl})` });
+	}
+
+	return { embeds: [embed] };
+}
+
+function createInstaEmbed(res) {
+	const embed = {};
+
+	embed.title = res.name;
+	embed.color = 0xbc2a8d;
+	embed.thumbnail = { url: res.profilePic };
+	embed.url = res.url;
+	embed.fields = [{ name: "Bio", value: res.bio }];
+
+	if (res.image === null) {
+		embed.fields.push({ name: "Erro", value: res.error });
+	} else {
+		embed.image = { url: res.image };
+	}
+
+	embed.footer = {
+		text: `Posts: ${simplifyNumber(res.posts)} | Followers: ${simplifyNumber(
+			res.followers,
+		)} | Follows: ${simplifyNumber(res.follows)}`,
+	};
+
+	return { embeds: [embed] };
+}
+
 function createRedditEmbed(res) {
 	const embed = {};
 
 	if (res.contentVideo !== "") return res.contentVideo;
 
 	embed.title = res.title;
-	embed.url = res.url;
+	embed.url = res.permalink;
 	embed.color = 0x00ae86;
 
 	if (res.content !== "") {
@@ -14,65 +187,36 @@ function createRedditEmbed(res) {
 		embed.image = { url: res.contentImage };
 	}
 
-	embed.footer = { text: `From: ${res.subreddit} | Upvotes: ${res.score} | ` };
-
-	return { embeds: [embed] };
-}
-
-function prettyNumber(number) {
-	return String(parseFloat(number).toFixed(2)).replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, " ");
-}
-
-function createCryptoEmbed(res) {
-	const embed = {};
-
-	embed.title = `${res.rank}. ${res.name} (${res.symbol})`;
-	embed.color = 0x00ae86;
-
-	const marketcapEur = prettyNumber(res.marketcapEur);
-	const availableSupply = prettyNumber(res.availableSupply);
-	const totalSupply = prettyNumber(res.totalSupply);
-
-	embed.fields = [
-		{
-			name: "Price (€)",
-			value: `${res.priceEur.toFixed(2)} €`,
-			inline: true,
-		},
-		{
-			name: "Marketcap (€)",
-			value: `${marketcapEur} €`,
-			inline: true,
-		},
-		{
-			name: "Available Supply",
-			value: `${availableSupply} ${res.symbol}`,
-			inline: true,
-		},
-		{
-			name: "Total Supply",
-			value: `${totalSupply} ${res.symbol}`,
-			inline: true,
-		},
-	];
-
 	embed.footer = {
-		text: `1h: ${res.change1h.toFixed(2)}% | 24h: ${res.change24h.toFixed(2)}% | 7d: ${res.change7d.toFixed(2)}%`,
+		text: `From: r/${res.subreddit} | Upvotes: ${res.score} | Comments: ${res.comments} | Posted: ${formatDate(
+			res.created * 1000,
+			null,
+			true,
+		)}`,
 	};
 
 	return { embeds: [embed] };
 }
 
-function createRadarEmbed(radars) {
+function createYoutubeMessage(res) {
+	return `https://youtu.be/${res.videoId}`;
+}
+
+function createRadarEmbed(res) {
 	const embed = {};
 
-	embed.title = radars.location;
+	embed.title = res.location;
 	embed.color = 0x00ae86;
 
 	embed.fields = [];
-	for (const radar of radars.radars) embed.fields.push({ name: radar.date, value: radar.description });
 
-	if (!radars.length) embed.description = "Não há radares";
+	if (res.radars.length) {
+		for (const radar of res.radars) {
+			embed.fields.push({ name: radar.date, value: radar.description });
+		}
+	} else {
+		embed.description = "Não há radares";
+	}
 
 	return { embeds: [embed] };
 }
@@ -138,89 +282,6 @@ function createCoronaEmbed(res) {
 	return { embeds: [embed] };
 }
 
-function createWeatherEmbed(res) {
-	const embed = {};
-
-	embed.title = res.forecast;
-	embed.color = 0x00ae86;
-
-	embed.fields = [
-		{
-			name: "Temperatura atual",
-			value: `${res.temp} (${res.feelsLike}) °C`,
-			inline: true,
-		},
-		{
-			name: "Temperatura máxima",
-			value: `${res.maxTemp} °C`,
-			inline: true,
-		},
-		{
-			name: "Temperatura mínima",
-			value: `${res.minTemp} °C`,
-			inline: true,
-		},
-		{
-			name: "Vento",
-			value: `${res.wind} km/h`,
-			inline: true,
-		},
-		{
-			name: "Nascer do sol",
-			value: res.sunrise,
-			inline: true,
-		},
-		{
-			name: "Pôr do sol",
-			value: res.sunset,
-			inline: true,
-		},
-	];
-
-	return { embeds: [embed] };
-}
-
-function createSearchEmbed(res) {
-	const embed = {};
-
-	embed.title = res[0].topic;
-	embed.color = 0x00ae86;
-
-	embed.fields = [];
-	for (let i = 0; i < 3; i++) {
-		embed.fields.push({ name: res[i].title, value: res[i].link });
-		embed.fields.push({ name: "Description", value: res[i].description });
-	}
-
-	return { embeds: [embed] };
-}
-
-function createDefineEmbed(res) {
-	const embed = {};
-
-	embed.title = res.word;
-	embed.color = 0x00ae86;
-	embed.fields = [{ name: res.definition, value: res.example }];
-
-	return { embeds: [embed] };
-}
-
-function createPollEmbed(res) {
-	const embed = {};
-
-	embed.title = res.title;
-	embed.color = 0x00ae86;
-
-	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
-
-	embed.fields = [];
-	for (let i = 0; i < res.options.length; i++) {
-		embed.fields.push({ name: "----------", value: `${reacts[i]} - ${res.options[i]}` });
-	}
-
-	return { embeds: [embed] };
-}
-
 function createKeyboardEmbed(res) {
 	const embed = {};
 
@@ -264,52 +325,46 @@ function createStockEmbed(products) {
 	return { embeds };
 }
 
-function createInstaEmbed(res) {
-	const embed = {};
-
-	embed.title = res.name;
-	embed.color = 0xbc2a8d;
-	embed.thumbnail = { url: res.profilePic };
-	embed.url = res.url;
-	embed.fields = [{ name: "Bio", value: res.bio }];
-
-	if (res.image === null) {
-		embed.fields.push({ name: "Erro", value: res.error });
-	} else {
-		embed.image = { url: res.image };
-	}
-
-	embed.footer = { text: `Posts: ${res.posts} | Followers: ${res.followers} | Follows: ${res.follows}` };
-
-	return { embeds: [embed] };
+function createReminderMessage(res) {
+	return res;
 }
 
-function createPriceEmbed(res) {
+function createPollEmbed(res) {
 	const embed = {};
 
-	embed.title = res[0].search;
-	embed.color = 0xff9900;
-	embed.url = res[0].url;
+	embed.title = res.title;
+	embed.color = 0x00ae86;
+
+	const reacts = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰"];
 
 	embed.fields = [];
-	for (let i = 0; i < res.length; i++) {
-		embed.fields.push({ name: res[i].price, value: `[${res[i].product}](${res[i].productUrl})` });
+	for (let i = 0; i < res.options.length; i++) {
+		embed.fields.push({ name: "----------", value: `${reacts[i]} - ${res.options[i]}` });
 	}
 
 	return { embeds: [embed] };
 }
 
 module.exports = {
-	createRedditEmbed,
-	createCryptoEmbed,
+	createDefineEmbed,
 	createSearchEmbed,
+	createSortMessage,
+	createMathMessage,
 	createWeatherEmbed,
+
+	createConvertMessage,
+	createCryptoEmbed,
+	createStockEmbed,
+	createPriceEmbed,
+
+	createInstaEmbed,
+	createRedditEmbed,
+	createYoutubeMessage,
+
 	createRadarEmbed,
 	createCoronaEmbed,
-	createDefineEmbed,
-	createPollEmbed,
 	createKeyboardEmbed,
-	createStockEmbed,
-	createInstaEmbed,
-	createPriceEmbed,
+	createReminderMessage,
+
+	createPollEmbed,
 };

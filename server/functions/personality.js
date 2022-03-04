@@ -1,3 +1,5 @@
+const cleverbot = require("cleverbot-free");
+
 const { updateMetadata } = require("../utils/database");
 
 async function compliment() {
@@ -12,4 +14,20 @@ async function insult() {
 	return `Durante a minha existência já me deram bullying ${metaInfo.dislikes} vezes. Vou chamar os meus pais. *cries while getting hit with a laptop*`;
 }
 
-module.exports = { compliment, insult };
+async function talk(options) {
+	const { prompt, conversation } = options;
+
+	const response = await cleverbot(prompt, conversation);
+
+	console.log(prompt, conversation, response);
+
+	return {
+		status: 200,
+		body: {
+			message: "TALK_SUCCESS",
+			data: { prompt, response },
+		},
+	};
+}
+
+module.exports = { compliment, insult, talk };

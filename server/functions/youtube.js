@@ -1,164 +1,73 @@
-const errors = require("../utils/errors");
-const { get } = require("../utils/request");
-const secrets = require("../utils/secrets");
+const rssParser = require("rss-converter");
 
-const Channel = require("../models/channel");
-const Notification = require("../models/notification");
+const { api } = require("../utils/request");
 
 async function checkIfChannelExists(channel) {
-	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${secrets.youtubeKey}`;
+	const res = await api({
+		method: "get",
+		url: `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channel}&type=channel&key=${process.env.youtubeKey}`,
+	});
 
-	const res = await get(url);
-
-	if (res.status === 403) throw errors.youtubeLimit;
+	if (res.status === 403) return { status: 403, body: { message: "YOUTUBE_FORBIDDEN" } };
 
 	const json = res.data;
 
 	return json.pageInfo.totalResults > 0 ? json.items[0] : null;
 }
 
-async function getChannelsPlaylist(channel) {
-	const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channel}&maxResults=50&key=${secrets.youtubeKey}`;
-
-	const res = await get(url);
-
-	if (res.status === 403) throw errors.youtubeLimit;
-
-	const json = res.data;
-
-	return json.items;
-}
-
 async function getVideo(options) {
-	const channel = options.channel;
+	const { channel } = options;
 
 	const channelFound = await checkIfChannelExists(channel);
 
-	if (channelFound) {
-		const playlist = await getChannelsPlaylist(channelFound.id.channelId);
+	if (!channelFound) return { status: 404, body: { message: "YOUTUBE_CHANNEL_NOT_FOUND" } };
 
-		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist[0].contentDetails.relatedPlaylists.uploads}&maxResults=5&key=${secrets.youtubeKey}`;
+	const res = await rssParser.toJson(
+		`https://www.youtube.com/feeds/videos.xml?channel_id=${channelFound.id.channelId}`,
+	);
 
-		const res = await get(url);
-
-		if (res.status === 403) throw errors.youtubeLimit;
-
-		const json = res.data;
-
-		return `https://youtu.be/${json.items[0].snippet.resourceId.videoId}`;
-	}
-
-	return "Esse canal deve estar no xixo porque não o encontro";
+	return {
+		status: 200,
+		body: {
+			message: "YOUTUBE_SUCCESS",
+			data: {
+				videoId: res.items[0].yt_videoId,
+				videoTitle: res.items[0].title,
+				thumbnail: res.items[0].media_group.media_thumbnail_url.replace("hqdefault", "mqdefault"),
+				channelId: res.items[0].yt_channelId,
+				channelName: res.items[0].author.name,
+				published: res.items[0].published,
+				views: res.items[0].media_group.media_community.media_statistics_views,
+			},
+		},
+	};
 }
 
-async function getVideoSearch(search) {
-	const url = `https://www.googleapis.com/youtube/v3/search?q=${search}&maxResults=1&key=${secrets.youtubeKey}`;
+async function getVideoSearch(options) {
+	const { search } = options;
 
-	const res = await get(url);
+	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${search}&type=video&maxResults=1&key=${process.env.youtubeKey}`;
 
-	if (res.status === 403) throw errors.youtubeLimit;
+	const res = await api({ method: "get", url });
+
+	if (res.status === 403) return { status: 403, body: { message: "YOUTUBE_FORBIDDEN" } };
 
 	const json = res.data;
 
-	return `https://www.youtube.com/watch?v=${json.items[0].id.videoId}`;
+	return {
+		status: 200,
+		body: {
+			message: "YOUTUBE_SUCCESS",
+			data: {
+				videoId: json.items[0].id.videoId,
+				videoTitle: json.items[0].snippet.title,
+				thumbnail: json.items[0].snippet.thumbnails.medium.url,
+				channelId: json.items[0].snippet.channelId,
+				channelName: json.items[0].snippet.channelTitle,
+				published: json.items[0].publishTime,
+			},
+		},
+	};
 }
 
-async function addChannel(msg) {
-	const channelName = msg.content.split("youtube add ")[1];
-
-	const channelFound = await checkIfChannelExists(channelName);
-	if (channelFound) {
-		const channel = await Channel.findOne({
-			guild: msg.guild.id,
-			channel: channelFound.id.channelId,
-			platform: "youtube",
-		});
-
-		if (channel) return "Esse canal já existe seu lixo";
-
-		const newChannel = new Channel({
-			guild: msg.guild.id,
-			name: channelFound.snippet.title,
-			channel: channelFound.id.channelId,
-			platform: "youtube",
-		});
-
-		await newChannel.save();
-
-		return "Canal adicionado com sucesso my dude";
-	}
-
-	return "Esse canal deve estar no xixo porque não o encontro";
-}
-
-async function removeChannel(msg) {
-	const channelName = msg.content.split("youtube remove ")[1];
-
-	const channelFound = await checkIfChannelExists(channelName);
-
-	if (channelFound) {
-		const channel = await Channel.findOne({
-			guild: msg.guild.id,
-			channel: channelFound.id.channelId,
-			platform: "youtube",
-		});
-
-		if (channel) {
-			await Channel.deleteOne({ _id: channel._id });
-
-			return "Canal removido com sucesso my dude";
-		}
-	}
-
-	return "Esse canal deve estar no xixo porque não o encontro";
-}
-
-async function fetchChannels(msg) {
-	let channels = await Channel.find({
-		guild: msg.guild.id,
-		platform: "youtube",
-	})
-		.collation({ locale: "en" })
-		.sort({ name: 1 });
-
-	channels = channels.map(channel => channel.name).join(" | ");
-
-	return channels;
-}
-
-async function fetchNotifications() {
-	let channels = await Channel.find({ platform: "youtube" });
-
-	channels = channels.map(channel => channel.channel).join(",");
-
-	const playlists = await getChannelsPlaylist(channels);
-
-	for (const playlist of playlists) {
-		const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist.contentDetails.relatedPlaylists.uploads}&maxResults=1&key=${secrets.youtubeKey}`;
-
-		const res = await get(url);
-
-		const json = res.data;
-
-		const item = json.items[0];
-
-		const ONE_HOUR = 60000 * 60 * 24 * 3;
-		if (new Date() - new Date(item.snippet.publishedAt) < ONE_HOUR) {
-			const exists = await Notification.findOne({ video: item.snippet.resourceId.videoId });
-
-			if (!exists) {
-				const notification = new Notification({
-					video: item.snippet.resourceId.videoId,
-				});
-
-				notification.save();
-
-				return `**${item.snippet.channelTitle}** postou um novo video! | https://youtu.be/${item.snippet.resourceId.videoId}`;
-			}
-		}
-	}
-
-	return null;
-}
-
-module.exports = { getVideo, getVideoSearch, fetchNotifications };
+module.exports = { getVideo, getVideoSearch };

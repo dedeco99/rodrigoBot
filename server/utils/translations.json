@@ -1,0 +1,32 @@
+{
+	"PROMPT_PLACEHOLDER": { "en": "Type / for commands or type anything else" },
+	"REQUIRED_FIELDS_MISSING": { "en": "Required fields are missing" },
+
+	"COMMAND_NOT_FOUND": { "en": "The command specified was not found" },
+	"COMMAND_INTERNAL_ERROR": { "en": "Something went wrong" },
+
+	"DEFINE_NOT_FOUND": { "en": "The definition for the word specified was not found" },
+	"WEATHER_CITY_NOT_FOUND": { "en": "The location specified was not found" },
+
+	"PRICE_CRYPTO_NOT_FOUND": { "en": "The symbol specified was not found" },
+	"PRICE_CRYPTO_DOWN": { "en": "CoinMarketCap API is down" },
+
+	"YOUTUBE_FORBIDDEN": { "en": "Youtube API is down" },
+	"YOUTUBE_CHANNEL_NOT_FOUND": { "en": "The channel specified was not found" },
+
+	"REDDIT_REFRESH_TOKEN": { "en": "Reddit API is down" },
+	"REDDIT_FORBIDDEN": { "en": "Reddit API is down" },
+	"REDDIT_NOT_FOUND": { "en": "The subreddit specified was not found" },
+
+	"INSTAGRAM_DOWN": { "en": "Instagram API is down" },
+	"INSTAGRAM_NOT_FOUND": { "en": "The profile specified was not found" },
+
+	"MEME_NOT_FOUND": { "en": "The meme specified was not found" },
+
+	"CORONA_COUNTRY_NOT_FOUND": { "en": "The country specified was not found" },
+	"KEYBOARDS_NOT_FOUND": { "en": "No new keyboard group buys were found" },
+
+	"REMINDER_INVALID_DATE": { "en": "The date/time specified are invalid" },
+	"REMINDER_IN_PAST": { "en": "The date/time specified is in the past" },
+	"REMINDER_EXISTS": { "en": "This reminder already exists" }
+}
