@@ -1,6 +1,6 @@
 {
 	"name": "rodrigobot",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"author": "dedeco99",
 	"license": "MIT",
 	"main": "app.js",
@@ -23,11 +23,11 @@
 		"dayjs": "^1.10.8",
 		"express": "^4.17.3",
 		"jimp": "^0.16.1",
-		"mathjs": "^10.1.1",
+		"mathjs": "^10.3.0",
 		"mongoose": "6.0.15",
 		"morgan": "^1.10.0",
 		"node-cron": "^3.0.0",
 		"rss-converter": "^1.1.6",
-		"yahoo-finance2": "^2.1.9"
+		"yahoo-finance2": "^2.2.0"
 	}
 }

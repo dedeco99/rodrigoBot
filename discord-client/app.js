@@ -491,6 +491,7 @@ const commands = [
 		],
 	},
 	// Music
+	/*
 	{
 		name: "play",
 		description: "Plays a song",
@@ -523,6 +524,7 @@ const commands = [
 		name: "stop",
 		description: "Leave the voice channel",
 	},
+	*/
 	// System
 	{
 		name: "activity",

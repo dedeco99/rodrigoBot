@@ -1,6 +1,6 @@
 {
 	"name": "rodrigo-discord-client",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"author": "dedeco99",
 	"license": "MIT",
 	"main": "app.js",
