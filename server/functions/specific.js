@@ -226,14 +226,14 @@ async function reminder(options) {
 	const { reminder, room, user } = options;
 	const date = dayjs(`${options.date} ${options.time}`, "DD-MM-YYYY HH:mm");
 
-	if (!date.isValid()) return { status: 400, body: { mesage: "REMINDER_INVALID_DATE" } };
-	if (date.diff(dayjs(), "minutes") < 0) return { status: 400, body: { mesage: "REMINDER_IN_PAST" } };
+	if (!date.isValid()) return { status: 400, body: { message: "REMINDER_INVALID_DATE" } };
+	if (date.diff(dayjs(), "minutes") < 0) return { status: 400, body: { message: "REMINDER_IN_PAST" } };
 
 	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
 
 	const response = await addCronjob({ type: "reminder", cron, message: reminder, room, user });
 
-	if (!response) return { status: 400, body: { mesage: "REMINDER_EXISTS" } };
+	if (!response) return { status: 400, body: { message: "REMINDER_EXISTS" } };
 
 	return { status: 200, body: { message: "REMINDER_SUCCESS", data: "REMINDER_SUCCESS" } };
 }
@@ -242,13 +242,13 @@ async function birthday(options) {
 	const { user, room } = options;
 	const date = dayjs(`${options.date} 08:00`, "DD-MM HH:mm");
 
-	if (!date.isValid()) return { status: 400, body: { mesage: "REMINDER_INVALID_DATE" } };
+	if (!date.isValid()) return { status: 400, body: { message: "REMINDER_INVALID_DATE" } };
 
 	const cron = `${date.minute()} ${date.hour()} ${date.date()} ${date.month() + 1} *`;
 
 	const response = await addCronjob({ type: "birthday", cron, message: "Parabéns :partying_face:", room, user });
 
-	if (!response) return { status: 400, body: { mesage: "REMINDER_EXISTS" } };
+	if (!response) return { status: 400, body: { message: "REMINDER_EXISTS" } };
 
 	return { status: 200, body: { message: "REMINDER_SUCCESS", data: "REMINDER_SUCCESS" } };
 }

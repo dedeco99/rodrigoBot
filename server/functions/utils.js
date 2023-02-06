@@ -11,7 +11,7 @@ function answer(options) {
 
 	let data = num ? "ANSWER_YES" : "ANSWER_NO";
 	if (!phrase) {
-		return "ANSWER_ALIVE";
+		return { status: 200, body: { message: "ANSWER_ALIVE" } };
 	} else if (phrase.includes(" or ")) {
 		const option1 = phrase.split(" or ")[0];
 		const option2 = phrase.split(" or ")[1];
@@ -27,7 +27,7 @@ function answer(options) {
 		data = num.toString();
 	}
 
-	return { status: 200, body: { message: "ANSWER_SUCCESS", data: { answer: data } } };
+	return { status: 200, body: { message: "ANSWER_SUCCESS", data } };
 }
 
 async function define(options) {

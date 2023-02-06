@@ -616,7 +616,7 @@ async function handleInteraction(interaction) {
 		if (response.data.status === 200) {
 			const message = embeds[response.command]
 				? embeds[response.command](response.data.body.data)
-				: response.data.body.data;
+				: translate(response.data.body.data);
 
 			if (message) await interaction.followUp(message);
 		} else {

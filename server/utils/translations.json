@@ -28,5 +28,8 @@
 
 	"REMINDER_INVALID_DATE": { "en": "The date/time specified are invalid" },
 	"REMINDER_IN_PAST": { "en": "The date/time specified is in the past" },
-	"REMINDER_EXISTS": { "en": "This reminder already exists" }
+	"REMINDER_EXISTS": { "en": "This reminder already exists" },
+
+	"ANSWER_YES": { "en": "Yes" },
+	"ANSWER_NO": { "en": "No" }
 }

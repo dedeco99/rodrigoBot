@@ -38,7 +38,7 @@ function translate(code, ...params) {
 		return translations[code](...params)[lang];
 	}
 
-	return translations[code] ? translations[code][lang] : translations.UNKNOWN_ERROR[lang];
+	return translations[code] ? translations[code][lang] : code;
 }
 
 module.exports = { formatDate, simplifyNumber, translate };
