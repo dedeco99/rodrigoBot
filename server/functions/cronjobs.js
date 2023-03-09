@@ -1,5 +1,7 @@
 const nodeCron = require("node-cron");
 
+const { api } = require("../utils/request");
+
 const Cronjob = require("../models/cronjob");
 
 async function cronjobScheduler(toSchedule) {
@@ -14,14 +16,26 @@ async function cronjobScheduler(toSchedule) {
 		const task = nodeCron.schedule(
 			cronjob.cron,
 			async () => {
-				global.callback(
-					cronjob.room,
-					cronjob.command
-						? { command: cronjob.command, options: cronjob.options }
-						: ["reminder", "birthday"].includes(cronjob.type)
-						? `<@${cronjob.user}> ${cronjob.message}`
-						: cronjob.message,
-				);
+				let message = cronjob.command
+					? { command: cronjob.command, options: cronjob.options }
+					: ["reminder", "birthday"].includes(cronjob.type)
+					? `<@${cronjob.user}> ${cronjob.message}`
+					: cronjob.message;
+
+				if (cronjob.type === "birthday") {
+					try {
+						const res = await api({
+							method: "get",
+							url: "https://g.tenor.com/v1/random?q=birthday&limit=1&key=LIVDSRZULELA",
+						});
+
+						if (res.data.results[0].itemurl) message += `\n${res.data.results[0].itemurl}`;
+					} catch (err) {
+						console.log(err);
+					}
+				}
+
+				global.callback(cronjob.room, message);
 
 				if (cronjob.type === "reminder") {
 					await Cronjob.updateOne({ _id: cronjob._id }, { active: false });
