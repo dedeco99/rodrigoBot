@@ -113,13 +113,13 @@ async function keyboards() {
 			link: encodeURI(`https://mechgroupbuys.com/${i.type}/${i.name}`),
 		}));
 
-	for (const groupBuy of []) {
+	for (const groupBuy of liveGroupBuys) {
 		const groupBuyExists = await GroupBuy.findOne({ name: groupBuy.name });
 
 		if (!groupBuyExists) {
 			const newGroupBuy = new GroupBuy(groupBuy);
 
-			//await newGroupBuy.save();
+			await newGroupBuy.save();
 
 			return { status: 200, body: { message: "KEYBOARDS_SUCCESS", data: groupBuy } };
 		}
